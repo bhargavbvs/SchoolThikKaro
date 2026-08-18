@@ -41,8 +41,11 @@ export function schoolFromFeature(feature) {
   };
 }
 
-export function openSheet(feature) {
-  const school = schoolFromFeature(feature);
+/** Opens the sheet for a school object that already has lat/lng — used by
+ *  both the map-pin click path (via openSheet, below) and anywhere else
+ *  (e.g. search results) that already has a flat school record and would
+ *  otherwise have to fake a GeoJSON feature just to reuse this wiring. */
+export function openSheetForSchool(school) {
   const el = document.getElementById('sheet');
   el.innerHTML = renderSheetHTML(school);
   el.hidden = false;
@@ -52,4 +55,8 @@ export function openSheet(feature) {
     .addEventListener('click', () => openFixFlow(school));
   el.querySelector('#sheet-dispute')
     .addEventListener('click', () => openDisputeFlow(school));
+}
+
+export function openSheet(feature) {
+  openSheetForSchool(schoolFromFeature(feature));
 }

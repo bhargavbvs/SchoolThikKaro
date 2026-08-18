@@ -1,7 +1,8 @@
 import { onRoute, startRouter } from './lib/router.js';
 import { mountAdmin } from './admin/admin.js';
-import { initMap, showState } from './map/map.js';
+import { initMap, showState, showAllStates } from './map/map.js';
 import { openSheet } from './map/sheet.js';
+import { mountTopbar } from './map/topbar.js';
 
 onRoute(/^\/admin/, () => {
   const el = document.getElementById('admin-root');
@@ -10,13 +11,26 @@ onRoute(/^\/admin/, () => {
   mountAdmin(el);
 });
 
+// The route handler re-fires on every hashchange (e.g. state <-> state
+// navigation). initMap() creates a real maplibregl.Map instance — calling
+// it more than once would stack duplicate maps on the same #map container.
+let mapPromise = null;
+
 onRoute(/^\/(?:$|state\/)/, async () => {
-  const map = await initMap('map');
+  const firstMount = !mapPromise;
+  mapPromise ??= initMap('map');
+  const map = await mapPromise;
+
   const code = (window.location.hash.match(/state\/([A-Z-]+)/) || [])[1];
   if (code) await showState(map, code);
-  map.on('click', 'pins', (e) => openSheet(e.features[0]));
-  map.on('mouseenter', 'pins', () => (map.getCanvas().style.cursor = 'pointer'));
-  map.on('mouseleave', 'pins', () => (map.getCanvas().style.cursor = ''));
+  else await showAllStates(map);
+
+  if (firstMount) {
+    mountTopbar(document.getElementById('topbar'), map);
+    map.on('click', 'pins', (e) => openSheet(e.features[0]));
+    map.on('mouseenter', 'pins', () => (map.getCanvas().style.cursor = 'pointer'));
+    map.on('mouseleave', 'pins', () => (map.getCanvas().style.cursor = ''));
+  }
 });
 
 onRoute(/^\/methodology/, async () => {

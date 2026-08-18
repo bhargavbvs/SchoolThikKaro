@@ -22,13 +22,11 @@ export function addPinLayers(map) {
     },
   });
 
-  map.addLayer({
-    id: 'cluster-count', type: 'symbol', source: 'schools',
-    filter: ['has', 'point_count'],
-    layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12 },
-    paint: { 'text-color': '#ffffff' },
-  });
-
+  // Individual pins are the layer that matters most — add them before the
+  // count-label layer below, so a font/glyph problem with that cosmetic
+  // layer can never again take the actual pins down with it (it did once:
+  // addLayer throws synchronously, and everything queued after a failed
+  // call in the same function never runs).
   map.addLayer({
     id: 'pins', type: 'circle', source: 'schools',
     filter: ['!', ['has', 'point_count']],
@@ -44,6 +42,21 @@ export function addPinLayers(map) {
       ],
     },
   });
+
+  try {
+    map.addLayer({
+      id: 'cluster-count', type: 'symbol', source: 'schools',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': ['Noto Sans Regular'],
+        'text-size': 12,
+      },
+      paint: { 'text-color': '#ffffff' },
+    });
+  } catch (err) {
+    console.warn('cluster-count label layer failed to add (glyphs unavailable); clusters still render without labels', err);
+  }
 }
 
 export function setPinData(map, geojson) {

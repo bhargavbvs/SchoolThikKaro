@@ -1,6 +1,7 @@
 node_modules
+.data-src
+.git
 dist
 .env.local
-.data-src
-.vercel
 .env*
+docs
