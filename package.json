@@ -1,0 +1,16 @@
+{
+  "name": "shaala",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run validate && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "data:join": "node scripts/join-coords.mjs",
+    "data:build": "node scripts/build-geo.mjs",
+    "validate": "node scripts/validate.mjs"
+  },
+  "dependencies": { "maplibre-gl": "^4.7.1" },
+  "devDependencies": { "vite": "^5.4.8", "vitest": "^3.2.7" }
+}
