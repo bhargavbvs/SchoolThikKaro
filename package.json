@@ -4,13 +4,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run validate && vite build",
+    "build": "npm run validate && vite build && npm run data:pages",
     "preview": "vite preview",
     "test": "vitest run",
     "data:join": "node scripts/join-coords.mjs",
     "data:build": "node scripts/build-geo.mjs",
     "data:totals": "node scripts/crawl-totals.mjs",
     "data:agg": "node scripts/build-aggregates.mjs",
+    "data:pages": "node scripts/prerender.mjs",
     "validate": "node scripts/validate.mjs"
   },
   "dependencies": {
