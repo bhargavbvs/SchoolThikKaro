@@ -1,4 +1,4 @@
-// Small inline-SVG icon set shared across the submit flow. All icons use
+// Small inline-SVG icon set shared across the app. All icons use
 // stroke="currentColor" so a wrapping element's `color` tints them — no
 // separate color prop needed, and no icon font/library dependency.
 const wrap = (paths, viewBox = '0 0 24 24') =>
@@ -16,6 +16,9 @@ export const icons = {
   lock: wrap('<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
   droplet: wrap('<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>'),
   ban: wrap('<circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/>'),
+  sun: wrap('<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'),
+  moon: wrap('<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>'),
+  search: wrap('<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'),
 };
 
 export function iconEl(name, extraClass = '') {

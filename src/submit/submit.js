@@ -2,7 +2,7 @@
 import { SOURCE_YEAR } from '../config.js';
 import { detectPlatform } from './gps.js';
 import { renderDesktopGateHTML, paintQR, handoffURL } from './qr.js';
-import { iconEl } from './icons.js';
+import { iconEl } from '../lib/icons.js';
 
 export const FINDINGS = [
   { value: 'no_toilet', label: 'No toilet for girls at all', icon: 'ban' },

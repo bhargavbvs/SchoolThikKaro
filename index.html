@@ -4,6 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>shaala</title>
+  <script>
+    // Applies a remembered theme choice before the stylesheet paints, so a
+    // returning visitor never sees a flash of the wrong theme. Deliberately
+    // not importing src/lib/theme.js here — this must run as plain,
+    // synchronous, blocking script, before any module graph resolves.
+    (function () {
+      var t = localStorage.getItem('shaala.theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    })();
+  </script>
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>

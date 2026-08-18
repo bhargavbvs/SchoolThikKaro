@@ -5,7 +5,7 @@ import { getFix, computeTier, permissionHelpHTML, detectPlatform } from './gps.j
 import { validateSubmission } from './submit.js';
 import { MAX_IMAGE_BYTES } from '../config.js';
 import { submitReport } from './api.js';
-import { iconEl } from './icons.js';
+import { iconEl } from '../lib/icons.js';
 
 export function mountCapture(slot, school, root) {
   const state = {

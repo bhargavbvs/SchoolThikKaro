@@ -1,5 +1,5 @@
 // src/submit/qr.js
-import { iconEl } from './icons.js';
+import { iconEl } from '../lib/icons.js';
 
 export function handoffURL(school, origin = window.location.origin) {
   return `${origin}/#/report/${school.udise}`;

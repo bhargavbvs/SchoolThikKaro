@@ -1,9 +1,15 @@
 #topbar { position:fixed; top:0; left:0; right:0; z-index:5; padding:10px 14px;
-  background:rgba(13,13,15,0.82); backdrop-filter:blur(10px);
+  background:var(--panel-a); backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:flex-start;
-  flex-wrap:wrap; }
+  flex-wrap:wrap; transition:background .2s ease; }
+#theme-toggle { display:flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:50%; border:1px solid var(--line);
+  background:var(--panel-2); color:var(--ink); cursor:pointer; margin-left:auto;
+  font-size:1.1em; transition:background .15s ease; }
+#theme-toggle:hover { background:var(--panel); }
 #topbar .brand { font-weight:700; letter-spacing:.02em; align-self:center; }
-#search-toggle { padding:8px 14px; border-radius:8px; border:1px solid var(--line);
+#search-toggle { display:flex; align-items:center; gap:6px; padding:8px 14px;
+  border-radius:8px; border:1px solid var(--line);
   background:var(--panel-2); color:var(--ink); }
 #search-panel { flex-basis:100%; margin-top:8px; }
 #search-panel input[type="search"] { width:100%; max-width:420px; padding:10px;

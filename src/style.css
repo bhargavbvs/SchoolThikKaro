@@ -2,13 +2,36 @@
 @import './submit/style-submit.css';
 @import './admin/style-admin.css';
 
+/* Dark is the app's baseline identity (protest-poster, civic-accountability
+   tone — see the design spec). Light is an override, not the default: it
+   activates on prefers-color-scheme:light OR an explicit [data-theme=light]
+   (the topbar toggle), and [data-theme=dark] always wins back over both so
+   a manual choice sticks regardless of OS setting. Accent colours
+   (admitted/found/fixed/disputed) stay constant across themes — only the
+   neutral scale changes. */
 :root {
-  --bg:#0d0d0f; --panel:#17171a; --panel-2:#1f1f24;
+  --bg:#0d0d0f; --panel:#17171a; --panel-2:#1f1f24; --panel-a:rgba(13,13,15,0.82);
   --ink:#f4efe9; --body:#b9b2a8; --muted:#7c766d;
   --line:rgba(244,239,233,0.12);
   --admitted:#e0473e; --found:#f0932b; --fixed:#2a9d8f; --disputed:#7c766d;
 }
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#f7f5f2; --panel:#ffffff; --panel-2:#efece7; --panel-a:rgba(255,255,255,0.85);
+    --ink:#17171a; --body:#4a453e; --muted:#8b8377;
+    --line:rgba(23,23,26,0.12);
+  }
+}
+
+:root[data-theme="light"] {
+  --bg:#f7f5f2; --panel:#ffffff; --panel-2:#efece7; --panel-a:rgba(255,255,255,0.85);
+  --ink:#17171a; --body:#4a453e; --muted:#8b8377;
+  --line:rgba(23,23,26,0.12);
+}
+
 * { box-sizing:border-box; }
 html,body { margin:0; height:100%; background:var(--bg); color:var(--ink);
-  font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  transition:background .2s ease, color .2s ease; }
 #map { position:fixed; inset:0; }

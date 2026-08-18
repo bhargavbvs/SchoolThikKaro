@@ -1,7 +1,7 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { normaliseImage, toJpegBlob } from './blur.js';
 import { renderFixHTML, renderDisputeHTML, buildFixPayload, buildDisputePayload } from './fix.js';
-import { iconEl } from './icons.js';
+import { iconEl } from '../lib/icons.js';
 
 const doneHTML = (message) => `<div class="done">
   <span class="done-badge">${iconEl('checkCircle')}</span>
