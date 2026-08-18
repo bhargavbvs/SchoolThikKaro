@@ -1,1 +1,292 @@
-{ "states": [{ "code": "SAMPLE", "name": "Sample", "count": 3, "file": "schools-SAMPLE.geojson" }] }
+{
+  "states": [
+    {
+      "code": "ANDHRA-PRADESH",
+      "name": "ANDHRA PRADESH",
+      "count": 606,
+      "files": [
+        "schools-ANDHRA-PRADESH.geojson"
+      ]
+    },
+    {
+      "code": "ARUNACHAL-PRADESH",
+      "name": "ARUNACHAL PRADESH",
+      "count": 793,
+      "files": [
+        "schools-ARUNACHAL-PRADESH.geojson"
+      ]
+    },
+    {
+      "code": "ASSAM",
+      "name": "ASSAM",
+      "count": 2797,
+      "files": [
+        "schools-ASSAM-1.geojson",
+        "schools-ASSAM-2.geojson"
+      ]
+    },
+    {
+      "code": "BIHAR",
+      "name": "BIHAR",
+      "count": 1399,
+      "files": [
+        "schools-BIHAR.geojson"
+      ]
+    },
+    {
+      "code": "CHHATTISGARH",
+      "name": "CHHATTISGARH",
+      "count": 5137,
+      "files": [
+        "schools-CHHATTISGARH-1.geojson",
+        "schools-CHHATTISGARH-2.geojson",
+        "schools-CHHATTISGARH-3.geojson"
+      ]
+    },
+    {
+      "code": "DELHI",
+      "name": "DELHI",
+      "count": 1,
+      "files": [
+        "schools-DELHI.geojson"
+      ]
+    },
+    {
+      "code": "GOA",
+      "name": "GOA",
+      "count": 1,
+      "files": [
+        "schools-GOA.geojson"
+      ]
+    },
+    {
+      "code": "GUJARAT",
+      "name": "GUJARAT",
+      "count": 989,
+      "files": [
+        "schools-GUJARAT.geojson"
+      ]
+    },
+    {
+      "code": "HARYANA",
+      "name": "HARYANA",
+      "count": 41,
+      "files": [
+        "schools-HARYANA.geojson"
+      ]
+    },
+    {
+      "code": "HIMACHAL-PRADESH",
+      "name": "HIMACHAL PRADESH",
+      "count": 126,
+      "files": [
+        "schools-HIMACHAL-PRADESH.geojson"
+      ]
+    },
+    {
+      "code": "JAMMU-KASHMIR",
+      "name": "JAMMU & KASHMIR",
+      "count": 3711,
+      "files": [
+        "schools-JAMMU-KASHMIR-1.geojson",
+        "schools-JAMMU-KASHMIR-2.geojson"
+      ]
+    },
+    {
+      "code": "JHARKHAND",
+      "name": "JHARKHAND",
+      "count": 1745,
+      "files": [
+        "schools-JHARKHAND.geojson"
+      ]
+    },
+    {
+      "code": "KARNATAKA",
+      "name": "KARNATAKA",
+      "count": 998,
+      "files": [
+        "schools-KARNATAKA.geojson"
+      ]
+    },
+    {
+      "code": "KERALA",
+      "name": "KERALA",
+      "count": 56,
+      "files": [
+        "schools-KERALA.geojson"
+      ]
+    },
+    {
+      "code": "LADAKH",
+      "name": "LADAKH",
+      "count": 88,
+      "files": [
+        "schools-LADAKH.geojson"
+      ]
+    },
+    {
+      "code": "MADHYA-PRADESH",
+      "name": "MADHYA PRADESH",
+      "count": 13328,
+      "files": [
+        "schools-MADHYA-PRADESH-1.geojson",
+        "schools-MADHYA-PRADESH-2.geojson",
+        "schools-MADHYA-PRADESH-3.geojson",
+        "schools-MADHYA-PRADESH-4.geojson",
+        "schools-MADHYA-PRADESH-5.geojson",
+        "schools-MADHYA-PRADESH-6.geojson",
+        "schools-MADHYA-PRADESH-7.geojson"
+      ]
+    },
+    {
+      "code": "MAHARASHTRA",
+      "name": "MAHARASHTRA",
+      "count": 5941,
+      "files": [
+        "schools-MAHARASHTRA-1.geojson",
+        "schools-MAHARASHTRA-2.geojson",
+        "schools-MAHARASHTRA-3.geojson",
+        "schools-MAHARASHTRA-4.geojson"
+      ]
+    },
+    {
+      "code": "MANIPUR",
+      "name": "MANIPUR",
+      "count": 1130,
+      "files": [
+        "schools-MANIPUR.geojson"
+      ]
+    },
+    {
+      "code": "MEGHALAYA",
+      "name": "MEGHALAYA",
+      "count": 4326,
+      "files": [
+        "schools-MEGHALAYA-1.geojson",
+        "schools-MEGHALAYA-2.geojson",
+        "schools-MEGHALAYA-3.geojson"
+      ]
+    },
+    {
+      "code": "MIZORAM",
+      "name": "MIZORAM",
+      "count": 758,
+      "files": [
+        "schools-MIZORAM.geojson"
+      ]
+    },
+    {
+      "code": "NAGALAND",
+      "name": "NAGALAND",
+      "count": 494,
+      "files": [
+        "schools-NAGALAND.geojson"
+      ]
+    },
+    {
+      "code": "ODISHA",
+      "name": "ODISHA",
+      "count": 1139,
+      "files": [
+        "schools-ODISHA.geojson"
+      ]
+    },
+    {
+      "code": "PUDUCHERRY",
+      "name": "PUDUCHERRY",
+      "count": 1,
+      "files": [
+        "schools-PUDUCHERRY.geojson"
+      ]
+    },
+    {
+      "code": "PUNJAB",
+      "name": "PUNJAB",
+      "count": 372,
+      "files": [
+        "schools-PUNJAB.geojson"
+      ]
+    },
+    {
+      "code": "RAJASTHAN",
+      "name": "RAJASTHAN",
+      "count": 11710,
+      "files": [
+        "schools-RAJASTHAN-1.geojson",
+        "schools-RAJASTHAN-2.geojson",
+        "schools-RAJASTHAN-3.geojson",
+        "schools-RAJASTHAN-4.geojson",
+        "schools-RAJASTHAN-5.geojson",
+        "schools-RAJASTHAN-6.geojson",
+        "schools-RAJASTHAN-7.geojson"
+      ]
+    },
+    {
+      "code": "SIKKIM",
+      "name": "SIKKIM",
+      "count": 23,
+      "files": [
+        "schools-SIKKIM.geojson"
+      ]
+    },
+    {
+      "code": "TAMILNADU",
+      "name": "TAMILNADU",
+      "count": 3086,
+      "files": [
+        "schools-TAMILNADU-1.geojson",
+        "schools-TAMILNADU-2.geojson"
+      ]
+    },
+    {
+      "code": "TELANGANA",
+      "name": "TELANGANA",
+      "count": 2912,
+      "files": [
+        "schools-TELANGANA-1.geojson",
+        "schools-TELANGANA-2.geojson"
+      ]
+    },
+    {
+      "code": "TRIPURA",
+      "name": "TRIPURA",
+      "count": 1146,
+      "files": [
+        "schools-TRIPURA.geojson"
+      ]
+    },
+    {
+      "code": "UTTAR-PRADESH",
+      "name": "UTTAR PRADESH",
+      "count": 12286,
+      "files": [
+        "schools-UTTAR-PRADESH-1.geojson",
+        "schools-UTTAR-PRADESH-2.geojson",
+        "schools-UTTAR-PRADESH-3.geojson",
+        "schools-UTTAR-PRADESH-4.geojson",
+        "schools-UTTAR-PRADESH-5.geojson",
+        "schools-UTTAR-PRADESH-6.geojson",
+        "schools-UTTAR-PRADESH-7.geojson"
+      ]
+    },
+    {
+      "code": "UTTARAKHAND",
+      "name": "UTTARAKHAND",
+      "count": 1561,
+      "files": [
+        "schools-UTTARAKHAND.geojson"
+      ]
+    },
+    {
+      "code": "WEST-BENGAL",
+      "name": "WEST BENGAL",
+      "count": 43,
+      "files": [
+        "schools-WEST-BENGAL.geojson"
+      ]
+    }
+  ],
+  "total": 78744,
+  "matchRate": 0.8978279459551907,
+  "unmatched": 8961
+}

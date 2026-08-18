@@ -1,5 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import { joinSchools } from '../scripts/lib/coords.mjs';
+import { joinSchools, parseCsvLine } from '../scripts/lib/coords.mjs';
+
+describe('parseCsvLine', () => {
+  it('splits a plain comma-separated line', () => {
+    expect(parseCsvLine('a,b,c')).toEqual(['a', 'b', 'c']);
+  });
+
+  it('keeps a comma inside a quoted field from shifting later columns', () => {
+    // Real row from udise_schools.csv — this exact school name broke a naive
+    // split(',') and corrupted every field after it, including lat/lng.
+    const line = '1260399,1260399,12160404001,"GOVT. UPPER PRIMARY SCHOOL, QUIBANG",2,Primary';
+    const f = parseCsvLine(line);
+    expect(f[3]).toBe('GOVT. UPPER PRIMARY SCHOOL, QUIBANG');
+    expect(f).toHaveLength(6);
+  });
+
+  it('unescapes a doubled quote inside a quoted field', () => {
+    expect(parseCsvLine('a,"He said ""hi""",c')).toEqual(['a', 'He said "hi"', 'c']);
+  });
+});
 
 describe('joinSchools', () => {
   const coords = new Map([
