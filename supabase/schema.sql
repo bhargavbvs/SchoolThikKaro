@@ -100,12 +100,49 @@ create policy disputes_public_read_approved on disputes
 
 -- moderators and audit_log: no anon policy at all => denied by default.
 
+-- Fixes and disputes are lower-stakes than reports (no minors in frame by
+-- design, no rate-limit-sensitive photo pipeline), so — unlike reports —
+-- anon may insert directly rather than going through an Edge Function.
+drop policy if exists fixes_public_insert_pending on fixes;
+create policy fixes_public_insert_pending on fixes
+  for insert to anon with check (review_status = 'pending');
+
+drop policy if exists disputes_public_insert_pending on disputes;
+create policy disputes_public_insert_pending on disputes
+  for insert to anon with check (review_status = 'pending');
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('shaala-photos','shaala-photos', true, 3145728,
         array['image/jpeg','image/webp'])
 on conflict (id) do nothing;
 
--- Public may READ photos. Public may NOT write: the Edge Function uploads.
+-- Public may READ photos. Public may NOT write to the report-photo path:
+-- the submit-report Edge Function uploads those with the service key.
 drop policy if exists shaala_photos_public_read on storage.objects;
 create policy shaala_photos_public_read on storage.objects
   for select to anon using (bucket_id = 'shaala-photos');
+
+-- Fix-evidence photos ARE written directly by anon, but only under the
+-- fixes/ path prefix — the report-photo path stays Edge-Function-only.
+drop policy if exists shaala_photos_fixes_insert on storage.objects;
+create policy shaala_photos_fixes_insert on storage.objects
+  for insert to anon
+  with check (bucket_id = 'shaala-photos' and (storage.foldername(name))[1] = 'fixes');
+
+-- Moderators (Plan B Task 8): read every pending report and act on it.
+-- Without these, the admin console has no query it's allowed to run.
+drop policy if exists reports_moderator_read_all on reports;
+create policy reports_moderator_read_all on reports for select to authenticated
+  using (exists (select 1 from moderators m
+                 where m.email = auth.jwt() ->> 'email' and m.active));
+
+drop policy if exists reports_moderator_update on reports;
+create policy reports_moderator_update on reports for update to authenticated
+  using (exists (select 1 from moderators m
+                 where m.email = auth.jwt() ->> 'email' and m.active))
+  with check (true);
+
+drop policy if exists audit_insert_moderator on audit_log;
+create policy audit_insert_moderator on audit_log for insert to authenticated
+  with check (exists (select 1 from moderators m
+                      where m.email = auth.jwt() ->> 'email' and m.active));

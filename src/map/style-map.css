@@ -10,4 +10,11 @@
 #sheet .claim-label { margin:0 0 4px; font-size:13px; color:var(--muted); }
 #sheet .claim-value { margin:0; font-weight:600; }
 #sheet .udise { font-size:12px; color:var(--muted); }
+#sheet #sheet-report { width:100%; padding:14px; border-radius:10px; border:0;
+  background:var(--admitted); color:#fff; font-weight:600; margin-top:14px; }
+.sheet-secondary { display:flex; gap:8px; margin-top:8px; }
+.sheet-secondary button { flex:1; padding:10px; border-radius:8px;
+  border:1px solid var(--line); background:transparent; color:var(--body); }
+#sheet-fix { border-color:var(--fixed); color:var(--fixed); }
+#sheet-dispute { border-color:var(--disputed); }
 @media (min-width:800px) { #sheet { left:auto; top:0; width:380px; max-height:100vh; } }

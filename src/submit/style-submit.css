@@ -14,3 +14,15 @@
 #sub-send { width:100%; padding:14px; border-radius:10px; border:0;
   background:var(--admitted); color:#fff; font-weight:600; }
 #sub-send:disabled { opacity:.45; }
+
+#flow-close { float:right; background:none; border:0; color:var(--muted);
+  font-size:22px; line-height:1; cursor:pointer; }
+#submit-root textarea, #submit-root input[type="text"] {
+  width:100%; margin:10px 0; padding:10px; border-radius:8px;
+  border:1px solid var(--line); background:var(--panel-2); color:var(--ink);
+  font:inherit; }
+#submit-root textarea { min-height:90px; resize:vertical; }
+#fix-send, #dis-send { width:100%; padding:12px; border-radius:10px; border:0;
+  background:var(--fixed); color:#fff; font-weight:600; margin-top:6px; }
+#dis-send { background:var(--disputed); }
+.done { text-align:center; padding:40px 16px; }

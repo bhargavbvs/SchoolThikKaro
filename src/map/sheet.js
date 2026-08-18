@@ -1,5 +1,6 @@
 import { SOURCE_YEAR } from '../config.js';
 import { openSubmitFlow } from '../submit/submit.js';
+import { openFixFlow, openDisputeFlow } from '../submit/fixFlow.js';
 
 const INDICATOR_TEXT = {
   no_girls_toilet: 'No girls’ toilet',
@@ -21,6 +22,10 @@ export function renderSheetHTML(school) {
       <p class="claim-value">${esc(INDICATOR_TEXT[school.indicator] ?? 'Unknown')}</p>
     </div>
     <button id="sheet-report" type="button">Report what you found</button>
+    <div class="sheet-secondary">
+      <button id="sheet-fix" type="button">Report a fix</button>
+      <button id="sheet-dispute" type="button">Dispute this</button>
+    </div>
   `;
 }
 
@@ -43,4 +48,8 @@ export function openSheet(feature) {
   el.hidden = false;
   el.querySelector('#sheet-report')
     .addEventListener('click', () => openSubmitFlow(school));
+  el.querySelector('#sheet-fix')
+    .addEventListener('click', () => openFixFlow(school));
+  el.querySelector('#sheet-dispute')
+    .addEventListener('click', () => openDisputeFlow(school));
 }

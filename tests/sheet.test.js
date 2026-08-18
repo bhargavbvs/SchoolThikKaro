@@ -25,6 +25,11 @@ describe('renderSheetHTML', () => {
     const evil = { ...school, name: '<img src=x onerror=alert(1)>' };
     expect(renderSheetHTML(evil)).not.toContain('<img');
   });
+  it('offers the fix and dispute flows, not just the report flow', () => {
+    const html = renderSheetHTML(school);
+    expect(html).toContain('id="sheet-fix"');
+    expect(html).toContain('id="sheet-dispute"');
+  });
 });
 
 describe('schoolFromFeature', () => {
