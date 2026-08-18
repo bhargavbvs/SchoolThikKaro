@@ -1,0 +1,138 @@
+// src/submit/camera.js
+import { normaliseImage, blurRegions, toJpegBlob } from './blur.js';
+import { loadDetector, detectFaces, blurGate } from './faces.js';
+import { getFix, computeTier, permissionHelpHTML, detectPlatform } from './gps.js';
+import { validateSubmission } from './submit.js';
+import { MAX_IMAGE_BYTES } from '../config.js';
+import { submitReport } from './api.js';
+
+export function mountCapture(slot, school, root) {
+  const state = {
+    canvas: null, blob: null, fix: null, tier: null,
+    detectorLoaded: false, facesFound: 0, blurApplied: false,
+  };
+
+  slot.innerHTML = `
+    <input id="cap" type="file" accept="image/*" capture="environment" hidden />
+    <button id="cap-btn" type="button">Take photo</button>
+    <div id="cap-preview"></div>
+    <div id="gps-slot"></div>
+    <details class="fallback">
+      <summary>I can\u2019t use the camera right now</summary>
+      <input id="gal" type="file" accept="image/*" hidden />
+      <button id="gal-btn" type="button">Upload from gallery (unverified)</button>
+      <p class="o-hint">Gallery photos are published but marked unverified and
+         are not counted in public totals.</p>
+    </details>`;
+
+  const preview = slot.querySelector('#cap-preview');
+  const gpsSlot = slot.querySelector('#gps-slot');
+  const sendBtn = root.querySelector('#sub-send');
+  const errBox = root.querySelector('#sub-errors');
+
+  async function acquireFix() {
+    try {
+      state.fix = await getFix();
+      gpsSlot.innerHTML = `<p class="ok">Location acquired (\u00b1${Math.round(state.fix.accuracyM)}m)</p>`;
+    } catch {
+      state.fix = null;
+      gpsSlot.innerHTML = `
+        <div class="gate gate-gps">
+          <h3>Location access is off</h3>
+          <p>We need your GPS to verify you are at this school. This is what
+             makes a report verifiable.</p>
+          <button id="gps-retry" type="button">Try Again</button>
+          <details><summary>How to enable</summary>
+            ${permissionHelpHTML(detectPlatform())}</details>
+        </div>`;
+      gpsSlot.querySelector('#gps-retry').addEventListener('click', acquireFix);
+    }
+    recompute();
+  }
+
+  async function handleFile(file, source) {
+    const bitmap = await createImageBitmap(file);
+    const { canvas } = normaliseImage(bitmap);
+    state.canvas = canvas;
+    state.blurApplied = false;
+
+    const detector = await loadDetector();
+    state.detectorLoaded = Boolean(detector);
+    const faces = await detectFaces(detector, canvas);
+    state.facesFound = faces.length;
+    if (faces.length) { blurRegions(canvas, faces); state.blurApplied = true; }
+
+    preview.innerHTML = '';
+    canvas.style.maxWidth = '100%';
+    preview.appendChild(canvas);
+    if (!state.detectorLoaded) {
+      preview.insertAdjacentHTML('beforeend',
+        `<p class="warn">Automatic face check unavailable. Drag over any people
+          in the photo to blur them before submitting.</p>`);
+      enableManualBrush(canvas, state, recompute);
+    }
+
+    state.source = source;
+    recompute();
+  }
+
+  function recompute() {
+    const gate = blurGate(state);
+    const finding = root.querySelector('input[name=finding]:checked')?.value ?? null;
+    const t = computeTier({
+      schoolLat: school.lat, schoolLng: school.lng,
+      fixLat: state.fix?.lat ?? null, fixLng: state.fix?.lng ?? null,
+      accuracyM: state.fix?.accuracyM ?? null, source: state.source ?? 'camera',
+    });
+    state.tier = t;
+    const { valid, errors } = validateSubmission({
+      finding, hasPhoto: Boolean(state.canvas), gate,
+    });
+    errBox.hidden = valid;
+    errBox.innerHTML = errors.map((e) => `<p>${e}</p>`).join('');
+    sendBtn.disabled = !valid;
+  }
+
+  root.addEventListener('change', (e) => {
+    if (e.target.name === 'finding' || e.target.name === 'severity') recompute();
+  });
+
+  slot.querySelector('#cap-btn').addEventListener('click', () => slot.querySelector('#cap').click());
+  slot.querySelector('#cap').addEventListener('change', (e) => handleFile(e.target.files[0], 'camera'));
+  slot.querySelector('#gal-btn').addEventListener('click', () => slot.querySelector('#gal').click());
+  slot.querySelector('#gal').addEventListener('change', (e) => handleFile(e.target.files[0], 'gallery'));
+
+  sendBtn.addEventListener('click', async () => {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Submitting\u2026';
+    // Encode at successively lower quality until the result fits the byte cap.
+    state.blob = null;
+    for (const q of [0.9, 0.8, 0.7, 0.6, 0.5]) {
+      const candidate = await toJpegBlob(state.canvas, q);
+      if (candidate.size <= MAX_IMAGE_BYTES) { state.blob = candidate; break; }
+      state.blob = candidate;
+    }
+    await submitReport({ school, state, root });
+    root.innerHTML = `<div class="done"><h2>Thank you</h2>
+      <p>Your report is queued for review. It appears on the map once approved.</p></div>`;
+  });
+
+  acquireFix();
+}
+
+/** Lets the user paint irreversible blur when automatic detection is unavailable. */
+function enableManualBrush(canvas, state, onChange) {
+  let drawing = false;
+  const paint = (ev) => {
+    const r = canvas.getBoundingClientRect();
+    const x = ((ev.clientX ?? ev.touches[0].clientX) - r.left) * (canvas.width / r.width);
+    const y = ((ev.clientY ?? ev.touches[0].clientY) - r.top) * (canvas.height / r.height);
+    const s = Math.round(canvas.width / 12);
+    blurRegions(canvas, [{ x: x - s / 2, y: y - s / 2, width: s, height: s }]);
+    state.blurApplied = true;
+    onChange();
+  };
+  canvas.addEventListener('pointerdown', (e) => { drawing = true; paint(e); });
+  canvas.addEventListener('pointermove', (e) => { if (drawing) paint(e); });
+  window.addEventListener('pointerup', () => { drawing = false; });
+}
