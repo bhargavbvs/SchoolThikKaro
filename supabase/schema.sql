@@ -30,12 +30,17 @@ create table if not exists reports (
   captured_at timestamptz,
   image_path text not null,
   blur_applied boolean not null default false,
+  faces_found integer not null default 0,
   review_status text not null default 'pending'
     check (review_status in ('pending','approved','rejected')),
   ip_hash text,
   created_at timestamptz not null default now()
 );
 create index if not exists reports_school_idx on reports (udise_code, review_status);
+-- Column added after the table already shipped once — CREATE TABLE IF NOT
+-- EXISTS above won't retrofit an existing table, so this makes the file
+-- safe to re-run against a database created before faces_found existed.
+alter table reports add column if not exists faces_found integer not null default 0;
 
 create table if not exists fixes (
   id uuid primary key default gen_random_uuid(),
