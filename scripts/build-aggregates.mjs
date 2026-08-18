@@ -17,4 +17,8 @@ console.log(`districts: ${tree.states.reduce((n, s) => n + s.districts.length, 0
 console.log(`blocks: ${nBlocks}  (without a rate: ${noRate})`);
 console.log(`flagged: ${tree.national.flagged.toLocaleString()}`);
 
-writeFileSync('.data-src/aggregates.json', JSON.stringify(tree));
+// Written to the tracked data/ directory (not .data-src/, which is
+// gitignored raw-input scratch space) so that npm run build works on a
+// fresh clone / CI / Vercel without depending on this machine's local
+// .data-src symlink. See scripts/prerender.mjs, which reads this same path.
+writeFileSync('data/aggregates.json', JSON.stringify(tree));

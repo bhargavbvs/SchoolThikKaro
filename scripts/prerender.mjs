@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import { renderIndexPage, renderStatePage, renderDistrictPage, renderBlockPage, SITE } from './lib/render.mjs';
 import { collectUrls, renderSitemap } from './lib/sitemap.mjs';
 
-const tree = JSON.parse(readFileSync('.data-src/aggregates.json', 'utf8'));
+const tree = JSON.parse(readFileSync('data/aggregates.json', 'utf8'));
 
 // This script runs AFTER `vite build` (see the package.json change below),
 // writing directly into dist/ — never into public/. See the "Why dist/, not
