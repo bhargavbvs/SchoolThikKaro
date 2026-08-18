@@ -1,0 +1,13 @@
+:root {
+  --bg:#0d0d0f; --panel:#17171a; --panel-2:#1f1f24;
+  --ink:#f4efe9; --body:#b9b2a8; --muted:#7c766d;
+  --line:rgba(244,239,233,0.12);
+  --admitted:#e0473e; --found:#f0932b; --fixed:#2a9d8f; --disputed:#7c766d;
+}
+* { box-sizing:border-box; }
+html,body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+  font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+#map { position:fixed; inset:0; }
+@import './map/style-map.css';
+@import './submit/style-submit.css';
+@import './admin/style-admin.css';

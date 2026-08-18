@@ -1,0 +1,8 @@
+{ "type":"FeatureCollection","features":[
+ {"type":"Feature","geometry":{"type":"Point","coordinates":[83.0418999999466,17.6903999997509]},
+  "properties":{"udise":"28133390196","name":"ST.PETERS HS ANKP","state":"ANDHRA PRADESH","district":"ANAKAPALLI","block":"ANAKAPALLI","indicator":"girls_toilet_nonfunctional"}},
+ {"type":"Feature","geometry":{"type":"Point","coordinates":[78.7512,25.2086]},
+  "properties":{"udise":"23070100101","name":"SAMPLE GHS TWO","state":"MADHYA PRADESH","district":"AGAR MALWA","block":"AGAR","indicator":"no_girls_toilet"}},
+ {"type":"Feature","geometry":{"type":"Point","coordinates":[76.2999,9.9816]},
+  "properties":{"udise":"32080200301","name":"SAMPLE GHS THREE","state":"KERALA","district":"ERNAKULAM","block":"KOCHI","indicator":"girls_toilet_nonfunctional"}}
+]}
