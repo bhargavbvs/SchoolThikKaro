@@ -22,7 +22,18 @@ const write = (urlPath, html) => {
   writeFileSync(file, html);
 };
 
-write('/', renderIndexPage(tree));
+// Vite's own `vite build` step already wrote the real, hashed asset tags
+// into dist/index.html before this script ran. The homepage is the one
+// generated page that still needs to boot the SPA (for the map below the
+// fold), so its script/style tags must reference the actual built files in
+// dist/assets/ — not the dev-time /src/main.js path — or the homepage ships
+// to production with a 404ing script and an unstyled map/topbar/sheet.
+const viteIndex = readFileSync('dist/index.html', 'utf8');
+const scriptTag = viteIndex.match(/<script[^>]*src="[^"]*"[^>]*><\/script>/)?.[0];
+const styleHref = viteIndex.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]*)"/)?.[1];
+if (!scriptTag) throw new Error('could not find Vite\'s built script tag in dist/index.html — check the build actually ran first');
+
+write('/', renderIndexPage(tree, { script: scriptTag, style: styleHref ?? '' }));
 let n = 1;
 for (const s of tree.states) {
   write(`/state/${s.slug}`, renderStatePage(s)); n++;

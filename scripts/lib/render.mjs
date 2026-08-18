@@ -18,7 +18,7 @@ const INDICATOR_TEXT = {
   girls_toilet_nonfunctional: 'Girls’ toilet does not function',
 };
 
-export function renderPage({ title, description, canonical, breadcrumb, headline, table, extra = '', spa = false }) {
+export function renderPage({ title, description, canonical, breadcrumb, headline, table, extra = '', spa = false, scriptTag = '', extraStyle = '' }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -29,6 +29,7 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
 <link rel="canonical" href="${esc(canonical)}" />
 <script>(function(){var t=localStorage.getItem('shaala.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;})();</script>
 <link rel="stylesheet" href="/browse.css" />
+${extraStyle ? `<link rel="stylesheet" href="${extraStyle}" />` : ''}
 </head>
 <body class="browse">
 <nav class="crumb">${breadcrumb}</nav>
@@ -40,7 +41,7 @@ ${extra}
      the school’s own record, not as our finding.</p>
   <p><a href="/#/methodology">How this works</a></p>
 </footer>
-${spa ? '<script type="module" src="/src/main.js"></script>' : ''}
+${spa ? scriptTag : ''}
 </body>
 </html>`;
 }
@@ -64,9 +65,14 @@ const statTable = (rows) => `
   <tbody>${rows}</tbody>
 </table>`;
 
-export function renderIndexPage(tree) {
+export function renderIndexPage(tree, assetTags = {
+  script: '<script type="module" src="/src/main.js"></script>',
+  style: '',
+}) {
   return renderPage({
     spa: true,
+    scriptTag: assetTags.script,
+    extraStyle: assetTags.style,
     title: `${fmtNum(tree.national.flagged)} Indian government schools flagged for girls’ toilets`,
     description: `${fmtNum(tree.national.flagged)} schools are recorded in ${SOURCE_YEAR} as having no girls’ toilet or one that does not function. Browse by state and district.`,
     canonical: `${SITE}/`,
