@@ -868,7 +868,9 @@ git commit -m "feat: add static page templates for browse hierarchy"
 
 **Interfaces:**
 - Consumes: `renderIndexPage`, `renderStatePage`, `renderDistrictPage`, `renderBlockPage` from `scripts/lib/render.mjs`; `.data-src/aggregates.json`.
-- Produces: `collectUrls(tree): string[]`, `renderSitemap(urls, site): string` from `scripts/lib/sitemap.mjs`; writes `public/index.html`, `public/state/**/index.html`, `public/sitemap.xml`, `public/robots.txt`.
+- Produces: `collectUrls(tree): string[]`, `renderSitemap(urls, site): string` from `scripts/lib/sitemap.mjs`; writes `dist/index.html`, `dist/state/**/index.html`, `dist/sitemap.xml`, `dist/robots.txt`.
+
+**Why `dist/`, not `public/`:** the repo's real SPA entry is the root `index.html` (loaded by Vite, not by anything under `public/`). Vite's own `vite build` step already emits its processed copy to `dist/index.html`. Writing the generated pages into `public/index.html` would create a second, different `index.html` that Vite's own build copies into `dist/` as a static passthrough file — colliding with the file Vite itself just generated, with the outcome depending on build step ordering. Writing directly into `dist/`, after `vite build` has already run, avoids the collision entirely.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -962,12 +964,19 @@ import { collectUrls, renderSitemap } from './lib/sitemap.mjs';
 
 const tree = JSON.parse(readFileSync('.data-src/aggregates.json', 'utf8'));
 
-// Clear previously generated pages so a removed region cannot linger as a
-// stale page that the sitemap no longer lists.
-rmSync('public/state', { recursive: true, force: true });
+// This script runs AFTER `vite build` (see the package.json change below),
+// writing directly into dist/ — never into public/. See the "Why dist/, not
+// public/" note above the Interfaces block for the collision this avoids.
+//
+// vite build empties dist/ by default, so this rmSync is only load-bearing
+// when re-running `npm run data:pages` alone (iterating on this script
+// without a full rebuild) — kept as a defensive guard either way, so a
+// region removed from the aggregate tree cannot linger as a stale page the
+// sitemap no longer lists.
+rmSync('dist/state', { recursive: true, force: true });
 
 const write = (urlPath, html) => {
-  const file = urlPath === '/' ? 'public/index.html' : `public${urlPath}/index.html`;
+  const file = urlPath === '/' ? 'dist/index.html' : `dist${urlPath}/index.html`;
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, html);
 };
@@ -987,8 +996,8 @@ for (const s of tree.states) {
 const urls = collectUrls(tree);
 if (urls.length !== n) throw new Error(`sitemap/page mismatch: ${urls.length} urls vs ${n} pages`);
 
-writeFileSync('public/sitemap.xml', renderSitemap(urls, SITE));
-writeFileSync('public/robots.txt', `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
+writeFileSync('dist/sitemap.xml', renderSitemap(urls, SITE));
+writeFileSync('dist/robots.txt', `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
 console.log(`wrote ${n.toLocaleString()} pages + sitemap.xml`);
 ```
 
@@ -997,7 +1006,7 @@ Add to `package.json` `scripts`:
 "data:pages": "node scripts/prerender.mjs"
 ```
 
-**Important:** `index.html` at the repo root is Vite's entry and is NOT the generated one. The generated `public/index.html` would collide with it. Resolve by having Vite build first and prerender write into `dist/` instead of `public/` — change the two paths in `prerender.mjs` from `public/` to `dist/` and chain the build:
+The code above already writes into `dist/`, after Vite's own build — chain it so `data:pages` always runs second:
 
 ```json
 "build": "npm run validate && vite build && npm run data:pages"
