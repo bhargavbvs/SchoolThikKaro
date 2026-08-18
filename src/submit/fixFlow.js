@@ -1,6 +1,13 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { normaliseImage, toJpegBlob } from './blur.js';
 import { renderFixHTML, renderDisputeHTML, buildFixPayload, buildDisputePayload } from './fix.js';
+import { iconEl } from './icons.js';
+
+const doneHTML = (message) => `<div class="done">
+  <span class="done-badge">${iconEl('checkCircle')}</span>
+  <h2>Thank you</h2>
+  <p>${message}</p>
+</div>`;
 
 export { buildFixPayload, buildDisputePayload };
 
@@ -37,7 +44,7 @@ async function insertRow(table, payload) {
 export function openFixFlow(school) {
   const root = document.getElementById('submit-root');
   root.hidden = false;
-  root.innerHTML = `<button id="flow-close" type="button" aria-label="Close">×</button>${renderFixHTML(school)}`;
+  root.innerHTML = `<button id="flow-close" type="button" aria-label="Close">${iconEl('x')}</button>${renderFixHTML(school)}`;
 
   let photoBlob = null;
   root.querySelector('#fix-photo').addEventListener('change', async (e) => {
@@ -54,7 +61,7 @@ export function openFixFlow(school) {
     let imagePath = null;
     if (photoBlob) imagePath = await uploadFixPhoto(school.udise, photoBlob);
     await insertRow('fixes', buildFixPayload(school, { note, imagePath }));
-    root.innerHTML = '<div class="done"><h2>Thank you</h2><p>Your fix report is queued for review.</p></div>';
+    root.innerHTML = doneHTML('Your fix report is queued for review.');
   });
 
   root.querySelector('#flow-close').addEventListener('click', () => {
@@ -65,14 +72,14 @@ export function openFixFlow(school) {
 export function openDisputeFlow(school) {
   const root = document.getElementById('submit-root');
   root.hidden = false;
-  root.innerHTML = `<button id="flow-close" type="button" aria-label="Close">×</button>${renderDisputeHTML(school)}`;
+  root.innerHTML = `<button id="flow-close" type="button" aria-label="Close">${iconEl('x')}</button>${renderDisputeHTML(school)}`;
 
   root.querySelector('#dis-send').addEventListener('click', async (e) => {
     e.target.disabled = true;
     const reason = root.querySelector('#dis-reason').value.trim();
     const contact = root.querySelector('#dis-contact').value.trim();
     await insertRow('disputes', buildDisputePayload(school, { reason, contact: contact || null }));
-    root.innerHTML = '<div class="done"><h2>Thank you</h2><p>Your dispute is queued for review.</p></div>';
+    root.innerHTML = doneHTML('Your dispute is queued for review.');
   });
 
   root.querySelector('#flow-close').addEventListener('click', () => {

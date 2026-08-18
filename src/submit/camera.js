@@ -5,6 +5,7 @@ import { getFix, computeTier, permissionHelpHTML, detectPlatform } from './gps.j
 import { validateSubmission } from './submit.js';
 import { MAX_IMAGE_BYTES } from '../config.js';
 import { submitReport } from './api.js';
+import { iconEl } from './icons.js';
 
 export function mountCapture(slot, school, root) {
   const state = {
@@ -14,11 +15,11 @@ export function mountCapture(slot, school, root) {
 
   slot.innerHTML = `
     <input id="cap" type="file" accept="image/*" capture="environment" hidden />
-    <button id="cap-btn" type="button">Take photo</button>
+    <button id="cap-btn" type="button">${iconEl('camera')}<span>Take photo</span></button>
     <div id="cap-preview"></div>
     <div id="gps-slot"></div>
     <details class="fallback">
-      <summary>I can\u2019t use the camera right now</summary>
+      <summary>I can\u2019t use the camera right now ${iconEl('chevronDown', 'chevron')}</summary>
       <input id="gal" type="file" accept="image/*" hidden />
       <button id="gal-btn" type="button">Upload from gallery (unverified)</button>
       <p class="o-hint">Gallery photos are published but marked unverified and
@@ -33,17 +34,21 @@ export function mountCapture(slot, school, root) {
   async function acquireFix() {
     try {
       state.fix = await getFix();
-      gpsSlot.innerHTML = `<p class="ok">Location acquired (\u00b1${Math.round(state.fix.accuracyM)}m)</p>`;
+      gpsSlot.innerHTML = `<p class="ok">${iconEl('checkCircle')}
+        Location acquired (\u00b1${Math.round(state.fix.accuracyM)}m)</p>`;
     } catch {
       state.fix = null;
       gpsSlot.innerHTML = `
         <div class="gate gate-gps">
+          <span class="gate-badge">${iconEl('pin')}</span>
           <h3>Location access is off</h3>
           <p>We need your GPS to verify you are at this school. This is what
              makes a report verifiable.</p>
-          <button id="gps-retry" type="button">Try Again</button>
-          <details><summary>How to enable</summary>
-            ${permissionHelpHTML(detectPlatform())}</details>
+          <button id="gps-retry" type="button">${iconEl('pin')}<span>Try Again</span></button>
+          <details class="fallback">
+            <summary>How to enable ${iconEl('chevronDown', 'chevron')}</summary>
+            ${permissionHelpHTML(detectPlatform())}
+          </details>
         </div>`;
       gpsSlot.querySelector('#gps-retry').addEventListener('click', acquireFix);
     }
@@ -67,8 +72,8 @@ export function mountCapture(slot, school, root) {
     preview.appendChild(canvas);
     if (!state.detectorLoaded) {
       preview.insertAdjacentHTML('beforeend',
-        `<p class="warn">Automatic face check unavailable. Drag over any people
-          in the photo to blur them before submitting.</p>`);
+        `<p class="warn">${iconEl('warning')} Automatic face check unavailable.
+          Drag over any people in the photo to blur them before submitting.</p>`);
       enableManualBrush(canvas, state, recompute);
     }
 
@@ -104,7 +109,8 @@ export function mountCapture(slot, school, root) {
 
   sendBtn.addEventListener('click', async () => {
     sendBtn.disabled = true;
-    sendBtn.textContent = 'Submitting\u2026';
+    sendBtn.classList.add('is-loading');
+    sendBtn.innerHTML = '<span class="btn-label">Submitting\u2026</span>';
     // Encode at successively lower quality until the result fits the byte cap.
     state.blob = null;
     for (const q of [0.9, 0.8, 0.7, 0.6, 0.5]) {
@@ -113,8 +119,11 @@ export function mountCapture(slot, school, root) {
       state.blob = candidate;
     }
     await submitReport({ school, state, root });
-    root.innerHTML = `<div class="done"><h2>Thank you</h2>
-      <p>Your report is queued for review. It appears on the map once approved.</p></div>`;
+    root.innerHTML = `<div class="done">
+      <span class="done-badge">${iconEl('checkCircle')}</span>
+      <h2>Thank you</h2>
+      <p>Your report is queued for review. It appears on the map once approved.</p>
+    </div>`;
   });
 
   acquireFix();
