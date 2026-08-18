@@ -146,6 +146,22 @@ Each page carries the attribution required by the parent spec: the source
 and year (`UDISE+ 2024-25`) accompany every claim, and no individual staff
 are named.
 
+## Discoverability
+
+**`sitemap.xml` is generated alongside the pages and is not optional.** At
+~6,160 URLs, search engines will not reliably discover the block pages by
+following links alone; without a sitemap most would never be indexed, which
+would defeat the reason for generating them. Written by `prerender.mjs` from
+the same tree it renders, so the two cannot drift apart. `robots.txt` points
+at it.
+
+**Block pages must carry content beyond their school table.** ~5,400 pages
+that differ only by 15 templated rows are the classic thin-content pattern
+and risk being deprioritized as a group. Each block page therefore states its
+rate against its district and state averages ("Mylliem: 3.6% — below the East
+Khasi Hills average of 25.9%"), which is genuinely useful to a reader and
+makes each page substantively distinct.
+
 ## Coexistence with the SPA
 
 **Browse pages do not boot the SPA at all.** No MapLibre, no MediaPipe, no
@@ -233,6 +249,10 @@ Real coverage on what can silently corrupt:
 
 - **Slug generation and collision detection** — a collision must fail the
   build, and the test asserts that it does.
+- **Sitemap completeness** — every generated page appears in `sitemap.xml`
+  exactly once, and the sitemap contains no URL without a corresponding
+  file. A sitemap that silently drifts from the generated pages is worse
+  than none.
 - **Aggregate rollup integrity** — block sums equal their district sum;
   district sums equal their state sum. A rollup that silently drops rows
   would produce plausible-looking but wrong rankings.
