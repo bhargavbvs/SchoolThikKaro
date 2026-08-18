@@ -19,6 +19,10 @@ const INDICATOR_TEXT = {
 };
 
 export function renderPage({ title, description, canonical, breadcrumb, headline, table, extra = '', spa = false, scriptTag = '', extraStyle = '' }) {
+  // scriptTag and extraStyle are pre-built HTML tag markup (sourced by
+  // prerender.mjs from Vite's own build output), not text content — unlike
+  // every other interpolated value below, they are deliberately NOT esc()'d.
+  // Escaping them would turn real <script>/<link> tags into inert text.
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -28,8 +32,8 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
 <meta name="description" content="${esc(description)}" />
 <link rel="canonical" href="${esc(canonical)}" />
 <script>(function(){var t=localStorage.getItem('shaala.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;})();</script>
-<link rel="stylesheet" href="/browse.css" />
-${extraStyle ? `<link rel="stylesheet" href="${extraStyle}" />` : ''}
+<link rel="stylesheet" href="/browse.css" />${extraStyle ? `
+<link rel="stylesheet" href="${extraStyle}" />` : ''}
 </head>
 <body class="browse">
 <nav class="crumb">${breadcrumb}</nav>

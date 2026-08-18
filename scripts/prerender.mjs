@@ -32,6 +32,13 @@ const viteIndex = readFileSync('dist/index.html', 'utf8');
 const scriptTag = viteIndex.match(/<script[^>]*src="[^"]*"[^>]*><\/script>/)?.[0];
 const styleHref = viteIndex.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]*)"/)?.[1];
 if (!scriptTag) throw new Error('could not find Vite\'s built script tag in dist/index.html — check the build actually ran first');
+// Not fatal — the homepage still functions without its bundled CSS (browse.css
+// covers the shared chrome) — but this must never fail silently: a future Vite
+// version reordering <link> attributes (href before rel) would otherwise slip
+// past unnoticed, exactly the class of bug this whole task exists to fix.
+if (!styleHref) {
+  console.warn('could not find Vite\'s built stylesheet link in dist/index.html — homepage will ship without its bundled CSS');
+}
 
 write('/', renderIndexPage(tree, { script: scriptTag, style: styleHref ?? '' }));
 let n = 1;
