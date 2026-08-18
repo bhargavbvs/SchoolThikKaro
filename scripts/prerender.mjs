@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { renderIndexPage, renderStatePage, renderDistrictPage, renderBlockPage, SITE } from './lib/render.mjs';
 import { collectUrls, renderSitemap } from './lib/sitemap.mjs';
+import { extractAssetTags } from './lib/assets.mjs';
 
 const tree = JSON.parse(readFileSync('data/aggregates.json', 'utf8'));
 
@@ -29,9 +30,9 @@ const write = (urlPath, html) => {
 // dist/assets/ — not the dev-time /src/main.js path — or the homepage ships
 // to production with a 404ing script and an unstyled map/topbar/sheet.
 const viteIndex = readFileSync('dist/index.html', 'utf8');
-const scriptTag = viteIndex.match(/<script[^>]*src="[^"]*"[^>]*><\/script>/)?.[0];
-const styleHref = viteIndex.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]*)"/)?.[1];
-if (!scriptTag) throw new Error('could not find Vite\'s built script tag in dist/index.html — check the build actually ran first');
+// extractAssetTags throws its own clear error if the script tag is missing
+// (e.g. the build didn't actually run first) — see scripts/lib/assets.mjs.
+const { script: scriptTag, style: styleHref } = extractAssetTags(viteIndex);
 // Not fatal — the homepage still functions without its bundled CSS (browse.css
 // covers the shared chrome) — but this must never fail silently: a future Vite
 // version reordering <link> attributes (href before rel) would otherwise slip

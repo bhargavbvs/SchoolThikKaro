@@ -20,6 +20,12 @@
 body.browse { margin:0; background:var(--bg); color:var(--ink);
   font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   max-width:900px; margin-inline:auto; padding:16px; }
+/* The index page (only) also embeds the SPA's mount points below the fold
+   for the map, so it also boots src/map/style-map.css, whose #topbar is
+   position:fixed at the top of the viewport (~56px tall). Without this,
+   the breadcrumb and h1 render underneath it. Every other generated page
+   never loads the SPA and doesn't carry this class. */
+body.browse.has-spa { padding-top:72px; }
 .crumb { font-size:13px; color:var(--muted); margin-bottom:12px; }
 .crumb a { color:var(--body); }
 .head h1 { margin:0 0 4px; font-size:28px; }
@@ -38,4 +44,18 @@ table.stats a:hover { text-decoration:underline; }
   font-size:13px; color:var(--muted); }
 .map-section { margin-top:32px; }
 .map-section #map { position:relative; height:60vh; border-radius:10px; overflow:hidden; }
+/* src/main.js's /admin route unhides #admin-root but has no reason to know
+   about (or reach into) this page's browse-specific markup — it only
+   hides #map. Left alone, the breadcrumb/h1/32-row national table/map
+   section header push the actual admin console ~1,600px down an otherwise
+   empty page. CSS-only and robust to future markup changes: whenever
+   #admin-root is visible, hide the browse chrome around it so the console
+   renders at the top of the page. */
+body:has(#admin-root:not([hidden])) .crumb,
+body:has(#admin-root:not([hidden])) .head,
+body:has(#admin-root:not([hidden])) table.stats,
+body:has(#admin-root:not([hidden])) .map-section > h2,
+body:has(#admin-root:not([hidden])) .map-section > #map {
+  display:none;
+}
 @media (max-width:600px) { .head h1 { font-size:22px; } table.stats th, table.stats td { padding:8px 4px; } }

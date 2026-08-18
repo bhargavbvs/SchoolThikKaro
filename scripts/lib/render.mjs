@@ -18,7 +18,7 @@ const INDICATOR_TEXT = {
   girls_toilet_nonfunctional: 'Girls’ toilet does not function',
 };
 
-export function renderPage({ title, description, canonical, breadcrumb, headline, table, extra = '', spa = false, scriptTag = '', extraStyle = '' }) {
+export function renderPage({ title, description, canonical, breadcrumb, headline, table, extra = '', spa = false, scriptTag = '', extraStyle = '', bodyClass = 'browse' }) {
   // scriptTag and extraStyle are pre-built HTML tag markup (sourced by
   // prerender.mjs from Vite's own build output), not text content — unlike
   // every other interpolated value below, they are deliberately NOT esc()'d.
@@ -31,11 +31,14 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}" />
 <link rel="canonical" href="${esc(canonical)}" />
+<meta property="og:title" content="${esc(title)}" />
+<meta property="og:description" content="${esc(description)}" />
+<meta property="og:url" content="${esc(canonical)}" />
 <script>(function(){var t=localStorage.getItem('shaala.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;})();</script>
 <link rel="stylesheet" href="/browse.css" />${extraStyle ? `
 <link rel="stylesheet" href="${extraStyle}" />` : ''}
 </head>
-<body class="browse">
+<body class="${esc(bodyClass)}">
 <nav class="crumb">${breadcrumb}</nav>
 <header class="head">${headline}</header>
 ${table}
@@ -69,12 +72,28 @@ const statTable = (rows) => `
   <tbody>${rows}</tbody>
 </table>`;
 
-export function renderIndexPage(tree, assetTags = {
-  script: '<script type="module" src="/src/main.js"></script>',
-  style: '',
-}) {
+// assetTags is deliberately required, with no default: a default here once
+// meant "dev-time /src/main.js path", which is a dead 404 in a prerendered
+// production page — a real regression that shipped once already. Callers
+// (prerender.mjs) must pass the real hashed tags Vite's own build produced;
+// see scripts/lib/assets.mjs's extractAssetTags.
+export function renderIndexPage(tree, assetTags) {
+  if (!assetTags?.script) {
+    throw new Error(
+      'renderIndexPage: assetTags.script is required — pass the real built <script> tag ' +
+        '(see extractAssetTags in scripts/lib/assets.mjs); there is no dev-time fallback',
+    );
+  }
   return renderPage({
     spa: true,
+    // The generated homepage embeds the SPA's own mount points below the
+    // fold (#map, #topbar, etc. — see `extra` below) so a real browser
+    // visiting `/` boots the fixed, position:fixed topbar from
+    // src/map/style-map.css over the top of this content. `has-spa` gives
+    // browse.css a hook to push the breadcrumb/h1 down below that fixed
+    // band — every other generated page never loads the SPA and doesn't
+    // need it.
+    bodyClass: 'browse has-spa',
     scriptTag: assetTags.script,
     extraStyle: assetTags.style,
     title: `${fmtNum(tree.national.flagged)} Indian government schools flagged for girls’ toilets`,
@@ -127,9 +146,15 @@ export function renderBlockPage(state, district, block) {
     : ` — ${block.rate > district.rate ? 'above' : 'below'} the ${esc(district.name)}
         average of ${fmtRate(district.rate)}, and the ${esc(state.name)} average of ${fmtRate(state.rate)}`;
 
+  // No per-school route exists yet (#/school/<udise> is real future work,
+  // not built here — see "Deferred, explicitly" in the design spec), so
+  // each school row links to the one already-working place a citizen can
+  // see it on the map: the interactive map for its state. A real
+  // improvement over a dead end without inventing new SPA routing.
+  const stateHref = `/#/state/${esc(state.slug)}`;
   const rows = block.schools.map((s) => `
     <tr>
-      <td>${esc(s.name)}</td>
+      <td><a href="${stateHref}">${esc(s.name)}</a></td>
       <td class="udise">${esc(s.udise)}</td>
       <td>${esc(INDICATOR_TEXT[s.indicator] ?? 'Unknown')}</td>
     </tr>`).join('');

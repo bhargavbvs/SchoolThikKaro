@@ -295,6 +295,12 @@ silently rejected as if the citizen were lying about where they were.
   baseline UDISE numbers are useful without it.
 - **Per-school pages.** 78,744 files to display one row each. Blocks list
   their schools inline instead.
+- **Per-school deep links.** There is no `#/school/<udise>` route yet, so a
+  school row on a block page cannot fly the map to that exact pin. Phase 1
+  ships an interim link from each school row to its state's map instead
+  (`/#/state/<slug>`) — a real improvement over a dead end, without
+  building new SPA routing. Full per-school deep linking (a route plus a
+  map `flyTo` keyed by UDISE) is deferred to Phase 3.
 - **Schools genuinely absent from UDISE.** Free-form school entry is not
   built; an unlisted school cannot be reported. Accepted trade-off — every
   report stays tied to a verifiable government identifier.
