@@ -232,8 +232,61 @@ the submission flow or database.
 validation, the two optional form fields, and client-side hydration of
 reports onto block pages.
 
-The dependency runs one way: Phase 2's hydration needs Phase 1's block pages
-to hydrate onto. Phase 1 has no dependency on Phase 2.
+**Phase 3 — any-school lookup.** Per-district all-schools index and the
+"report a school not on this list" path (detailed below).
+
+Dependencies run one way: Phase 2's hydration and Phase 3's lookup entry
+point both need Phase 1's pages to attach to. Phase 1 depends on neither, and
+Phases 2 and 3 are independent of each other.
+
+## Phase 3 — reporting a school that is not on the flagged list
+
+The original map design promised "flagged pins **plus lookup for any
+school**", so a citizen could document a school the government has *not*
+admitted is failing. That is the under-reporting half of the argument and it
+was never built: search currently covers only the 78,744 flagged schools.
+
+### Why lookup, not free-form entry
+
+Every report stays anchored to a real UDISE code. "This specific school, which
+the government records as compliant, has no working toilet — here is a
+photo taken 40m from its recorded location" is checkable and damaging.
+"There is a bad school near me" is noise, and a free-text school field
+invites duplicates, typos, and fabricated entries sitting alongside
+government-sourced data.
+
+### District-scoped index
+
+A full all-schools index measures **99MB raw / ~35MB gzipped** — far too heavy
+to send to a phone. Scoped per district it is **~2,000 schools, ~141KB**,
+which needs no database and fits the static architecture unchanged.
+
+`build-district-index.mjs` reads the 1.45M-row coordinate CSV and emits
+`public/data/all/<state>/<district>.json` — `udise`, `name`, `block`, `lat`,
+`lng`, `management` per school. 725 files.
+
+District pages gain: *"Don't see your school? Show all 2,004 in this
+district"* — loads that one file, searchable client-side, and reporting
+against a picked school follows the existing flow. Such reports create the
+`citizen-found` pin state already defined in the parent spec.
+
+### Two risks, both real
+
+**Deploy size.** ~99MB of additional static files. A previous deploy already
+failed on a Vercel file-size limit, so this must be measured against actual
+limits before committing to it, not assumed. Mitigation if it does not fit:
+restrict the index to government schools only (~1.01M rows, ~70MB), which
+matches the campaign's scope anyway and costs nothing the project needs.
+
+**Coordinate quality breaks the verified tier for some schools.** Roughly 3.2%
+of schools in the 2021 coordinate dump sit on shared "centroid dump"
+coordinates — up to 552 schools stacked on one point — and 76,199 have three
+or fewer decimal places. For those, the 200m GPS proximity check will reject a
+photo taken *at the school*, because the school's recorded location is wrong.
+Flagged schools mostly avoid this, but an arbitrary school picked from the
+full index may not. Such a report must fall back to `unverified` with an
+explicit reason ("this school's recorded location is imprecise"), never be
+silently rejected as if the citizen were lying about where they were.
 
 ## Deferred, explicitly
 
@@ -242,6 +295,9 @@ to hydrate onto. Phase 1 has no dependency on Phase 2.
   baseline UDISE numbers are useful without it.
 - **Per-school pages.** 78,744 files to display one row each. Blocks list
   their schools inline instead.
+- **Schools genuinely absent from UDISE.** Free-form school entry is not
+  built; an unlisted school cannot be reported. Accepted trade-off — every
+  report stays tied to a verifiable government identifier.
 
 ## Testing
 
