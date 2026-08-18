@@ -10,6 +10,7 @@
     "data:join": "node scripts/join-coords.mjs",
     "data:build": "node scripts/build-geo.mjs",
     "data:totals": "node scripts/crawl-totals.mjs",
+    "data:agg": "node scripts/build-aggregates.mjs",
     "validate": "node scripts/validate.mjs"
   },
   "dependencies": {
