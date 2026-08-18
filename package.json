@@ -9,6 +9,7 @@
     "test": "vitest run",
     "data:join": "node scripts/join-coords.mjs",
     "data:build": "node scripts/build-geo.mjs",
+    "data:totals": "node scripts/crawl-totals.mjs",
     "validate": "node scripts/validate.mjs"
   },
   "dependencies": {
