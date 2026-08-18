@@ -1,0 +1,16 @@
+#submit-root { position:fixed; inset:0; z-index:20; overflow:auto;
+  background:var(--bg); padding:16px; }
+.sub-head { display:flex; justify-content:space-between; align-items:center; }
+.sub-school { padding:12px; background:var(--panel-2); border-radius:8px; margin:12px 0; }
+.s-meta, .s-claim { font-size:13px; color:var(--body); margin:4px 0 0; }
+.opt { display:block; padding:12px; margin:6px 0; border:1px solid var(--line);
+  border-radius:8px; cursor:pointer; }
+.opt:has(input:checked) { border-color:var(--found); background:rgba(240,147,43,0.08); }
+.o-hint { display:block; font-size:13px; color:var(--muted); }
+.guidance { color:var(--found); font-size:14px; }
+.gate { border:2px dashed var(--found); border-radius:10px; padding:16px; text-align:center; }
+.errors { color:var(--admitted); margin:10px 0; }
+.anon { font-size:12px; color:var(--muted); text-align:center; }
+#sub-send { width:100%; padding:14px; border-radius:10px; border:0;
+  background:var(--admitted); color:#fff; font-weight:600; }
+#sub-send:disabled { opacity:.45; }
