@@ -1,0 +1,10 @@
+#admin-root { padding:20px; max-width:900px; margin:0 auto; }
+.card { display:flex; gap:14px; padding:12px; margin:10px 0;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+.card img { width:140px; height:140px; object-fit:cover; border-radius:6px; }
+.b { display:inline-block; padding:2px 8px; border-radius:99px; font-size:12px;
+  background:var(--panel-2); }
+.b-ok { background:rgba(42,157,143,.2); color:#2a9d8f; }
+.b-warn { background:rgba(240,147,43,.2); color:#f0932b; }
+.b-danger { background:rgba(224,71,62,.25); color:#e0473e; }
+.actions button { margin-right:8px; padding:8px 14px; border-radius:8px; border:0; }
