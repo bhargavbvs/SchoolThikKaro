@@ -14,7 +14,7 @@
 // recovers slowly, so a server that does start struggling is left alone.
 
 import { readFileSync, appendFileSync, existsSync, mkdirSync } from 'node:fs';
-import { parseSchoolResponse, stripPersonal } from './lib/school-detail.mjs';
+import { parseSchoolResponse } from './lib/school-detail.mjs';
 
 const BASE = 'https://kys.udiseplus.gov.in/web-app/api';
 const YEAR_ID = 11;
@@ -94,11 +94,18 @@ async function worker() {
     const facility = parseSchoolResponse(f);
     const teachers = parseSchoolResponse(t);
     const card = parseSchoolResponse(r);
-    // stripPersonal runs HERE, at ingestion, not at render: the profile
-    // names an individual head teacher, and the spec forbids naming staff
-    // anywhere. Dropping it before it touches disk means no later code
-    // path can leak what we never stored.
-    const profile = stripPersonal(parseSchoolResponse(p));
+    // Stored verbatim, personal fields included. UDISE+ publishes the head
+    // teacher's name and the school's contact details openly, and holding
+    // them is useful — verifying a report, following one up. What the spec
+    // forbids is NAMING STAFF ON THE SITE, which is a publishing rule, not
+    // a storage rule.
+    //
+    // The guarantee therefore moves to the publishing boundary:
+    // stripPersonal is applied wherever this data becomes a public artifact
+    // (see scripts/lib/school-detail.mjs), and tests/no-personal-data.test.js
+    // fails the build if a personal field ever reaches data/ or dist/.
+    // This file never leaves the machine — .data-src/ is gitignored.
+    const profile = parseSchoolResponse(p);
     if (!facility && !teachers && !card) { failed++; continue; }
     appendFileSync(OUT, JSON.stringify({ udise, facility, teachers, card, profile }) + '\n');
     ok++;

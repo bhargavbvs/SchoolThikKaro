@@ -105,17 +105,21 @@ export function parseSchoolResponse(json) {
 
 /** Fields the UDISE+ profile returns that name or contact a person.
  *
- *  headMasterName and respName are individual government employees. The
- *  spec forbids naming staff anywhere on this site, and the safest form of
- *  that rule is never to hold the data: this runs at ingestion, so the
- *  names are dropped before anything touches disk rather than filtered at
- *  render time by code someone might later forget to call.
+ *  headMasterName and respName are individual government employees. UDISE+
+ *  publishes them openly and the raw crawl keeps them — they are useful for
+ *  verifying and following up a report — but the spec forbids naming staff
+ *  ON THE SITE, so this runs at the publishing boundary: anything becoming
+ *  a public artifact under data/ or dist/ passes through here first.
  *
  *  The contact fields go with them. A school inbox and phone number are
  *  arguably institutional, but on a site that invites the public to act on
  *  what it publishes, printing a direct line to one named person turns
  *  accountability into harassment. Anyone with a legitimate need can get
- *  them from UDISE+ itself. */
+ *  them from UDISE+ itself.
+ *
+ *  tests/no-personal-data.test.js is the backstop: it fails if any of these
+ *  ever appears in a published file, so forgetting to call this is caught
+ *  by the build rather than by a reader. */
 export const PERSONAL_FIELDS = [
   'headMasterName', 'respName', 'email', 'schPhone', 'mobileNo', 'contactNo',
 ];
