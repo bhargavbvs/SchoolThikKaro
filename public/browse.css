@@ -186,12 +186,34 @@ table.stats td.rate .rate-val.is-low { color:var(--muted); }
 /* The map answers "where" and the table answers "how many"; they are laid
    out together because either alone invites a wrong reading. Below 900px
    they stack, map first. */
-.atlas { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,520px);
-  gap:30px; align-items:start; margin-top:44px; padding-top:28px;
+/* The one section allowed out of the 1060px text column. Prose gets no
+   better past a comfortable measure, but a map does — boxed into half a
+   text column India was the smallest thing on a page that is mostly about
+   India. No transform is used to centre it: a transformed ancestor would
+   change the containing block for the sticky header inside the table. */
+.atlas { --atlas-w:min(1320px, calc(100vw - 60px));
+  width:var(--atlas-w); margin-left:calc(50% - var(--atlas-w) / 2);
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,420px);
+  gap:34px; align-items:start; margin-top:44px; padding-top:28px;
   border-top:1.5px solid var(--line-strong); }
 .atlas-table { min-width:0; }
+.atlas-table table.stats td { padding:11px 12px; }
+.atlas-table table.stats thead th { padding:11px 12px; }
+.atlas-table table.stats td.name a { font-size:13px; }
+.atlas-table table.stats td.num { font-size:13px; }
+.atlas-table table.stats td.rate { width:132px; }
+.atlas-table table.stats td.rate .rate-wrap { gap:10px; }
+.atlas-table table.stats td.rate .rate-val { font-size:13px; }
+.atlas-table #filter { font-size:13px; }
 .atlas-map { margin:0; min-width:0; }
-.atlas-map svg.india { width:100%; height:auto; display:block; }
+/* Sized by HEIGHT, not width. The outline is a 10:11 portrait, so filling
+   the widened column would make it ~950px tall and tower over the list
+   beside it. Driving from height keeps the two columns roughly level and
+   still leaves the map far larger than the half-text-column it was.
+   width:auto lets the intrinsic aspect ratio from the viewBox pick the
+   width, so it is never stretched. */
+.atlas-map svg.india { height:min(74vh, 900px); width:auto; max-width:100%;
+  display:block; margin-inline:auto; }
 
 /* Five shades, cut at multiples of the national rate (see BIN_MULTIPLES in
    scripts/lib/choropleth.mjs). Absolute, not ranked: b3 means the same
@@ -255,7 +277,8 @@ svg.india a:focus-visible { outline:none; }
 
 @media (max-width:900px) {
   .atlas { grid-template-columns:minmax(0,1fr); gap:34px; }
-  .atlas-map svg.india { max-height:66vh; }
+  /* Stacked, width is the scarce dimension again, so hand it back. */
+  .atlas-map svg.india { height:auto; width:100%; max-height:66vh; }
 }
 
 @media (max-width:640px) {
