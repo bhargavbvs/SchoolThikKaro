@@ -8,6 +8,20 @@ import { renderChoropleth, renderLegend, stateKey } from './choropleth.mjs';
 
 export const SITE = 'https://shaala-flax.vercel.app';
 
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+
+// The button ships hidden and is revealed here, so a reader with no
+// JavaScript is never shown a control that cannot do anything. The choice
+// is stored under the same key the SPA uses, so switching theme on a
+// browse page carries into the reporting flow and back.
+const THEME_SCRIPT = `<script>
+(function(){var b=document.getElementById('theme-toggle');if(!b)return;b.hidden=false;
+b.addEventListener('click',function(){var d=document.documentElement;
+var next=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=next;
+try{localStorage.setItem('shaala.theme',next);}catch(e){}});})();
+</script>`;
+
 export { esc } from './render-escape.mjs';
 
 export const fmtRate = (r) => (r === null || r === undefined ? '—' : `${r.toFixed(1)}%`);
@@ -44,8 +58,16 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
 <body class="${esc(bodyClass)}">
 <header class="masthead">
   <a class="wordmark" href="/">SchoolThikKaro</a>
-  <span class="tag">${esc(SOURCE_YEAR)} · Government’s own record</span>
+  <div class="mast-right">
+    <span class="tag">${esc(SOURCE_YEAR)} · Government’s own record</span>
+    <button class="theme-toggle" type="button" id="theme-toggle" hidden
+            aria-label="Switch between light and dark">
+      <span class="t-dark">${MOON}Dark</span>
+      <span class="t-light">${SUN}Light</span>
+    </button>
+  </div>
 </header>
+${THEME_SCRIPT}
 ${breadcrumb ? `<nav class="crumb">${breadcrumb}</nav>` : ''}
 <header class="head">${headline}</header>
 ${table}

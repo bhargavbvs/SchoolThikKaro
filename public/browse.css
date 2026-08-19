@@ -22,13 +22,15 @@
 }
 
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg:#0e0f10; --panel:#161719; --ink:#f4f2ec; --body:#b5b2a9;
-    --muted:#807d76; --line:#26282b; --line-strong:#f4f2ec; --rule:#2c2e31;
-    --accent:#f5c542; --accent-soft:#3a3222;
-  }
-}
+/* Light is the default, whatever the device is set to.
+ *
+ * This deliberately ignores prefers-color-scheme. The page is a printed
+ * public record — paper stock, a serif headline, ruled tables — and a
+ * visitor arriving from a phone in night mode was getting a different
+ * document from the one everyone else sees, with no way to say otherwise.
+ * Dark is still here, and now it is a choice: the toggle in the masthead
+ * writes it to localStorage, and the inline script in <head> applies it
+ * before first paint so there is no flash of the wrong theme. */
 :root[data-theme="dark"] {
   --bg:#0e0f10; --panel:#161719; --ink:#f4f2ec; --body:#b5b2a9;
   --muted:#807d76; --line:#26282b; --line-strong:#f4f2ec; --rule:#2c2e31;
@@ -335,3 +337,18 @@ table.stats td.udise, .crumb, .label, .masthead .tag {
    the numbers rather than only in prose further up the page. */
 .table-note { margin:12px 0 0; max-width:70ch;
   font:400 12px/1.6 var(--sans); color:var(--muted); }
+
+/* ---------- theme toggle ---------- */
+.theme-toggle { display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; cursor:pointer; color:var(--muted);
+  background:transparent; border:1px solid var(--line);
+  font:600 10px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; }
+.theme-toggle:hover { color:var(--ink); border-color:var(--line-strong); background:var(--accent); }
+.theme-toggle svg { width:13px; height:13px; }
+/* One button, two labels: the stylesheet shows whichever matches the theme
+   in force, so the script only has to flip an attribute on <html>. */
+.theme-toggle .t-dark { display:inline-flex; align-items:center; gap:6px; }
+.theme-toggle .t-light { display:none; align-items:center; gap:6px; }
+:root[data-theme="dark"] .theme-toggle .t-dark { display:none; }
+:root[data-theme="dark"] .theme-toggle .t-light { display:inline-flex; }
+.masthead .mast-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }

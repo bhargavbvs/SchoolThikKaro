@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { esc, fmtRate, renderBlockPage, renderStatePage, renderIndexPage }
   from '../scripts/lib/render.mjs';
@@ -276,5 +277,39 @@ describe('percentages', () => {
   it('states how common a problem is as a count of schools', () => {
     const html = renderStatePage(state, 5.63);
     expect(html).toMatch(/1 in \d/);
+  });
+});
+
+describe('theme', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('defaults to light regardless of the device setting', () => {
+    // The page is a printed public record. A visitor arriving from a phone
+    // in night mode was silently getting a different document from
+    // everyone else, with no way to say otherwise.
+    const css = readFileSync('public/browse.css', 'utf8');
+    // The words may still appear in a comment explaining the decision;
+    // what must not exist is a media query acting on them.
+    expect(css).not.toMatch(/@media[^{]*prefers-color-scheme/);
+    expect(css).toContain(':root[data-theme="dark"]');
+  });
+
+  it('offers a toggle, so dark is a choice rather than an accident', () => {
+    expect(html).toContain('id="theme-toggle"');
+  });
+
+  it('ships the toggle hidden, so a reader without JavaScript never sees a dead control', () => {
+    expect(html).toMatch(/id="theme-toggle" hidden/);
+    expect(html).toContain("b.hidden=false");
+  });
+
+  it('applies a stored choice before first paint, so there is no flash of the wrong theme', () => {
+    const head = html.slice(0, html.indexOf('</head>'));
+    expect(head).toContain("localStorage.getItem('shaala.theme')");
+  });
+
+  it('stores the choice under the key the reporting flow already uses', () => {
+    // Switching theme on a browse page must carry into /app/ and back.
+    expect(html).toContain("localStorage.setItem('shaala.theme'");
   });
 });
