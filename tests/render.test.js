@@ -1,16 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { esc, fmtRate, renderBlockPage, renderStatePage, renderIndexPage }
   from '../scripts/lib/render.mjs';
-import { extractAssetTags } from '../scripts/lib/assets.mjs';
 
-// A real-shaped hashed asset-tag pair, of the kind Vite's own build writes
-// into dist/index.html. Used explicitly instead of relying on any default —
-// renderIndexPage has no default any more (see scripts/lib/render.mjs):
-// the old default was itself the dead dev-time path that shipped as a real
-// production bug once already.
-const assetTags = {
-  script: '<script type="module" crossorigin src="/assets/index-DEADBEEF.js"></script>',
-  style: '/assets/index-DEADBEEF.css',
+// State outlines, shaped like data/india-states.json but with two toy
+// shapes — renderIndexPage needs geometry, not the real 104KB of it.
+const geo = {
+  viewBox: '0 0 100 100',
+  shapes: [
+    { key: 'MEGHALAYA', label: 'Meghalaya', d: 'M0 0L10 0L10 10Z' },
+    { key: 'KERALA', label: 'Kerala', d: 'M20 20L30 20L30 30Z' },
+  ],
 };
 
 const block = { slug: 'mylliem', name: 'MYLLIEM', flagged: 7, total: 196, rate: 3.571,
@@ -76,7 +75,7 @@ describe('renderBlockPage', () => {
     // #/school/<udise> deep linking is real future work (Phase 3, per the
     // spec's "Deferred, explicitly" section) — the interim link goes to
     // the existing, working map route for the school's state.
-    expect(html).toMatch(/<a href="\/#\/state\/meghalaya">GOVT LP MYLLIEM<\/a>/);
+    expect(html).toMatch(/<a href="\/app\/#\/state\/meghalaya">GOVT LP MYLLIEM<\/a>/);
   });
 });
 
@@ -134,7 +133,7 @@ describe('renderStatePage', () => {
 });
 
 describe('renderIndexPage', () => {
-  const html = renderIndexPage(tree, assetTags);
+  const html = renderIndexPage(tree, geo);
   it('shows the national headline figure', () => {
     expect(html).toContain('78,744');
   });
@@ -142,43 +141,28 @@ describe('renderIndexPage', () => {
     expect(html).toContain('Meghalaya');
     expect(html).not.toContain('>MEGHALAYA<');
   });
-  it('DOES load the SPA bundle, for the map section below the fold — the real ' +
-    'built tag it was given, not a literal "main.js" (there is no dev-time default any more)', () => {
-    expect(html).toContain(assetTags.script);
+  it('ships NO SPA bundle — the whole point of the static map', () => {
+    // The router matches an empty hash, so merely including the bundle
+    // booted MapLibre (~960KB) for every visitor who wanted to read a
+    // table. If a module script ever reappears here, that cost is back.
+    expect(html).not.toMatch(/<script[^>]+type="module"/);
+    expect(html).not.toMatch(/\/assets\/index-[^"]*\.js/);
   });
-  it('carries a body class browse.css can use to clear the SPA\'s fixed topbar', () => {
-    expect(html).toContain('class="browse has-spa"');
+  it('draws the state map inline, with no map library and no tile requests', () => {
+    expect(html).toContain('class="india"');
+    expect(html).toContain('class="legend"');
+    expect(html).not.toMatch(/maplibre|basemaps\.cartocdn|id="map"/);
   });
-  it('requires assetTags.script — there is no dev-time fallback', () => {
-    expect(() => renderIndexPage(tree)).toThrow(/assetTags\.script is required/);
-    expect(() => renderIndexPage(tree, {})).toThrow(/assetTags\.script is required/);
+  it('forwards legacy SPA links so QR codes already in the field keep working', () => {
+    // src/submit/qr.js prints /#/report/<udise> onto physical school walls.
+    expect(html).toContain("location.replace('/app/'+h)");
   });
-});
-
-describe('extractAssetTags', () => {
-  it('finds a real hashed <script type="module" crossorigin src="..."> tag', () => {
-    const html = `<html><head>
-      <link rel="stylesheet" href="/assets/index-DQVWydt9.css" />
-      </head><body>
-      <script type="module" crossorigin src="/assets/index-CjijMEpu.js"></script>
-      </body></html>`;
-    const tags = extractAssetTags(html);
-    expect(tags.script).toBe('<script type="module" crossorigin src="/assets/index-CjijMEpu.js"></script>');
+  it('links each state on the map to its own browse page', () => {
+    expect(html).toContain('href="/state/meghalaya"');
   });
-
-  it('throws a clear error when no script tag exists in the input HTML', () => {
-    expect(() => extractAssetTags('<html><head></head><body>no script here</body></html>'))
-      .toThrow(/no built <script/);
-  });
-
-  it('still finds the stylesheet href when href appears before rel="stylesheet" ' +
-    '(the exact attribute-order case the earlier hardening fix was for)', () => {
-    const html = `<html><head>
-      <link crossorigin href="/assets/index-DQVWydt9.css" rel="stylesheet" />
-      </head><body>
-      <script type="module" crossorigin src="/assets/index-CjijMEpu.js"></script>
-      </body></html>`;
-    const tags = extractAssetTags(html);
-    expect(tags.style).toBe('/assets/index-DQVWydt9.css');
+  it('requires the state geometry — a homepage with no map is a build error, not a style bug', () => {
+    expect(() => renderIndexPage(tree)).toThrow(/geo\.shapes is required/);
+    expect(() => renderIndexPage(tree, { shapes: [] })).toThrow(/geo\.shapes is required/);
   });
 });
+

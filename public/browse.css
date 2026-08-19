@@ -43,14 +43,6 @@ body.browse {
   font:16px/1.6 var(--sans);
   -webkit-font-smoothing:antialiased;
 }
-/* Marks the one page that also boots the SPA (for the map below the fold).
-   The SPA styles #topbar position:fixed — correct for the full-screen map
-   app, wrong here, where it floated over the masthead as a second,
-   differently-styled wordmark. Un-fix it so it sits with the map it
-   belongs to. No other page loads the SPA at all. */
-body.browse.has-spa #topbar { position:static; background:transparent;
-  backdrop-filter:none; border-bottom:0; padding:0 0 14px; }
-
 /* ---------- masthead ---------- */
 .masthead { display:flex; align-items:baseline; justify-content:space-between;
   gap:16px; padding-bottom:14px; border-bottom:1.5px solid var(--line-strong);
@@ -190,27 +182,57 @@ table.stats td.rate .rate-val.is-low { color:var(--muted); }
   font-size:13px; color:var(--muted); max-width:46em; }
 .foot a { color:var(--body); }
 
-/* ---------- map section (index only) ---------- */
-.map-section { margin-top:56px; padding-top:28px; border-top:1.5px solid var(--line-strong); }
-.map-section h2 { margin:0 0 18px; font:900 30px/1.1 var(--serif); letter-spacing:-0.02em; }
-.map-section #map { position:relative; height:58vh; overflow:hidden;
-  border:1px solid var(--line); }
+/* ---------- atlas: the state map and the state table, as one unit ---------- */
+/* The map answers "where" and the table answers "how many"; they are laid
+   out together because either alone invites a wrong reading. Below 900px
+   they stack, map first. */
+.atlas { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,520px);
+  gap:30px; align-items:start; margin-top:44px; padding-top:28px;
+  border-top:1.5px solid var(--line-strong); }
+.atlas-table { min-width:0; }
+.atlas-map { margin:0; min-width:0; }
+.atlas-map svg.india { width:100%; height:auto; display:block; }
 
-/* src/main.js's /admin route unhides #admin-root but only hides #map — it has
-   no reason to know about this page's browse markup. Left alone, the masthead,
-   hero, 32-row table and map header push the console ~1,600px down an
-   otherwise empty page. CSS-only, so it survives future markup changes. */
-body:has(#admin-root:not([hidden])) .masthead,
-body:has(#admin-root:not([hidden])) .hero,
-body:has(#admin-root:not([hidden])) .crumb,
-body:has(#admin-root:not([hidden])) .head,
-body:has(#admin-root:not([hidden])) .stat-grid,
-body:has(#admin-root:not([hidden])) #filter,
-body:has(#admin-root:not([hidden])) table.stats,
-body:has(#admin-root:not([hidden])) .foot,
-body:has(#admin-root:not([hidden])) .map-section > h2,
-body:has(#admin-root:not([hidden])) .map-section > #map {
-  display:none;
+/* Five shades, cut at multiples of the national rate (see BIN_MULTIPLES in
+   scripts/lib/choropleth.mjs). Absolute, not ranked: b3 means the same
+   thing here as it would on any other map we draw. */
+:root {
+  --b0:#eceae3; --b1:#cfccc2; --b2:#a39f94; --b3:#6a675f; --b4:#111214;
+  --b-nodata:#f5f4ef;
+}
+svg.india .st { stroke:var(--bg); stroke-width:1.1; vector-effect:non-scaling-stroke; }
+svg.india .b0 { fill:var(--b0); }
+svg.india .b1 { fill:var(--b1); }
+svg.india .b2 { fill:var(--b2); }
+svg.india .b3 { fill:var(--b3); }
+svg.india .b4 { fill:var(--b4); }
+/* A state we have no figures for must never read as a state with nothing
+   wrong, so no-data gets its own near-blank fill, outside the ramp. */
+svg.india .nodata { fill:var(--b-nodata); }
+svg.india a { cursor:pointer; }
+svg.india a:hover .st, svg.india a:focus-visible .st { fill:var(--accent); }
+svg.india a:focus-visible { outline:none; }
+
+.legend { display:flex; align-items:center; gap:7px; margin-top:15px;
+  font:500 10.5px/1 var(--mono); letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--muted); }
+.legend .sw { width:28px; height:11px; display:block; }
+.legend .sw.b0 { background:var(--b0); }
+.legend .sw.b1 { background:var(--b1); }
+.legend .sw.b2 { background:var(--b2); }
+.legend .sw.b3 { background:var(--b3); }
+.legend .sw.b4 { background:var(--b4); }
+.atlas-map figcaption { margin-top:12px; max-width:58ch;
+  font:400 12px/1.6 var(--sans); color:var(--muted); }
+
+/* ---------- report call-out (index only) ---------- */
+.findmine { margin-top:52px; padding-top:26px; border-top:1.5px solid var(--line-strong); }
+.findmine h2 { margin:0 0 12px; font:900 30px/1.1 var(--serif); letter-spacing:-0.02em; }
+.findmine p { margin:0 0 16px; max-width:60ch; color:var(--body); }
+
+@media (max-width:900px) {
+  .atlas { grid-template-columns:minmax(0,1fr); gap:34px; }
+  .atlas-map svg.india { max-height:66vh; }
 }
 
 @media (max-width:640px) {

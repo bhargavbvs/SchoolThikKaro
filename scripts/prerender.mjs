@@ -2,9 +2,12 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { renderIndexPage, renderStatePage, renderDistrictPage, renderBlockPage, SITE } from './lib/render.mjs';
 import { collectUrls, renderSitemap } from './lib/sitemap.mjs';
-import { extractAssetTags } from './lib/assets.mjs';
 
 const tree = JSON.parse(readFileSync('data/aggregates.json', 'utf8'));
+// State outlines for the homepage map, built once by
+// scripts/build-india-svg.mjs and committed. Not derived at build time: its
+// input is a ~74MB boundary file that is deliberately not in this repo.
+const geo = JSON.parse(readFileSync('data/india-states.json', 'utf8'));
 
 // This script runs AFTER `vite build` (see the package.json change below),
 // writing directly into dist/ — never into public/. See the "Why dist/, not
@@ -23,25 +26,26 @@ const write = (urlPath, html) => {
   writeFileSync(file, html);
 };
 
-// Vite's own `vite build` step already wrote the real, hashed asset tags
-// into dist/index.html before this script ran. The homepage is the one
-// generated page that still needs to boot the SPA (for the map below the
-// fold), so its script/style tags must reference the actual built files in
-// dist/assets/ — not the dev-time /src/main.js path — or the homepage ships
-// to production with a 404ing script and an unstyled map/topbar/sheet.
+// The SPA moves to /app/. Vite built it at dist/index.html, but the root
+// now belongs to the static homepage: the router matches an empty hash, so
+// merely serving the bundle at `/` booted MapLibre — ~960KB of JavaScript —
+// for every visitor who only wanted to read a table.
+//
+// Vite emits absolute /assets/… URLs, so the page works unchanged from a
+// subdirectory. Legacy /#/… links (including QR codes already printed on
+// school walls) are forwarded by a redirect in the homepage's <head>; see
+// headExtra in renderIndexPage.
 const viteIndex = readFileSync('dist/index.html', 'utf8');
-// extractAssetTags throws its own clear error if the script tag is missing
-// (e.g. the build didn't actually run first) — see scripts/lib/assets.mjs.
-const { script: scriptTag, style: styleHref } = extractAssetTags(viteIndex);
-// Not fatal — the homepage still functions without its bundled CSS (browse.css
-// covers the shared chrome) — but this must never fail silently: a future Vite
-// version reordering <link> attributes (href before rel) would otherwise slip
-// past unnoticed, exactly the class of bug this whole task exists to fix.
-if (!styleHref) {
-  console.warn('could not find Vite\'s built stylesheet link in dist/index.html — homepage will ship without its bundled CSS');
+if (!/<script[^>]+src="\/assets\//.test(viteIndex)) {
+  throw new Error(
+    'dist/index.html has no hashed /assets/ script tag — did `vite build` run before this script? ' +
+      'Moving it to /app/ would publish a dead SPA.',
+  );
 }
+mkdirSync('dist/app', { recursive: true });
+writeFileSync('dist/app/index.html', viteIndex);
 
-write('/', renderIndexPage(tree, { script: scriptTag, style: styleHref ?? '' }));
+write('/', renderIndexPage(tree, geo));
 let n = 1;
 for (const s of tree.states) {
   write(`/state/${s.slug}`, renderStatePage(s, tree.national.rate)); n++;
