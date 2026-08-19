@@ -55,3 +55,18 @@ describe('published artifacts carry no personal data', () => {
     expect(ignored).toMatch(/^\.data-src\/?$/m);
   });
 });
+
+describe('the full affidavit record never reaches a published page', () => {
+  it('stays out of dist/, where only the narrow projection belongs', () => {
+    // data/representatives-full.json is the shared record and carries
+    // assets, liabilities and criminal cases on purpose. Printing those
+    // beside a school with no toilet is innuendo, so they must not appear
+    // in anything that ships.
+    for (const file of filesUnder('dist', ['.html'])) {
+      const text = readFileSync(file, 'utf8');
+      for (const field of ['criminalCases', 'liabilities', '"assets"']) {
+        expect(text.includes(field), `${file} contains ${field}`).toBe(false);
+      }
+    }
+  });
+});
