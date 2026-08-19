@@ -239,3 +239,20 @@ describe('the page uses the reader’s words, not ours', () => {
     expect(statePage).toMatch(/<title>[^<]*SchoolThikKaro<\/title>/);
   });
 });
+
+describe('filtering works on a phone, where most rows start hidden', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('shows a match with an explicit display value, not by clearing the style', () => {
+    // browse.css hides rows 11+ on narrow screens until "Show all" is
+    // tapped. Clearing the inline style hands the row straight back to
+    // that rule, so searching for a state outside the top ten returned an
+    // empty table. Only an inline value outranks the stylesheet.
+    expect(html).toContain("'table-row'");
+    expect(html).not.toMatch(/indexOf\(q\)>-1\?'':'none'/);
+  });
+
+  it('restores the ten-row view when the query is cleared', () => {
+    expect(html).toContain("!q?''");
+  });
+});

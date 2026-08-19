@@ -92,10 +92,16 @@ const statRow = (label, href, flagged, total, rate, maxRate, nationalRate) => `
 /** Rows are pre-rendered and visible with JavaScript off; this only hides
  *  non-matching ones. Kept inline and tiny so browse pages stay free of any
  *  bundle — the whole point of them being static. */
+// A match is shown with an explicit 'table-row', not by clearing the inline
+// style. On a phone, browse.css hides rows 11+ until "Show all" is tapped;
+// clearing the style hands the row back to that rule, so searching for a
+// state outside the top ten returned an empty table. An inline value beats
+// the stylesheet. An empty query clears the style so the ten-row view
+// comes back.
 const FILTER_SCRIPT = `<script>
 (function(){var i=document.getElementById('filter');if(!i)return;var r=document.querySelectorAll('tbody tr[data-name]');
 i.hidden=false;i.addEventListener('input',function(){var q=i.value.trim().toLowerCase();
-for(var n=0;n<r.length;n++){r[n].style.display=!q||r[n].dataset.name.indexOf(q)>-1?'':'none';}});})();
+for(var n=0;n<r.length;n++){r[n].style.display=!q?'':(r[n].dataset.name.indexOf(q)>-1?'table-row':'none');}});})();
 </script>`;
 
 const statTable = (rows, filterLabel, nameLabel = 'Name') => `
