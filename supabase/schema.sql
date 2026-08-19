@@ -42,6 +42,43 @@ create index if not exists reports_school_idx on reports (udise_code, review_sta
 -- safe to re-run against a database created before faces_found existed.
 alter table reports add column if not exists faces_found integer not null default 0;
 
+-- Schools a citizen says exist that the UDISE+ release does not list.
+--
+-- A SEPARATE table, deliberately, not a nullable udise_code on reports.
+-- Every figure this site publishes is the government's own record, and
+-- that is the whole basis on which it can be trusted. A citizen-submitted
+-- school has no UDISE code, no government record and no independent
+-- corroboration, so it must be structurally impossible for one to be
+-- counted in those figures. Different table, different query, no accident
+-- can merge them.
+create table if not exists school_submissions (
+  id uuid primary key default gen_random_uuid(),
+  submitted_name text not null,
+  submitted_area text not null,
+  submitted_district text,
+  submitted_state text,
+  udise_code text,                 -- optional: only if the reporter knows it
+  finding text not null check (finding in
+    ('no_toilet','locked','no_water','unusable','working')),
+  severity text check (severity in ('usable','barely_usable','unusable','absent')),
+  -- No 'verified' tier is possible here: there is no recorded location to
+  -- check the reporter's fix against. See computeTier in src/submit/gps.js.
+  tier text not null default 'unverified' check (tier = 'unverified'),
+  lat double precision,
+  lng double precision,
+  gps_accuracy_m double precision,
+  captured_at timestamptz,
+  image_path text not null,
+  blur_applied boolean not null default false,
+  faces_found integer not null default 0,
+  review_status text not null default 'pending'
+    check (review_status in ('pending','approved','rejected')),
+  ip_hash text,
+  created_at timestamptz not null default now()
+);
+create index if not exists school_submissions_status_idx
+  on school_submissions (review_status, created_at desc);
+
 create table if not exists fixes (
   id uuid primary key default gen_random_uuid(),
   udise_code text not null,
@@ -81,6 +118,7 @@ create table if not exists audit_log (
 
 alter table schools   enable row level security;
 alter table reports   enable row level security;
+alter table school_submissions enable row level security;
 alter table fixes     enable row level security;
 alter table disputes  enable row level security;
 alter table moderators enable row level security;
@@ -93,6 +131,14 @@ create policy schools_public_read on schools for select to anon using (true);
 -- the submit-report Edge Function, which writes with the service key.
 drop policy if exists reports_public_read_approved on reports;
 create policy reports_public_read_approved on reports
+  for select to anon using (review_status = 'approved');
+
+-- Same shape as reports: anon reads approved only, and cannot insert at
+-- all — submissions go through the submit-report Edge Function, which
+-- enforces the rate limit, the size cap and the unblurred-photo refusal
+-- with the service key.
+drop policy if exists school_submissions_public_read_approved on school_submissions;
+create policy school_submissions_public_read_approved on school_submissions
   for select to anon using (review_status = 'approved');
 
 drop policy if exists fixes_public_read_approved on fixes;
@@ -143,6 +189,19 @@ create policy reports_moderator_read_all on reports for select to authenticated
 
 drop policy if exists reports_moderator_update on reports;
 create policy reports_moderator_update on reports for update to authenticated
+  using (exists (select 1 from moderators m
+                 where m.email = auth.jwt() ->> 'email' and m.active))
+  with check (true);
+
+drop policy if exists school_submissions_moderator_read_all on school_submissions;
+create policy school_submissions_moderator_read_all on school_submissions
+  for select to authenticated
+  using (exists (select 1 from moderators m
+                 where m.email = auth.jwt() ->> 'email' and m.active));
+
+drop policy if exists school_submissions_moderator_update on school_submissions;
+create policy school_submissions_moderator_update on school_submissions
+  for update to authenticated
   using (exists (select 1 from moderators m
                  where m.email = auth.jwt() ->> 'email' and m.active))
   with check (true);

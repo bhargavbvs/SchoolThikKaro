@@ -195,9 +195,15 @@ export function renderIndexPage(tree, geo) {
       'Filter states…')}<label class="showall" for="showall">Show all ${tree.states.length} states</label></div></section>`,
     extra: `<section class="findmine">
       <h2>Report a school</h2>
-      <p>Standing outside one of these schools? The reporting map needs your
-         location to confirm you are there.</p>
-      <p><a class="btn btn-primary" href="/app/#/">Open the reporting map \u2192</a></p>
+      <p>Standing outside one of these schools? Open it from its block page and
+         send a photo — we need your location to confirm you are there.</p>
+      <p>If the school you are at is <b>not</b> in the government’s record, you can
+         still report it. Those are published separately, marked as reported by a
+         citizen, and never counted inside the official figures.</p>
+      <p class="actions">
+        <a class="btn btn-primary" href="/app/#/">Open the reporting map \u2192</a>
+        <a class="btn btn-ghost" href="/app/#/add">Report an unlisted school</a>
+      </p>
     </section>`,
   });
 }
@@ -233,18 +239,16 @@ export function renderDistrictPage(state, district, nationalRate) {
 }
 
 export function renderBlockPage(state, district, block, nationalRate) {
-  // No per-school route exists yet (#/school/<udise> is real future work,
-  // not built here — see "Deferred, explicitly" in the design spec), so
-  // each school row links to the one already-working place a citizen can
-  // see it on the map: the interactive map for its state, which now lives
-  // at /app/ rather than at the root (see prerender.mjs).
-  const stateHref = `/app/#/state/${esc(state.slug)}`;
+  // Straight into the report form for this exact school. Until the
+  // /report/<udise> route existed, the best a row could do was open the
+  // state map and leave the reader to find the pin themselves.
+  const reportHref = (udise) => `/app/#/report/${esc(udise)}`;
   // School names render verbatim, NOT title-cased: ~30% carry abbreviations
   // (LPS, UPS, SSA, GOVT.) that title-casing corrupts — "AGGONGITIM LPS"
   // would become "Aggongitim Lps", and LPS means Lower Primary School.
   const rows = block.schools.map((s) => `
     <tr data-name="${esc(s.name.toLowerCase())}">
-      <td class="name"><a href="${stateHref}">${esc(s.name)}</a></td>
+      <td class="name"><a href="${reportHref(s.udise)}">${esc(s.name)}</a></td>
       <td class="udise">${esc(s.udise)}</td>
       <td><span class="tag ${s.indicator === 'no_girls_toilet' ? 'tag-none' : 'tag-broken'}">${esc(INDICATOR_TEXT[s.indicator] ?? 'Unknown')}</span></td>
     </tr>`).join('');

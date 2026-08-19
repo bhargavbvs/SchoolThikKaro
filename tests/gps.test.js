@@ -40,3 +40,24 @@ describe('permissionHelpHTML', () => {
     expect(permissionHelpHTML('android')).toMatch(/Permissions/i);
   });
 });
+
+describe('computeTier for a school with no government record', () => {
+  it('is always unverified — one claim cannot corroborate itself', () => {
+    // A citizen-added school has no recorded location to stand near, so
+    // the distance check has nothing to measure against.
+    const t = computeTier({
+      schoolLat: null, schoolLng: null,
+      fixLat: 25.57, fixLng: 91.88, accuracyM: 5, source: 'camera',
+    });
+    expect(t.tier).toBe('unverified');
+    expect(t.distanceM).toBeNull();
+    expect(t.reason).toMatch(/not in the government record/i);
+  });
+  it('never reports a NaN distance for it', () => {
+    const t = computeTier({
+      schoolLat: null, schoolLng: null,
+      fixLat: 25.57, fixLng: 91.88, accuracyM: 5, source: 'camera',
+    });
+    expect(Number.isNaN(t.distanceM)).toBe(false);
+  });
+});

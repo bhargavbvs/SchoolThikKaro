@@ -2,6 +2,32 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 
 export function buildPayload(school, state) {
+  // A school the UDISE+ release does not list goes to its own table, with
+  // no udise_code and its identity carried as what the reporter typed.
+  // Never merged into the report stream: every figure this site publishes
+  // is the government's own record, and a citizen-submitted school has no
+  // record behind it. See school_submissions in supabase/schema.sql.
+  if (school.kind === 'unlisted') {
+    return {
+      kind: 'unlisted',
+      submitted_name: school.name,
+      submitted_area: school.area,
+      submitted_district: school.district || null,
+      submitted_state: school.state || null,
+      udise_code: school.udise || null,
+      finding: state.finding,
+      severity: state.severity ?? null,
+      // Structurally unverifiable — there is no recorded location to check
+      // the reporter's fix against, so computeTier can only return this.
+      tier: 'unverified',
+      lat: state.fix?.lat ?? null,
+      lng: state.fix?.lng ?? null,
+      gps_accuracy_m: state.fix?.accuracyM ?? null,
+      captured_at: new Date().toISOString(),
+      blur_applied: Boolean(state.blurApplied),
+      faces_found: state.facesFound ?? 0,
+    };
+  }
   return {
     udise_code: school.udise,
     school_name_snapshot: school.name,

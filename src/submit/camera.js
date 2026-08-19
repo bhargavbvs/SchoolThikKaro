@@ -2,7 +2,7 @@
 import { normaliseImage, blurRegions, toJpegBlob } from './blur.js';
 import { loadDetector, detectFaces, blurGate } from './faces.js';
 import { getFix, computeTier, permissionHelpHTML, detectPlatform } from './gps.js';
-import { validateSubmission } from './submit.js';
+import { validateSubmission, validateIdentity } from './submit.js';
 import { MAX_IMAGE_BYTES } from '../config.js';
 import { submitReport } from './api.js';
 import { iconEl } from '../lib/icons.js';
@@ -84,6 +84,11 @@ export function mountCapture(slot, school, root) {
   function recompute() {
     const gate = blurGate(state);
     const finding = root.querySelector('input[name=finding]:checked')?.value ?? null;
+    // Recorded onto state, not just read for validation: buildPayload reads
+    // state.finding, and without this every submission sent no finding at
+    // all against a NOT NULL column — the insert failed every time.
+    state.finding = finding;
+    state.severity = root.querySelector('input[name=severity]:checked')?.value ?? null;
     const t = computeTier({
       schoolLat: school.lat, schoolLng: school.lng,
       fixLat: state.fix?.lat ?? null, fixLng: state.fix?.lng ?? null,
@@ -93,9 +98,14 @@ export function mountCapture(slot, school, root) {
     const { valid, errors } = validateSubmission({
       finding, hasPhoto: Boolean(state.canvas), gate,
     });
-    errBox.hidden = valid;
-    errBox.innerHTML = errors.map((e) => `<p>${e}</p>`).join('');
-    sendBtn.disabled = !valid;
+    // An unlisted school also has to say which school it is. The Edge
+    // Function refuses a nameless one anyway; this stops the reporter
+    // taking a photo and only then being told.
+    const idErrors = school.kind === 'unlisted' ? validateIdentity(school).errors : [];
+    const all = [...idErrors, ...errors];
+    errBox.hidden = all.length === 0;
+    errBox.innerHTML = all.map((e) => `<p>${e}</p>`).join('');
+    sendBtn.disabled = all.length > 0;
   }
 
   root.addEventListener('change', (e) => {

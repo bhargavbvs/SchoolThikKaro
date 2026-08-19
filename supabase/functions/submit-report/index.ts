@@ -23,10 +23,16 @@ Deno.serve(async (req) => {
   const ipHash = await hashIp(ip);
 
   const since = new Date(Date.now() - WINDOW_MS).toISOString();
-  const { count } = await admin.from('reports')
-    .select('id', { count: 'exact', head: true })
-    .eq('ip_hash', ipHash).gte('created_at', since);
-  if ((count ?? 0) >= MAX_PER_WINDOW) {
+  // Counts BOTH tables against one budget. Counting only `reports` would
+  // hand every client a second, full allowance on school_submissions.
+  const [reported, submitted] = await Promise.all([
+    admin.from('reports').select('id', { count: 'exact', head: true })
+      .eq('ip_hash', ipHash).gte('created_at', since),
+    admin.from('school_submissions').select('id', { count: 'exact', head: true })
+      .eq('ip_hash', ipHash).gte('created_at', since),
+  ]);
+  const count = (reported.count ?? 0) + (submitted.count ?? 0);
+  if (count >= MAX_PER_WINDOW) {
     return new Response(JSON.stringify({ error: 'rate limited' }), { status: 429 });
   }
 
@@ -47,15 +53,25 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'unblurred photo refused' }), { status: 400 });
   }
 
-  const path = `${meta.udise_code}/${crypto.randomUUID()}.jpg`;
+  // A school the UDISE+ release does not list has no code to file under.
+  const unlisted = meta.kind === 'unlisted';
+  if (unlisted && !String(meta.submitted_name ?? '').trim()) {
+    return new Response(JSON.stringify({ error: 'school name required' }), { status: 400 });
+  }
+  const path = unlisted
+    ? `unlisted/${crypto.randomUUID()}.jpg`
+    : `${meta.udise_code}/${crypto.randomUUID()}.jpg`;
   const up = await admin.storage.from('shaala-photos')
     .upload(path, photo, { contentType: 'image/jpeg' });
   if (up.error) {
     return new Response(JSON.stringify({ error: up.error.message }), { status: 500 });
   }
 
-  const { data, error } = await admin.from('reports').insert({
-    ...meta, image_path: path, ip_hash: ipHash, review_status: 'pending',
+  // `kind` is a routing flag for this function, not a column on either
+  // table — strip it before the insert or Postgres rejects the row.
+  const { kind: _kind, ...row } = meta;
+  const { data, error } = await admin.from(unlisted ? 'school_submissions' : 'reports').insert({
+    ...row, image_path: path, ip_hash: ipHash, review_status: 'pending',
   }).select('id').single();
 
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });

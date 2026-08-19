@@ -54,6 +54,15 @@ onRoute(/^\/report\//, async () => {
   openSubmitFlow(school);
 });
 
+// A school the UDISE+ release never listed. Its own route because it is
+// its own destination: the submission goes to school_submissions, not into
+// the published figures.
+onRoute(/^\/add/, async () => {
+  const { openAddSchoolFlow } = await import('./submit/addSchool.js');
+  document.getElementById('map').style.display = 'none';
+  await openAddSchoolFlow();
+});
+
 onRoute(/^\/methodology/, async () => {
   const { renderMethodologyHTML } = await import('./map/methodology.js');
   const idx = await (await fetch('/data/index.json')).json();

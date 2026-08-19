@@ -71,11 +71,10 @@ describe('renderBlockPage', () => {
     expect(html).toContain('property="og:description"');
     expect(html).toContain('property="og:url"');
   });
-  it('wraps each school row in a link, since there is no per-school page yet', () => {
-    // #/school/<udise> deep linking is real future work (Phase 3, per the
-    // spec's "Deferred, explicitly" section) — the interim link goes to
-    // the existing, working map route for the school's state.
-    expect(html).toMatch(/<a href="\/app\/#\/state\/meghalaya">GOVT LP MYLLIEM<\/a>/);
+  it('links each school straight into the report form for that exact school', () => {
+    // Until /report/<udise> existed, the best a row could do was open the
+    // state map and leave the reader to hunt for the pin.
+    expect(html).toMatch(/<a href="\/app\/#\/report\/17040300201">GOVT LP MYLLIEM<\/a>/);
   });
 });
 

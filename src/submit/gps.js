@@ -7,6 +7,14 @@ export function computeTier({ schoolLat, schoolLng, fixLat, fixLng, accuracyM, s
     return { tier: 'unverified', distanceM: null,
       reason: 'Uploaded from gallery — we cannot confirm where or when it was taken.' };
   }
+  // A school the government has no record of has no recorded location to
+  // stand near, so the distance check cannot mean anything. Such a report
+  // is always unverified — the reporter's own fix is the only claim about
+  // where the school is, and one claim cannot corroborate itself.
+  if (schoolLat == null || schoolLng == null) {
+    return { tier: 'unverified', distanceM: null,
+      reason: 'This school is not in the government record, so we cannot check your location against it.' };
+  }
   if (fixLat == null || fixLng == null) {
     return { tier: 'unverified', distanceM: null,
       reason: 'No location fix was available at capture.' };

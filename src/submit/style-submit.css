@@ -118,3 +118,14 @@
 .done-badge { display:inline-flex; align-items:center; justify-content:center;
   width:64px; height:64px; border-radius:50%; margin-bottom:16px;
   background:rgba(42,157,143,.15); color:var(--fixed); font-size:2.2em; }
+
+/* ---------- unlisted-school identity fields ---------- */
+/* Only the add-a-school form has these: a report on a listed school takes
+   its identity from the government record, not from anything typed. */
+.sub-identity { border:0; margin:0 0 18px; padding:0; }
+.sub-identity .fld { display:block; margin-bottom:12px; }
+.sub-identity .fld > span { display:block; margin-bottom:6px;
+  font-size:13px; font-weight:600; }
+/* Appearance comes from the existing #submit-root input[type="text"] rule
+   above — only the label/field layout is new. */
+.sub-identity .fld input { width:100%; }

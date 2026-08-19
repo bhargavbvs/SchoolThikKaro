@@ -90,6 +90,17 @@ export function validateSubmission({ finding, hasPhoto, gate }) {
   return { valid: errors.length === 0, errors };
 }
 
+/** Name and area are what make an unlisted-school submission actionable —
+ *  a moderator has to be able to find the place. Everything else is
+ *  optional. Lives here rather than in addSchool.js so camera.js can reach
+ *  it without closing an import cycle. */
+export function validateIdentity(school) {
+  const errors = [];
+  if (!school.name) errors.push('Enter the school\u2019s name.');
+  if (!school.area) errors.push('Enter the village or area, so it can be found.');
+  return { valid: errors.length === 0, errors };
+}
+
 export async function openSubmitFlow(school) {
   const root = document.getElementById('submit-root');
   root.hidden = false;
