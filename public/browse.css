@@ -230,6 +230,29 @@ svg.india a:focus-visible { outline:none; }
 .findmine h2 { margin:0 0 12px; font:900 30px/1.1 var(--serif); letter-spacing:-0.02em; }
 .findmine p { margin:0 0 16px; max-width:60ch; color:var(--body); }
 
+/* The state list scrolls inside its own panel so the map stays beside it.
+   32 rows are taller than the map, and a reader comparing a state's shading
+   to its figures should not have to scroll the map off screen to do it.
+   Every row stays in the DOM, so this costs nothing for crawlers. */
+@media (min-width:901px) {
+  .atlas-table { max-height:78vh; overflow-y:auto; overscroll-behavior:contain;
+    border:1px solid var(--line); }
+  .atlas-table table.stats { border:0; }
+  /* An explicit height, not an inherited one: the sticky header below is
+     offset by exactly this, and a guessed offset shows a sliver of moving
+     rows above a header that is supposed to be pinned. */
+  .atlas-table #filter { position:sticky; top:0; z-index:3; height:44px;
+    padding-block:0; border:0; border-bottom:1px solid var(--line); }
+  .atlas-table table.stats thead th { position:sticky; top:0; z-index:2;
+    /* A sticky cell silently drops its border under border-collapse in
+       Chrome; an inset shadow paints the same rule and survives. */
+    border-bottom:0; box-shadow:inset 0 -1px 0 var(--line-strong); }
+  /* The filter ships hidden and is unhidden by script. With JavaScript off
+     it never takes up space, so the header must pin to the very top
+     instead of leaving a 44px gap where the input would have been. */
+  .atlas-table:has(#filter:not([hidden])) table.stats thead th { top:44px; }
+}
+
 @media (max-width:900px) {
   .atlas { grid-template-columns:minmax(0,1fr); gap:34px; }
   .atlas-map svg.india { max-height:66vh; }
