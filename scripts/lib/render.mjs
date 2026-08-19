@@ -43,7 +43,7 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
 </head>
 <body class="${esc(bodyClass)}">
 <header class="masthead">
-  <a class="wordmark" href="/">shaala<span>.in</span></a>
+  <a class="wordmark" href="/">SchoolThikKaro</a>
   <span class="tag">${esc(SOURCE_YEAR)} · Government’s own record</span>
 </header>
 ${breadcrumb ? `<nav class="crumb">${breadcrumb}</nav>` : ''}
@@ -76,7 +76,7 @@ const hero = (name, { flagged, total, rate }, comparison, baseline) => {
   const sev = baseline === undefined ? '' : severityOf(rate, baseline);
   return `
   <h1>${esc(titleCase(name))}</h1>
-  <p class="hero-rate"><strong class="${sev}">${fmtRate(rate)}</strong> <span>of schools flagged</span></p>
+  <p class="hero-rate"><strong class="${sev}">${fmtRate(rate)}</strong> <span>of schools have no working girls’ toilet</span></p>
   <p class="sub">${fmtNum(flagged)} of ${fmtNum(total)} girls’ and co-ed schools</p>
   ${comparison ? `<p class="cmp ${comparison.startsWith('below') ? 'is-low' : ''}">${esc(comparison)}</p>` : ''}`;
 };
@@ -98,10 +98,10 @@ i.hidden=false;i.addEventListener('input',function(){var q=i.value.trim().toLowe
 for(var n=0;n<r.length;n++){r[n].style.display=!q||r[n].dataset.name.indexOf(q)>-1?'':'none';}});})();
 </script>`;
 
-const statTable = (rows, filterLabel) => `
+const statTable = (rows, filterLabel, nameLabel = 'Name') => `
 ${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />` : ''}
 <table class="stats" id="data">
-  <thead><tr><th>Name</th><th class="num">Flagged</th><th class="num">Schools</th><th class="num">Rate</th></tr></thead>
+  <thead><tr><th>${esc(nameLabel)}</th><th class="num">No working toilet</th><th class="num">All schools</th><th class="num">Share</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>${filterLabel ? FILTER_SCRIPT : ''}`;
 
@@ -125,12 +125,12 @@ export function renderIndexPage(tree, geo) {
   const byKey = new Map(tree.states.map((s) => [stateKey(s.name), {
     slug: s.slug,
     rate: s.rate,
-    label: `${titleCase(s.name)} — ${fmtRate(s.rate)} of schools flagged`,
+    label: `${titleCase(s.name)} — ${fmtRate(s.rate)} of schools have no working girls’ toilet`,
   }]));
   const map = `<figure class="atlas-map">
       ${renderChoropleth({
         shapes: geo.shapes, viewBox: geo.viewBox, byKey, nationalRate: tree.national.rate,
-        title: 'Share of government schools flagged for a girls\u2019 toilet, by state',
+        title: 'Share of government schools with no working girls\u2019 toilet, by state',
       })}
       ${renderLegend()}
       <figcaption>Shading is the share of a state\u2019s girls\u2019 and co-ed government
@@ -147,7 +147,7 @@ export function renderIndexPage(tree, geo) {
     // already in the field.
     headExtra: `
 <script>(function(){var h=location.hash;if(h.slice(0,2)==='#/')location.replace('/app/'+h);})();</script>`,
-    title: `${fmtNum(tree.national.flagged)} Indian government schools flagged for girls’ toilets`,
+    title: `SchoolThikKaro — ${fmtNum(tree.national.flagged)} Indian government schools with no working girls’ toilet`,
     description: `${fmtNum(tree.national.flagged)} schools are recorded in ${SOURCE_YEAR} as having no girls’ toilet or one that does not function. Browse by state and district.`,
     canonical: `${SITE}/`,
     breadcrumb: '',
@@ -169,19 +169,22 @@ export function renderIndexPage(tree, geo) {
 
     <div class="stat-grid">
       <div>
+        <h2 class="stat-head">Schools with no working toilet for girls</h2>
         <div class="figure"><mark>${fmtNum(tree.national.flagged)}</mark></div>
-        <p class="note">government schools have no working girls’ toilet —
-          <b>1 in ${oneInN(tree.national.rate)}</b> of every girls’ and co-ed school in India.</p>
+        <p class="note">That is <b>1 in ${oneInN(tree.national.rate)}</b> of every government
+          school girls attend.</p>
       </div>
       <div>
+        <h2 class="stat-head">Of those, counted as if they were fine</h2>
         <div class="figure">${fmtNum(tree.national.nonFunctional)}</div>
-        <p class="note">of those have a toilet that exists but does not work, and the
-          official figure counts every one of them as <b>compliant</b>.</p>
+        <p class="note">The toilet is there. It does not work. The official figure
+          counts it anyway.</p>
       </div>
       <div>
+        <h2 class="stat-head">Worst state: ${esc(titleCase(tree.states[0]?.name ?? ''))}</h2>
         <div class="figure">${fmtRate(tree.states[0]?.rate)}</div>
-        <p class="note">of schools in <b>${esc(titleCase(tree.states[0]?.name ?? ''))}</b>, the worst
-          affected state — ${fmtNum(tree.states[0]?.flagged)} of ${fmtNum(tree.states[0]?.total)}.</p>
+        <p class="note">of its schools — ${fmtNum(tree.states[0]?.flagged)} out of
+          ${fmtNum(tree.states[0]?.total)}.</p>
       </div>
     </div>`,
     // Map and table are one unit: the map answers "where", the table
@@ -193,7 +196,7 @@ export function renderIndexPage(tree, geo) {
       (() => { const m = maxRateOf(tree.states); const nat = tree.national.rate;
         return tree.states.map((s) =>
           statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate, m, nat)).join(''); })(),
-      'Filter states…')}<label class="showall" for="showall">Show all ${tree.states.length} states</label></div></section>`,
+      'Filter states…', 'State')}<label class="showall" for="showall">Show all ${tree.states.length} states</label></div></section>`,
     extra: `<section class="findmine">
       <h2>Whatever is broken, report it</h2>
       <p>The figures above are girls’ toilets, because that is what this release
@@ -215,21 +218,21 @@ export function renderIndexPage(tree, geo) {
 export function renderStatePage(state, nationalRate) {
   const m = maxRateOf(state.districts);
   return renderPage({
-    title: `${titleCase(state.name)} — ${fmtNum(state.flagged)} schools flagged for girls’ toilets`,
+    title: `${titleCase(state.name)} — ${fmtNum(state.flagged)} schools with no working girls’ toilet · SchoolThikKaro`,
     description: `${fmtNum(state.flagged)} of ${fmtNum(state.total)} schools in ${titleCase(state.name)} (${fmtRate(state.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' }, { label: state.name }]),
     headline: hero(state.name, state, compareToBaseline(state.rate, nationalRate, 'national average'), nationalRate),
     table: statTable(state.districts.map((d) =>
       statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.total, d.rate, m, nationalRate)).join(''),
-      'Filter districts…'),
+      'Filter districts…', 'District'),
   });
 }
 
 export function renderDistrictPage(state, district, nationalRate) {
   const m = maxRateOf(district.blocks);
   return renderPage({
-    title: `${titleCase(district.name)}, ${titleCase(state.name)} — ${fmtNum(district.flagged)} schools flagged`,
+    title: `${titleCase(district.name)}, ${titleCase(state.name)} — ${fmtNum(district.flagged)} schools with no working girls’ toilet · SchoolThikKaro`,
     description: `${fmtNum(district.flagged)} of ${fmtNum(district.total)} schools in ${titleCase(district.name)} district (${fmtRate(district.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}/${district.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' },
@@ -238,7 +241,7 @@ export function renderDistrictPage(state, district, nationalRate) {
       compareToBaseline(district.rate, state.rate, `${titleCase(state.name)} average`), nationalRate),
     table: statTable(district.blocks.map((b) =>
       statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.total, b.rate, m, nationalRate)).join(''),
-      'Filter blocks…'),
+      'Filter blocks…', 'Block'),
   });
 }
 
@@ -258,7 +261,7 @@ export function renderBlockPage(state, district, block, nationalRate) {
     </tr>`).join('');
 
   return renderPage({
-    title: `${titleCase(block.name)}, ${titleCase(district.name)} — ${fmtNum(block.flagged)} schools flagged`,
+    title: `${titleCase(block.name)}, ${titleCase(district.name)} — ${fmtNum(block.flagged)} schools with no working girls’ toilet · SchoolThikKaro`,
     description: `${fmtNum(block.flagged)} of ${fmtNum(block.total)} schools in ${titleCase(block.name)}, ${titleCase(district.name)} (${fmtRate(block.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}/${district.slug}/${block.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' },

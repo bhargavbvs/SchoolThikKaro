@@ -319,3 +319,14 @@ table.stats td.udise, .crumb, .label, .masthead .tag {
   font-variant-numeric:tabular-nums slashed-zero;
   font-feature-settings:'zero' 1, 'tnum' 1;
 }
+
+/* ---------- headline figures ---------- */
+/* Each figure gets a heading in ordinary words. An earlier pass removed
+   these because they read as jargon ("COUNTED HONESTLY"), but a bare
+   number with a trailing sentence is harder to read, not easier: the
+   reader meets the number before learning what it counts. The fix was
+   never fewer words, it was words that say something. */
+.stat-grid .stat-head {
+  margin:0 0 10px; padding-bottom:10px; border-bottom:1px solid var(--line);
+  font:600 13px/1.35 var(--sans); letter-spacing:0; text-transform:none;
+  color:var(--body); }

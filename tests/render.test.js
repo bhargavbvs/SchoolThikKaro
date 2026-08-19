@@ -201,3 +201,41 @@ describe('the homepage is about schools, not only about toilets', () => {
     expect(actions).toContain('Report what you find');
   });
 });
+
+describe('the page uses the reader’s words, not ours', () => {
+  const index = renderIndexPage(tree, geo);
+  const statePage = renderStatePage(state, 5.63);
+
+  it('never labels a column "Flagged" or "Rate"', () => {
+    // Both are this project's internal vocabulary. A visitor should be able
+    // to read a column heading and know what the number under it counts.
+    const thead = index.match(/<thead>[\s\S]*?<\/thead>/)[0];
+    expect(thead).not.toMatch(/Flagged|Rate<\/th>/);
+    expect(thead).toContain('No working toilet');
+    expect(thead).toContain('All schools');
+  });
+
+  it('names the column for what it actually lists on each page', () => {
+    expect(index).toMatch(/<th>State<\/th>/);
+    expect(statePage).toMatch(/<th>District<\/th>/);
+  });
+
+  it('spells out what a percentage counts instead of saying "flagged"', () => {
+    expect(statePage).toContain('of schools have no working girls’ toilet');
+    expect(statePage).not.toContain('of schools flagged');
+  });
+
+  it('gives every headline figure a heading in ordinary words', () => {
+    // A bare number with a trailing sentence makes the reader meet the
+    // figure before learning what it counts.
+    const heads = [...index.matchAll(/<h2 class="stat-head">([^<]*)<\/h2>/g)].map((m) => m[1]);
+    expect(heads).toHaveLength(3);
+    for (const h of heads) expect(h).not.toMatch(/flagged|rate|indicator/i);
+  });
+
+  it('carries the project name in the wordmark and the page title', () => {
+    expect(index).toContain('>SchoolThikKaro<');
+    expect(index).toMatch(/<title>SchoolThikKaro/);
+    expect(statePage).toMatch(/<title>[^<]*SchoolThikKaro<\/title>/);
+  });
+});
