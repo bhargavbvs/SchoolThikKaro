@@ -3,6 +3,7 @@
   --bg:#0d0d0f; --panel:#17171a; --panel-2:#1f1f24;
   --ink:#f4efe9; --body:#b9b2a8; --muted:#7c766d;
   --line:rgba(244,239,233,0.12); --admitted:#e0473e;
+  --found:#f0932b; --fixed:#2a9d8f;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
@@ -26,20 +27,79 @@ body.browse { margin:0; background:var(--bg); color:var(--ink);
    the breadcrumb and h1 render underneath it. Every other generated page
    never loads the SPA and doesn't carry this class. */
 body.browse.has-spa { padding-top:72px; }
-.crumb { font-size:13px; color:var(--muted); margin-bottom:12px; }
-.crumb a { color:var(--body); }
-.head h1 { margin:0 0 4px; font-size:28px; }
-.head .sub { margin:0 0 20px; color:var(--body); font-size:15px; }
+.crumb { font-size:13px; color:var(--muted); margin-bottom:14px; }
+.crumb a { color:var(--body); text-decoration:none; }
+.crumb a:hover { color:var(--ink); text-decoration:underline; }
+
+.head { margin-bottom:24px; }
+.head h1 { margin:0 0 10px; font-size:30px; letter-spacing:-0.02em; line-height:1.15; }
+/* The number the page exists for, given room to actually be read. */
+.head .hero-rate { margin:0; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.head .hero-rate strong { font-size:44px; line-height:1; font-weight:700;
+  color:var(--admitted); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+/* Matches the comparison pill and the table bars — a page must not show an
+   alarming red headline above a green "below the national average". */
+.head .hero-rate strong.is-high { color:var(--admitted); }
+.head .hero-rate strong.is-mid  { color:var(--found); }
+.head .hero-rate strong.is-low  { color:var(--fixed); }
+.head .hero-rate span { color:var(--body); font-size:15px; }
+.head .sub { margin:8px 0 0; color:var(--body); font-size:15px; }
+/* One honest sentence of context: a bare "29.7%" means nothing until you
+   know the national rate is 5.6%. */
+.head .cmp { margin:10px 0 0; display:inline-block; font-size:14px; font-weight:600;
+  color:var(--admitted); background:color-mix(in srgb, var(--admitted) 12%, transparent);
+  border-radius:999px; padding:5px 12px; }
+.head .cmp.is-low { color:var(--fixed,#2a9d8f);
+  background:color-mix(in srgb, var(--fixed,#2a9d8f) 14%, transparent); }
+
+#filter { width:100%; padding:11px 14px; margin-bottom:14px; font:inherit; font-size:15px;
+  color:var(--ink); background:var(--panel); border:1px solid var(--line);
+  border-radius:10px; }
+#filter::placeholder { color:var(--muted); }
+#filter:focus { outline:none; border-color:var(--admitted); }
+
 table.stats { width:100%; border-collapse:collapse; }
-table.stats th, table.stats td { padding:10px 8px; border-bottom:1px solid var(--line);
+table.stats th, table.stats td { padding:12px 10px; border-bottom:1px solid var(--line);
   text-align:left; }
-table.stats th { font-size:12px; text-transform:uppercase; letter-spacing:.04em;
+table.stats th { font-size:11px; text-transform:uppercase; letter-spacing:.06em;
   color:var(--muted); font-weight:600; }
+table.stats tbody tr:hover { background:var(--panel); }
 table.stats td.num, table.stats th.num { text-align:right; font-variant-numeric:tabular-nums; }
-table.stats td.rate { font-weight:600; color:var(--admitted); }
 table.stats td.udise { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
-table.stats a { color:var(--ink); text-decoration:none; }
+table.stats a { color:var(--ink); text-decoration:none; font-weight:500; }
 table.stats a:hover { text-decoration:underline; }
+
+/* Rate cell: a bar so the column can be scanned rather than read row by row.
+   LENGTH is relative to the largest rate in this same table (see barWidth in
+   scripts/lib/format.mjs) — otherwise, with a 29.7% national maximum and a
+   4.7% median, nearly every bar would be an invisible sliver.
+   COLOUR is absolute, against the national rate (see severityOf) — because
+   relative length alone would make Kerala's worst district (0.8%) look
+   exactly as alarming as Meghalaya's (46.5%). Length lets you scan a page;
+   colour keeps two pages honest against each other. The real figure always
+   sits beside the bar, so the bar is never the only source of the value. */
+/* Grid rather than an absolutely-positioned bar: the track and the figure
+   get their own columns, so a full-width bar can never overlap the number
+   no matter how wide the figure renders. */
+table.stats td.rate { width:170px; display:grid; grid-template-columns:1fr auto;
+  align-items:center; gap:12px; }
+table.stats td.rate .bar { height:8px; width:var(--w); justify-self:start;
+  border-radius:999px; }
+table.stats td.rate .bar.is-high { background:color-mix(in srgb, var(--admitted) 85%, transparent); }
+table.stats td.rate .bar.is-mid  { background:color-mix(in srgb, var(--found) 75%, transparent); }
+table.stats td.rate .bar.is-low  { background:color-mix(in srgb, var(--fixed) 65%, transparent); }
+table.stats td.rate .rate-val { position:relative; font-weight:600;
+  font-variant-numeric:tabular-nums; }
+table.stats td.rate .rate-val.is-high { color:var(--admitted); }
+table.stats td.rate .rate-val.is-mid  { color:var(--found); }
+table.stats td.rate .rate-val.is-low  { color:var(--fixed); }
+
+.tag { display:inline-block; font-size:12px; font-weight:600; padding:3px 9px;
+  border-radius:999px; white-space:nowrap; }
+.tag-none { color:var(--admitted);
+  background:color-mix(in srgb, var(--admitted) 14%, transparent); }
+.tag-broken { color:var(--found,#f0932b);
+  background:color-mix(in srgb, var(--found,#f0932b) 16%, transparent); }
 .foot { margin-top:28px; padding-top:16px; border-top:1px solid var(--line);
   font-size:13px; color:var(--muted); }
 .map-section { margin-top:32px; }
@@ -53,9 +113,22 @@ table.stats a:hover { text-decoration:underline; }
    renders at the top of the page. */
 body:has(#admin-root:not([hidden])) .crumb,
 body:has(#admin-root:not([hidden])) .head,
+body:has(#admin-root:not([hidden])) #filter,
 body:has(#admin-root:not([hidden])) table.stats,
 body:has(#admin-root:not([hidden])) .map-section > h2,
 body:has(#admin-root:not([hidden])) .map-section > #map {
   display:none;
 }
-@media (max-width:600px) { .head h1 { font-size:22px; } table.stats th, table.stats td { padding:8px 4px; } }
+
+@media (max-width:600px) {
+  .head h1 { font-size:22px; }
+  .head .hero-rate strong { font-size:36px; }
+  table.stats th, table.stats td { padding:10px 6px; }
+  /* Reclaim horizontal room on a narrow screen: the total-schools column
+     is the least load-bearing of the four, and the rate cell needs to stay
+     wide enough that the bar is still legible. */
+  table.stats th:nth-child(3), table.stats td:nth-child(3) { display:none; }
+  table.stats td.rate { width:120px; gap:8px; }
+  table.stats.schools td.udise { display:none; }
+  table.stats.schools th:nth-child(2) { display:none; }
+}

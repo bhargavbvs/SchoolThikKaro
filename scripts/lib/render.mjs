@@ -2,6 +2,7 @@
 // structurally impossible to omit or drift. src/config.js imports cleanly
 // under plain Node (its import.meta.env access is optional-chained).
 import { SOURCE_YEAR } from '../../src/config.js';
+import { titleCase, compareToBaseline, barWidth, severityOf } from './format.mjs';
 
 export const SITE = 'https://shaala-flax.vercel.app';
 
@@ -55,22 +56,53 @@ ${spa ? scriptTag : ''}
 
 const crumb = (parts) =>
   parts.map((p, i) => (p.href && i < parts.length - 1
-    ? `<a href="${esc(p.href)}">${esc(p.label)}</a>`
-    : `<span>${esc(p.label)}</span>`)).join(' › ');
+    ? `<a href="${esc(p.href)}">${esc(titleCase(p.label))}</a>`
+    : `<span>${esc(titleCase(p.label))}</span>`)).join(' › ');
 
-const statRow = (label, href, flagged, total, rate) => `
-  <tr>
-    <td><a href="${esc(href)}">${esc(label)}</a></td>
+/** The number the page is actually about, given room to be read, with the
+ *  counts behind it and one honest sentence of comparison. */
+const hero = (name, { flagged, total, rate }, comparison, baseline) => {
+  // The headline figure carries the same severity colour as its comparison
+  // pill and its table bars. Without this, Kerala renders an alarming red
+  // "0.4%" directly above a green "below the national average" — the page
+  // contradicting itself. Pages with no baseline to judge against (the
+  // national index) keep the default emphasis colour.
+  const sev = baseline === undefined ? '' : severityOf(rate, baseline);
+  return `
+  <h1>${esc(titleCase(name))}</h1>
+  <p class="hero-rate"><strong class="${sev}">${fmtRate(rate)}</strong> <span>of schools flagged</span></p>
+  <p class="sub">${fmtNum(flagged)} of ${fmtNum(total)} girls’ and co-ed schools</p>
+  ${comparison ? `<p class="cmp ${comparison.startsWith('below') ? 'is-low' : ''}">${esc(comparison)}</p>` : ''}`;
+};
+
+const statRow = (label, href, flagged, total, rate, maxRate, nationalRate) => `
+  <tr data-name="${esc(titleCase(label).toLowerCase())}">
+    <td><a href="${esc(href)}">${esc(titleCase(label))}</a></td>
     <td class="num">${fmtNum(flagged)}</td>
     <td class="num">${fmtNum(total)}</td>
-    <td class="num rate">${fmtRate(rate)}</td>
+    <td class="num rate">
+      <span class="bar ${severityOf(rate, nationalRate)}" style="--w:${barWidth(rate, maxRate)}%" aria-hidden="true"></span>
+      <span class="rate-val ${severityOf(rate, nationalRate)}">${fmtRate(rate)}</span>
+    </td>
   </tr>`;
 
-const statTable = (rows) => `
+/** Rows are pre-rendered and visible with JavaScript off; this only hides
+ *  non-matching ones. Kept inline and tiny so browse pages stay free of any
+ *  bundle — the whole point of them being static. */
+const FILTER_SCRIPT = `<script>
+(function(){var i=document.getElementById('filter');if(!i)return;var r=document.querySelectorAll('tbody tr[data-name]');
+i.hidden=false;i.addEventListener('input',function(){var q=i.value.trim().toLowerCase();
+for(var n=0;n<r.length;n++){r[n].style.display=!q||r[n].dataset.name.indexOf(q)>-1?'':'none';}});})();
+</script>`;
+
+const statTable = (rows, filterLabel) => `
+${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />` : ''}
 <table class="stats">
   <thead><tr><th>Name</th><th class="num">Flagged</th><th class="num">Schools</th><th class="num">Rate</th></tr></thead>
   <tbody>${rows}</tbody>
-</table>`;
+</table>${filterLabel ? FILTER_SCRIPT : ''}`;
+
+const maxRateOf = (nodes) => Math.max(0, ...nodes.map((n) => n.rate ?? 0));
 
 // assetTags is deliberately required, with no default: a default here once
 // meant "dev-time /src/main.js path", which is a dead 404 in a prerendered
@@ -101,10 +133,15 @@ export function renderIndexPage(tree, assetTags) {
     canonical: `${SITE}/`,
     breadcrumb: crumb([{ label: 'India' }]),
     headline: `<h1>${fmtNum(tree.national.flagged)} schools flagged</h1>
+      <p class="hero-rate"><strong>${fmtRate(tree.national.rate)}</strong>
+        <span>of India’s girls’ and co-ed schools</span></p>
       <p class="sub">${fmtNum(tree.national.noToilet)} have no girls’ toilet ·
         ${fmtNum(tree.national.nonFunctional)} have one that does not function</p>`,
-    table: statTable(tree.states.map((s) =>
-      statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate)).join('')),
+    table: statTable(
+      (() => { const m = maxRateOf(tree.states); const nat = tree.national.rate;
+        return tree.states.map((s) =>
+          statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate, m, nat)).join(''); })(),
+      'Filter states…'),
     extra: `<section class="map-section"><h2>Where reports are</h2><div id="map"></div>
       <header id="topbar"></header><aside id="sheet" hidden></aside>
       <div id="submit-root" hidden></div><div id="admin-root" hidden></div>
@@ -112,66 +149,67 @@ export function renderIndexPage(tree, assetTags) {
   });
 }
 
-export function renderStatePage(state) {
+export function renderStatePage(state, nationalRate) {
+  const m = maxRateOf(state.districts);
   return renderPage({
-    title: `${state.name} — ${fmtNum(state.flagged)} schools flagged for girls’ toilets`,
-    description: `${fmtNum(state.flagged)} of ${fmtNum(state.total)} schools in ${state.name} (${fmtRate(state.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
+    title: `${titleCase(state.name)} — ${fmtNum(state.flagged)} schools flagged for girls’ toilets`,
+    description: `${fmtNum(state.flagged)} of ${fmtNum(state.total)} schools in ${titleCase(state.name)} (${fmtRate(state.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' }, { label: state.name }]),
-    headline: `<h1>${esc(state.name)}</h1>
-      <p class="sub">${fmtNum(state.flagged)} of ${fmtNum(state.total)} schools flagged
-        (<strong>${fmtRate(state.rate)}</strong>)</p>`,
+    headline: hero(state.name, state, compareToBaseline(state.rate, nationalRate, 'national average'), nationalRate),
     table: statTable(state.districts.map((d) =>
-      statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.total, d.rate)).join('')),
+      statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.total, d.rate, m, nationalRate)).join(''),
+      'Filter districts…'),
   });
 }
 
-export function renderDistrictPage(state, district) {
+export function renderDistrictPage(state, district, nationalRate) {
+  const m = maxRateOf(district.blocks);
   return renderPage({
-    title: `${district.name}, ${state.name} — ${fmtNum(district.flagged)} schools flagged`,
-    description: `${fmtNum(district.flagged)} of ${fmtNum(district.total)} schools in ${district.name} district (${fmtRate(district.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
+    title: `${titleCase(district.name)}, ${titleCase(state.name)} — ${fmtNum(district.flagged)} schools flagged`,
+    description: `${fmtNum(district.flagged)} of ${fmtNum(district.total)} schools in ${titleCase(district.name)} district (${fmtRate(district.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}/${district.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' },
       { label: state.name, href: `/state/${state.slug}` }, { label: district.name }]),
-    headline: `<h1>${esc(district.name)}</h1>
-      <p class="sub">${fmtNum(district.flagged)} of ${fmtNum(district.total)} schools flagged
-        (<strong>${fmtRate(district.rate)}</strong>) · ${esc(state.name)} average ${fmtRate(state.rate)}</p>`,
+    headline: hero(district.name, district,
+      compareToBaseline(district.rate, state.rate, `${titleCase(state.name)} average`), nationalRate),
     table: statTable(district.blocks.map((b) =>
-      statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.total, b.rate)).join('')),
+      statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.total, b.rate, m, nationalRate)).join(''),
+      'Filter blocks…'),
   });
 }
 
-export function renderBlockPage(state, district, block) {
-  const cmp = block.rate === null || district.rate === null ? ''
-    : ` — ${block.rate > district.rate ? 'above' : 'below'} the ${esc(district.name)}
-        average of ${fmtRate(district.rate)}, and the ${esc(state.name)} average of ${fmtRate(state.rate)}`;
-
+export function renderBlockPage(state, district, block, nationalRate) {
   // No per-school route exists yet (#/school/<udise> is real future work,
   // not built here — see "Deferred, explicitly" in the design spec), so
   // each school row links to the one already-working place a citizen can
   // see it on the map: the interactive map for its state. A real
   // improvement over a dead end without inventing new SPA routing.
   const stateHref = `/#/state/${esc(state.slug)}`;
+  // School names render verbatim, NOT title-cased: ~30% carry abbreviations
+  // (LPS, UPS, SSA, GOVT.) that title-casing corrupts — "AGGONGITIM LPS"
+  // would become "Aggongitim Lps", and LPS means Lower Primary School.
   const rows = block.schools.map((s) => `
-    <tr>
+    <tr data-name="${esc(s.name.toLowerCase())}">
       <td><a href="${stateHref}">${esc(s.name)}</a></td>
       <td class="udise">${esc(s.udise)}</td>
-      <td>${esc(INDICATOR_TEXT[s.indicator] ?? 'Unknown')}</td>
+      <td><span class="tag ${s.indicator === 'no_girls_toilet' ? 'tag-none' : 'tag-broken'}">${esc(INDICATOR_TEXT[s.indicator] ?? 'Unknown')}</span></td>
     </tr>`).join('');
 
   return renderPage({
-    title: `${block.name}, ${district.name} — ${fmtNum(block.flagged)} schools flagged`,
-    description: `${fmtNum(block.flagged)} of ${fmtNum(block.total)} schools in ${block.name}, ${district.name} (${fmtRate(block.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
+    title: `${titleCase(block.name)}, ${titleCase(district.name)} — ${fmtNum(block.flagged)} schools flagged`,
+    description: `${fmtNum(block.flagged)} of ${fmtNum(block.total)} schools in ${titleCase(block.name)}, ${titleCase(district.name)} (${fmtRate(block.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}/${district.slug}/${block.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' },
       { label: state.name, href: `/state/${state.slug}` },
       { label: district.name, href: `/state/${state.slug}/${district.slug}` },
       { label: block.name }]),
-    headline: `<h1>${esc(block.name)}</h1>
-      <p class="sub">${fmtNum(block.flagged)} of ${fmtNum(block.total)} schools flagged
-        (<strong>${fmtRate(block.rate)}</strong>)${cmp}</p>`,
-    table: `<table class="stats schools">
+    headline: hero(block.name, block,
+      compareToBaseline(block.rate, district.rate, `${titleCase(district.name)} average`), nationalRate),
+    table: `
+<input id="filter" type="search" hidden placeholder="Filter schools…" aria-label="Filter schools…" />
+<table class="stats schools">
       <thead><tr><th>School</th><th>UDISE</th><th>Reported issue</th></tr></thead>
-      <tbody>${rows}</tbody></table>`,
+      <tbody>${rows}</tbody></table>${FILTER_SCRIPT}`,
   });
 }

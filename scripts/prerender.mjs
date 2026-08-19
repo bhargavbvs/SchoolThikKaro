@@ -44,11 +44,11 @@ if (!styleHref) {
 write('/', renderIndexPage(tree, { script: scriptTag, style: styleHref ?? '' }));
 let n = 1;
 for (const s of tree.states) {
-  write(`/state/${s.slug}`, renderStatePage(s)); n++;
+  write(`/state/${s.slug}`, renderStatePage(s, tree.national.rate)); n++;
   for (const d of s.districts) {
-    write(`/state/${s.slug}/${d.slug}`, renderDistrictPage(s, d)); n++;
+    write(`/state/${s.slug}/${d.slug}`, renderDistrictPage(s, d, tree.national.rate)); n++;
     for (const b of d.blocks) {
-      write(`/state/${s.slug}/${d.slug}/${b.slug}`, renderBlockPage(s, d, b)); n++;
+      write(`/state/${s.slug}/${d.slug}/${b.slug}`, renderBlockPage(s, d, b, tree.national.rate)); n++;
     }
   }
 }

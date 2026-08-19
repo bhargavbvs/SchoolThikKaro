@@ -51,9 +51,10 @@ describe('renderBlockPage', () => {
     expect(html).toContain('GOVT LP MYLLIEM');
     expect(html).toContain('17040300201');
   });
-  it('compares the block rate to its district and state, so the page is not a bare template', () => {
-    expect(html).toMatch(/EAST KHASI HILLS/);
-    expect(html).toMatch(/MEGHALAYA/);
+  it('compares the block rate to its district, so the page is not a bare template', () => {
+    // Place names render title-cased, not as the raw all-caps UDISE values.
+    expect(html).toMatch(/East Khasi Hills/);
+    expect(html).toMatch(/Meghalaya/);
     expect(html).toContain('25.9%');
   });
   it('renders a breadcrumb back up the hierarchy', () => {
@@ -82,7 +83,7 @@ describe('renderBlockPage', () => {
 describe('renderStatePage', () => {
   it('lists districts with their rates', () => {
     const html = renderStatePage(state);
-    expect(html).toContain('EAST KHASI HILLS');
+    expect(html).toContain('East Khasi Hills');
     expect(html).toContain('25.9%');
   });
   it('sets Open Graph tags for rich link previews', () => {
@@ -91,6 +92,45 @@ describe('renderStatePage', () => {
     expect(html).toContain('property="og:description"');
     expect(html).toContain('property="og:url"');
   });
+
+  it('leads with the rate as a hero figure, not buried in a paragraph', () => {
+    const html = renderStatePage(state, 5.63);
+    expect(html).toMatch(/class="hero-rate"[\s\S]*?29\.7%/);
+  });
+
+  it('places the rate against the national average, since a bare % means nothing alone', () => {
+    const html = renderStatePage(state, 5.63);
+    // 29.7 / 5.63 = 5.3x
+    expect(html).toMatch(/5\.3× the national average/);
+  });
+
+  it('omits the comparison line entirely when no baseline was supplied', () => {
+    expect(renderStatePage(state)).not.toContain('class="cmp');
+  });
+
+  it('gives each row a rate bar scaled to the largest rate in this table', () => {
+    const html = renderStatePage(state, 5.63);
+    // Only one district in the fixture, so it is the max and gets a full bar.
+    expect(html).toMatch(/class="bar [^"]*" style="--w:100%"/);
+  });
+
+  it('colours the bar by absolute severity, so pages stay comparable to each other', () => {
+    // The fixture district is 25.9% against a 5.63% national rate — 4.6x,
+    // so it must read as high even though it fills its own table's bar.
+    expect(renderStatePage(state, 5.63)).toMatch(/class="bar is-high"/);
+  });
+
+  it('offers a filter box for long lists, carrying a searchable name on each row', () => {
+    const html = renderStatePage(state, 5.63);
+    expect(html).toContain('id="filter"');
+    expect(html).toContain('data-name="east khasi hills"');
+  });
+
+  it('ships the filter input hidden so it never appears without the JS that drives it', () => {
+    // Rows are pre-rendered and all visible with JS off; the script unhides
+    // the input only once it has wired up the listener.
+    expect(renderStatePage(state, 5.63)).toMatch(/<input id="filter"[^>]*\shidden\b/);
+  });
 });
 
 describe('renderIndexPage', () => {
@@ -98,8 +138,9 @@ describe('renderIndexPage', () => {
   it('shows the national headline figure', () => {
     expect(html).toContain('78,744');
   });
-  it('lists states', () => {
-    expect(html).toContain('MEGHALAYA');
+  it('lists states, title-cased rather than as raw all-caps data', () => {
+    expect(html).toContain('Meghalaya');
+    expect(html).not.toContain('>MEGHALAYA<');
   });
   it('DOES load the SPA bundle, for the map section below the fold — the real ' +
     'built tag it was given, not a literal "main.js" (there is no dev-time default any more)', () => {
