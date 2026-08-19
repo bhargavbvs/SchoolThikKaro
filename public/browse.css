@@ -330,3 +330,8 @@ table.stats td.udise, .crumb, .label, .masthead .tag {
   margin:0 0 10px; padding-bottom:10px; border-bottom:1px solid var(--line);
   font:600 13px/1.35 var(--sans); letter-spacing:0; text-transform:none;
   color:var(--body); }
+
+/* A broader column heading has to say what it actually counted, next to
+   the numbers rather than only in prose further up the page. */
+.table-note { margin:12px 0 0; max-width:70ch;
+  font:400 12px/1.6 var(--sans); color:var(--muted); }

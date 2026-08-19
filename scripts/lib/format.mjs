@@ -25,7 +25,10 @@ export function compareToBaseline(rate, baseline, label) {
   if (!Number.isFinite(rate) || !Number.isFinite(baseline) || baseline <= 0) return null;
 
   const ratio = rate / baseline;
-  const base = `${baseline.toFixed(1)}%`;
+  // The baseline is stated as "1 in N schools" rather than a percentage:
+  // the same fact, in the form a reader can picture.
+  const n = oneInN(baseline);
+  const base = n === null ? `${baseline.toFixed(1)}%` : `1 in ${n.toLocaleString('en-IN')}`;
   if (ratio >= 1.5) return `${ratio.toFixed(1)}× the ${label} (${base})`;
   if (ratio >= 0.67) return `about the ${label} (${base})`;
   return `below the ${label} (${base})`;
@@ -78,4 +81,12 @@ export function oneInN(rate) {
   if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return null;
   const n = Math.round(100 / rate);
   return n >= 2 ? n : null;
+}
+
+/** "1 in 18" — the same fact a percentage carries, in the form a reader can
+ *  actually picture. Returns null when the rate is unknown or so high that
+ *  "1 in 1" would be nonsense, so callers can print a dash instead. */
+export function oneInLabel(rate) {
+  const n = oneInN(rate);
+  return n === null ? null : `1 in ${n.toLocaleString('en-IN')}`;
 }

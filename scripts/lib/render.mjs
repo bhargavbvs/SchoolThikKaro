@@ -2,7 +2,7 @@
 // structurally impossible to omit or drift. src/config.js imports cleanly
 // under plain Node (its import.meta.env access is optional-chained).
 import { SOURCE_YEAR } from '../../src/config.js';
-import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate, oneInN } from './format.mjs';
+import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate, oneInN, oneInLabel } from './format.mjs';
 import { esc } from './render-escape.mjs';
 import { renderChoropleth, renderLegend, stateKey } from './choropleth.mjs';
 
@@ -76,7 +76,7 @@ const hero = (name, { flagged, total, rate }, comparison, baseline) => {
   const sev = baseline === undefined ? '' : severityOf(rate, baseline);
   return `
   <h1>${esc(titleCase(name))}</h1>
-  <p class="hero-rate"><strong class="${sev}">${fmtRate(rate)}</strong> <span>of schools have no working girls’ toilet</span></p>
+  <p class="hero-rate"><strong class="${sev}">${oneInLabel(rate) ?? '—'}</strong> <span>schools here has an issue in the government’s record</span></p>
   <p class="sub">${fmtNum(flagged)} of ${fmtNum(total)} girls’ and co-ed schools</p>
   ${comparison ? `<p class="cmp ${comparison.startsWith('below') ? 'is-low' : ''}">${esc(comparison)}</p>` : ''}`;
 };
@@ -86,7 +86,7 @@ const statRow = (label, href, flagged, total, rate, maxRate, nationalRate) => `
     <td class="name"><a href="${esc(href)}">${esc(titleCase(label))}</a></td>
     <td class="num">${fmtNum(flagged)}</td>
     <td class="num">${fmtNum(total)}</td>
-    <td class="num rate"><span class="rate-wrap"><span class="bar ${severityOf(rate, nationalRate)}" style="--w:${barWidth(rate, maxRate)}%" aria-hidden="true"></span><span class="rate-val ${severityOf(rate, nationalRate)}">${fmtRate(rate)}</span></span></td>
+    <td class="num rate"><span class="rate-wrap"><span class="bar ${severityOf(rate, nationalRate)}" style="--w:${barWidth(rate, maxRate)}%" aria-hidden="true"></span><span class="rate-val ${severityOf(rate, nationalRate)}">${oneInLabel(rate) ?? '—'}</span></span></td>
   </tr>`;
 
 /** Rows are pre-rendered and visible with JavaScript off; this only hides
@@ -107,9 +107,13 @@ for(var n=0;n<r.length;n++){r[n].style.display=!q?'':(r[n].dataset.name.indexOf(
 const statTable = (rows, filterLabel, nameLabel = 'Name') => `
 ${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />` : ''}
 <table class="stats" id="data">
-  <thead><tr><th>${esc(nameLabel)}</th><th class="num">No working toilet</th><th class="num">All schools</th><th class="num">Share</th></tr></thead>
+  <thead><tr><th>${esc(nameLabel)}</th><th class="num">Schools with issues</th><th class="num">All schools</th><th class="num">How common</th></tr></thead>
   <tbody>${rows}</tbody>
-</table>${filterLabel ? FILTER_SCRIPT : ''}`;
+</table>
+<p class="table-note">“Issues” here means the one thing ${esc(SOURCE_YEAR)} records about
+  girls’ toilets: the school has none, or has one that does not function. It is the only
+  issue in this release — a school counted as having no issue may still have others.</p>
+${filterLabel ? FILTER_SCRIPT : ''}`;
 
 const maxRateOf = (nodes) => Math.max(0, ...nodes.map((n) => n.rate ?? 0));
 
@@ -131,7 +135,7 @@ export function renderIndexPage(tree, geo) {
   const byKey = new Map(tree.states.map((s) => [stateKey(s.name), {
     slug: s.slug,
     rate: s.rate,
-    label: `${titleCase(s.name)} — ${fmtRate(s.rate)} of schools have no working girls’ toilet`,
+    label: `${titleCase(s.name)} — ${oneInLabel(s.rate) ?? '—'} schools has an issue in the record`,
   }]));
   const map = `<figure class="atlas-map">
       ${renderChoropleth({
@@ -141,7 +145,8 @@ export function renderIndexPage(tree, geo) {
       ${renderLegend()}
       <figcaption>Shading is the share of a state\u2019s girls\u2019 and co-ed government
         schools with no working girls\u2019 toilet, cut at multiples of the national
-        rate (${fmtRate(tree.national.rate)}). Unshaded states are not in this release.
+        rate of ${esc(oneInLabel(tree.national.rate) ?? '—')} schools. Unshaded states are
+        not in this release.
         Figures are in the table beside it.</figcaption>
     </figure>`;
   return renderPage({
@@ -169,7 +174,7 @@ export function renderIndexPage(tree, geo) {
         tell us what you actually see: the toilet, the water, the wiring, the classroom.</p>
       <div class="actions">
         <a class="btn btn-primary" href="#data">Find your school →</a>
-        <a class="btn btn-ghost" href="/app/#/">Report what you find</a>
+        <a class="btn btn-ghost" href="/app/#/add">Report what you find</a>
       </div>
     </div>
 
@@ -188,7 +193,7 @@ export function renderIndexPage(tree, geo) {
       </div>
       <div>
         <h2 class="stat-head">Worst state: ${esc(titleCase(tree.states[0]?.name ?? ''))}</h2>
-        <div class="figure">${fmtRate(tree.states[0]?.rate)}</div>
+        <div class="figure">${oneInLabel(tree.states[0]?.rate) ?? '—'}</div>
         <p class="note">of its schools — ${fmtNum(tree.states[0]?.flagged)} out of
           ${fmtNum(tree.states[0]?.total)}.</p>
       </div>
@@ -225,7 +230,7 @@ export function renderStatePage(state, nationalRate) {
   const m = maxRateOf(state.districts);
   return renderPage({
     title: `${titleCase(state.name)} — ${fmtNum(state.flagged)} schools with no working girls’ toilet · SchoolThikKaro`,
-    description: `${fmtNum(state.flagged)} of ${fmtNum(state.total)} schools in ${titleCase(state.name)} (${fmtRate(state.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
+    description: `${fmtNum(state.flagged)} of ${fmtNum(state.total)} schools in ${titleCase(state.name)} — ${oneInLabel(state.rate) ?? '—'} — are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' }, { label: state.name }]),
     headline: hero(state.name, state, compareToBaseline(state.rate, nationalRate, 'national average'), nationalRate),
@@ -239,7 +244,7 @@ export function renderDistrictPage(state, district, nationalRate) {
   const m = maxRateOf(district.blocks);
   return renderPage({
     title: `${titleCase(district.name)}, ${titleCase(state.name)} — ${fmtNum(district.flagged)} schools with no working girls’ toilet · SchoolThikKaro`,
-    description: `${fmtNum(district.flagged)} of ${fmtNum(district.total)} schools in ${titleCase(district.name)} district (${fmtRate(district.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
+    description: `${fmtNum(district.flagged)} of ${fmtNum(district.total)} schools in ${titleCase(district.name)} district — ${oneInLabel(district.rate) ?? '—'} — are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}/${district.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' },
       { label: state.name, href: `/state/${state.slug}` }, { label: district.name }]),
@@ -268,7 +273,7 @@ export function renderBlockPage(state, district, block, nationalRate) {
 
   return renderPage({
     title: `${titleCase(block.name)}, ${titleCase(district.name)} — ${fmtNum(block.flagged)} schools with no working girls’ toilet · SchoolThikKaro`,
-    description: `${fmtNum(block.flagged)} of ${fmtNum(block.total)} schools in ${titleCase(block.name)}, ${titleCase(district.name)} (${fmtRate(block.rate)}) are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
+    description: `${fmtNum(block.flagged)} of ${fmtNum(block.total)} schools in ${titleCase(block.name)}, ${titleCase(district.name)} — ${oneInLabel(block.rate) ?? '—'} — are recorded in ${SOURCE_YEAR} as lacking a working girls’ toilet.`,
     canonical: `${SITE}/state/${state.slug}/${district.slug}/${block.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' },
       { label: state.name, href: `/state/${state.slug}` },

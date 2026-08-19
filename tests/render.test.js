@@ -55,7 +55,7 @@ describe('renderBlockPage', () => {
     // Place names render title-cased, not as the raw all-caps UDISE values.
     expect(html).toMatch(/East Khasi Hills/);
     expect(html).toMatch(/Meghalaya/);
-    expect(html).toContain('25.9%');
+    expect(html).toContain('1 in 4');
   });
   it('renders a breadcrumb back up the hierarchy', () => {
     expect(html).toContain('/state/meghalaya');
@@ -83,7 +83,7 @@ describe('renderStatePage', () => {
   it('lists districts with their rates', () => {
     const html = renderStatePage(state);
     expect(html).toContain('East Khasi Hills');
-    expect(html).toContain('25.9%');
+    expect(html).toContain('1 in 4');
   });
   it('sets Open Graph tags for rich link previews', () => {
     const html = renderStatePage(state);
@@ -94,7 +94,7 @@ describe('renderStatePage', () => {
 
   it('leads with the rate as a hero figure, not buried in a paragraph', () => {
     const html = renderStatePage(state, 5.63);
-    expect(html).toMatch(/class="hero-rate"[\s\S]*?29\.7%/);
+    expect(html).toMatch(/class="hero-rate"[\s\S]*?1 in 3/);
   });
 
   it('places the rate against the national average, since a bare % means nothing alone', () => {
@@ -211,7 +211,7 @@ describe('the page uses the reader’s words, not ours', () => {
     // to read a column heading and know what the number under it counts.
     const thead = index.match(/<thead>[\s\S]*?<\/thead>/)[0];
     expect(thead).not.toMatch(/Flagged|Rate<\/th>/);
-    expect(thead).toContain('No working toilet');
+    expect(thead).toContain('Schools with issues');
     expect(thead).toContain('All schools');
   });
 
@@ -220,8 +220,8 @@ describe('the page uses the reader’s words, not ours', () => {
     expect(statePage).toMatch(/<th>District<\/th>/);
   });
 
-  it('spells out what a percentage counts instead of saying "flagged"', () => {
-    expect(statePage).toContain('of schools have no working girls’ toilet');
+  it('says what the headline figure counts instead of saying "flagged"', () => {
+    expect(statePage).toContain('has an issue in the government’s record');
     expect(statePage).not.toContain('of schools flagged');
   });
 
@@ -254,5 +254,27 @@ describe('filtering works on a phone, where most rows start hidden', () => {
 
   it('restores the ten-row view when the query is cleared', () => {
     expect(html).toContain("!q?''");
+  });
+});
+
+describe('percentages', () => {
+  it('appear nowhere except the government’s own headline claim', () => {
+    // Percentages were removed in favour of "1 in N", which a reader can
+    // picture. The one exception is the official "has a girls' toilet"
+    // figure: that is the government's number, stated the way they state
+    // it, and it is the thing the page exists to challenge.
+    const pages = [renderIndexPage(tree, geo), renderStatePage(state, 5.63),
+      renderBlockPage(state, district, block, 5.63)];
+    const official = fmtRate(officialClaimRate(tree.national));
+    for (const page of pages) {
+      const text = page.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]*>/g, ' ');
+      const found = (text.match(/\d[\d,]*\.?\d*\s?%/g) ?? []).filter((m) => m.trim() !== official);
+      expect(found, `unexpected percentage(s): ${found.join(', ')}`).toEqual([]);
+    }
+  });
+
+  it('states how common a problem is as a count of schools', () => {
+    const html = renderStatePage(state, 5.63);
+    expect(html).toMatch(/1 in \d/);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate, oneInN }
+import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate, oneInN, oneInLabel }
   from '../scripts/lib/format.mjs';
 
 describe('titleCase', () => {
@@ -30,7 +30,9 @@ describe('compareToBaseline', () => {
     const s = compareToBaseline(29.7, 5.63, 'national average');
     expect(s).toMatch(/5\.3×/);
     expect(s).toMatch(/national average/);
-    expect(s).toMatch(/5\.6%/);
+    // The baseline is stated as "1 in N schools", never as a percentage.
+    expect(s).toMatch(/1 in 18/);
+    expect(s).not.toMatch(/%/);
   });
   it('says "about" when close to the baseline, rather than a noisy 1.1x', () => {
     expect(compareToBaseline(5.9, 5.63, 'national average')).toMatch(/about the national average/i);
@@ -124,5 +126,22 @@ describe('oneInN', () => {
     expect(oneInN(0)).toBeNull();
     expect(oneInN(null)).toBeNull();
     expect(oneInN(NaN)).toBeNull();
+  });
+});
+
+describe('oneInLabel', () => {
+  it('states the national rate as a number of schools, not a percentage', () => {
+    expect(oneInLabel(5.63)).toBe('1 in 18');
+  });
+  it('handles the worst real state', () => {
+    expect(oneInLabel(29.72)).toBe('1 in 3'); // Meghalaya
+  });
+  it('groups the digits for the best performers, where N gets large', () => {
+    expect(oneInLabel(0.07)).toBe('1 in 1,429'); // West Bengal
+  });
+  it('returns null when there is nothing meaningful to say', () => {
+    expect(oneInLabel(null)).toBeNull();
+    expect(oneInLabel(0)).toBeNull();
+    expect(oneInLabel(90)).toBeNull();
   });
 });
