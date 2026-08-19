@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { titleCase, compareToBaseline, barWidth, severityOf } from '../scripts/lib/format.mjs';
+import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate }
+  from '../scripts/lib/format.mjs';
 
 describe('titleCase', () => {
   it('title-cases a plain uppercase place name', () => {
@@ -64,6 +65,26 @@ describe('barWidth', () => {
   it('returns 0 when the table max is missing or zero, instead of dividing by zero', () => {
     expect(barWidth(5, 0)).toBe(0);
     expect(barWidth(5, null)).toBe(0);
+  });
+});
+
+describe('officialClaimRate', () => {
+  // The published "X% of schools have a girls' toilet" figure counts a
+  // non-functional toilet as a toilet — it only subtracts schools with NO
+  // toilet at all. Reproducing it exactly is what lets the page say what the
+  // official number leaves out.
+  it('counts only schools with no toilet at all as lacking one', () => {
+    // Real national figures: 1,397,477 total, 34,123 with no toilet.
+    expect(officialClaimRate({ total: 1397477, noToilet: 34123 })).toBeCloseTo(97.56, 1);
+  });
+  it('ignores non-functional toilets entirely, which is the whole point', () => {
+    const a = officialClaimRate({ total: 1000, noToilet: 100, nonFunctional: 0 });
+    const b = officialClaimRate({ total: 1000, noToilet: 100, nonFunctional: 500 });
+    expect(a).toBe(b);
+  });
+  it('returns null rather than a bogus figure when totals are missing', () => {
+    expect(officialClaimRate({ total: 0, noToilet: 5 })).toBeNull();
+    expect(officialClaimRate({})).toBeNull();
   });
 });
 

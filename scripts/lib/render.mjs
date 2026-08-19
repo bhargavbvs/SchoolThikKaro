@@ -2,7 +2,7 @@
 // structurally impossible to omit or drift. src/config.js imports cleanly
 // under plain Node (its import.meta.env access is optional-chained).
 import { SOURCE_YEAR } from '../../src/config.js';
-import { titleCase, compareToBaseline, barWidth, severityOf } from './format.mjs';
+import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate } from './format.mjs';
 
 export const SITE = 'https://shaala-flax.vercel.app';
 
@@ -36,16 +36,23 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
 <meta property="og:description" content="${esc(description)}" />
 <meta property="og:url" content="${esc(canonical)}" />
 <script>(function(){var t=localStorage.getItem('shaala.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&display=swap" />
 <link rel="stylesheet" href="/browse.css" />${extraStyle ? `
 <link rel="stylesheet" href="${extraStyle}" />` : ''}
 </head>
 <body class="${esc(bodyClass)}">
-<nav class="crumb">${breadcrumb}</nav>
+<header class="masthead">
+  <a class="wordmark" href="/">shaala<span>.in</span></a>
+  <span class="tag">${esc(SOURCE_YEAR)} · Government’s own record</span>
+</header>
+${breadcrumb ? `<nav class="crumb">${breadcrumb}</nav>` : ''}
 <header class="head">${headline}</header>
 ${table}
 ${extra}
 <footer class="foot">
-  <p>Figures as reported by schools to ${esc(SOURCE_YEAR)}. We publish them as
+  <p>Figures as reported by each school to ${esc(SOURCE_YEAR)}. We publish them as
      the school’s own record, not as our finding.</p>
   <p><a href="/#/methodology">How this works</a></p>
 </footer>
@@ -77,13 +84,10 @@ const hero = (name, { flagged, total, rate }, comparison, baseline) => {
 
 const statRow = (label, href, flagged, total, rate, maxRate, nationalRate) => `
   <tr data-name="${esc(titleCase(label).toLowerCase())}">
-    <td><a href="${esc(href)}">${esc(titleCase(label))}</a></td>
+    <td class="name"><a href="${esc(href)}">${esc(titleCase(label))}</a></td>
     <td class="num">${fmtNum(flagged)}</td>
     <td class="num">${fmtNum(total)}</td>
-    <td class="num rate">
-      <span class="bar ${severityOf(rate, nationalRate)}" style="--w:${barWidth(rate, maxRate)}%" aria-hidden="true"></span>
-      <span class="rate-val ${severityOf(rate, nationalRate)}">${fmtRate(rate)}</span>
-    </td>
+    <td class="num rate"><span class="rate-wrap"><span class="bar ${severityOf(rate, nationalRate)}" style="--w:${barWidth(rate, maxRate)}%" aria-hidden="true"></span><span class="rate-val ${severityOf(rate, nationalRate)}">${fmtRate(rate)}</span></span></td>
   </tr>`;
 
 /** Rows are pre-rendered and visible with JavaScript off; this only hides
@@ -97,7 +101,7 @@ for(var n=0;n<r.length;n++){r[n].style.display=!q||r[n].dataset.name.indexOf(q)>
 
 const statTable = (rows, filterLabel) => `
 ${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />` : ''}
-<table class="stats">
+<table class="stats" id="data">
   <thead><tr><th>Name</th><th class="num">Flagged</th><th class="num">Schools</th><th class="num">Rate</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>${filterLabel ? FILTER_SCRIPT : ''}`;
@@ -131,19 +135,54 @@ export function renderIndexPage(tree, assetTags) {
     title: `${fmtNum(tree.national.flagged)} Indian government schools flagged for girls’ toilets`,
     description: `${fmtNum(tree.national.flagged)} schools are recorded in ${SOURCE_YEAR} as having no girls’ toilet or one that does not function. Browse by state and district.`,
     canonical: `${SITE}/`,
-    breadcrumb: crumb([{ label: 'India' }]),
-    headline: `<h1>${fmtNum(tree.national.flagged)} schools flagged</h1>
-      <p class="hero-rate"><strong>${fmtRate(tree.national.rate)}</strong>
-        <span>of India’s girls’ and co-ed schools</span></p>
-      <p class="sub">${fmtNum(tree.national.noToilet)} have no girls’ toilet ·
-        ${fmtNum(tree.national.nonFunctional)} have one that does not function</p>`,
+    breadcrumb: '',
+    // The official headline figure counts a toilet that does not work as a
+    // toilet. That single sentence is the whole argument, so it is the page.
+    headline: `<div class="hero">
+      <p class="kicker"><span class="dot"></span><span class="label">Live · ${fmtNum(tree.national.flagged)} schools across India</span></p>
+      <h1>A toilet that<br /><mark>doesn’t work</mark><br />is still counted.</h1>
+      <p class="standfirst"><strong>${fmtNum(tree.national.nonFunctional)}</strong> government schools have a
+        girls’ toilet that does not function. The official
+        ${fmtRate(officialClaimRate(tree.national))} “has a girls’ toilet” figure counts every
+        one of them as compliant.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#data">Browse the record →</a>
+        <a class="btn btn-ghost" href="/#/methodology">How this works</a>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div>
+        <span class="label">Counted honestly</span>
+        <div class="figure"><mark>${fmtNum(tree.national.flagged)}</mark></div>
+        <p class="note">schools with no girls’ toilet <b>or</b> one that does not
+          function — <b>${fmtRate(tree.national.rate)}</b> of all girls’ and co-ed schools.</p>
+      </div>
+      <div>
+        <span class="label">Hidden by the official figure</span>
+        <div class="figure">${fmtNum(tree.national.nonFunctional)}</div>
+        <p class="note">have a toilet that exists but does not work. Every one is
+          counted as <b>compliant</b>.</p>
+      </div>
+      <div>
+        <span class="label">Worst affected state</span>
+        <div class="figure">${fmtRate(tree.states[0]?.rate)}</div>
+        <p class="note"><b>${esc(titleCase(tree.states[0]?.name ?? ''))}</b> —
+          ${fmtNum(tree.states[0]?.flagged)} of ${fmtNum(tree.states[0]?.total)} schools.</p>
+      </div>
+    </div>`,
     table: statTable(
       (() => { const m = maxRateOf(tree.states); const nat = tree.national.rate;
         return tree.states.map((s) =>
           statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate, m, nat)).join(''); })(),
       'Filter states…'),
-    extra: `<section class="map-section"><h2>Where reports are</h2><div id="map"></div>
-      <header id="topbar"></header><aside id="sheet" hidden></aside>
+    // #topbar is emitted BEFORE #map and un-fixed by browse.css: the SPA
+    // styles it position:fixed for the full-screen map app, where it is the
+    // whole chrome. On this page it would float over the masthead as a
+    // second, differently-styled wordmark. It belongs with the map.
+    extra: `<section class="map-section"><h2>Where reports are</h2>
+      <header id="topbar"></header><div id="map"></div>
+      <aside id="sheet" hidden></aside>
       <div id="submit-root" hidden></div><div id="admin-root" hidden></div>
       <div id="toast" hidden></div></section>`,
   });
@@ -191,7 +230,7 @@ export function renderBlockPage(state, district, block, nationalRate) {
   // would become "Aggongitim Lps", and LPS means Lower Primary School.
   const rows = block.schools.map((s) => `
     <tr data-name="${esc(s.name.toLowerCase())}">
-      <td><a href="${stateHref}">${esc(s.name)}</a></td>
+      <td class="name"><a href="${stateHref}">${esc(s.name)}</a></td>
       <td class="udise">${esc(s.udise)}</td>
       <td><span class="tag ${s.indicator === 'no_girls_toilet' ? 'tag-none' : 'tag-broken'}">${esc(INDICATOR_TEXT[s.indicator] ?? 'Unknown')}</span></td>
     </tr>`).join('');

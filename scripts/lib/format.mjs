@@ -42,6 +42,18 @@ export function barWidth(rate, maxRate) {
   return Math.max(1, Math.round((rate / maxRate) * 100));
 }
 
+/** Reproduces the published "X% of schools have a girls' toilet" figure.
+ *
+ *  That figure subtracts only schools with NO toilet at all — a toilet that
+ *  exists but does not function still counts as having one. Computing it the
+ *  same way is what lets the page state, precisely and checkably, what the
+ *  official number leaves out. */
+export function officialClaimRate({ total, noToilet } = {}) {
+  if (typeof total !== 'number' || typeof noToilet !== 'number') return null;
+  if (!Number.isFinite(total) || total <= 0) return null;
+  return ((total - noToilet) / total) * 100;
+}
+
 /** Severity class for a bar, measured against the NATIONAL rate rather than
  *  the table's own maximum.
  *
