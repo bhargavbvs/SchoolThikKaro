@@ -154,15 +154,16 @@ export function renderIndexPage(tree, geo) {
     // The official headline figure counts a toilet that does not work as a
     // toilet. That single sentence is the whole argument, so it is the page.
     headline: `<div class="hero">
-      <p class="kicker"><span class="dot"></span><span class="label">Girls at 1 in ${oneInN(tree.national.rate)} government schools have no working toilet</span></p>
-      <h1>A toilet that<br /><mark>doesn’t work</mark><br />is still counted.</h1>
-      <p class="standfirst"><strong>${fmtNum(tree.national.nonFunctional)}</strong> government schools have a
-        girls’ toilet that does not function. The official
-        ${fmtRate(officialClaimRate(tree.national))} “has a girls’ toilet” figure counts every
-        one of them as compliant.</p>
+      <p class="kicker"><span class="dot"></span><span class="label">School Thik Karo · the government’s own record, block by block</span></p>
+      <h1>The record says<br />the school is <mark>fine</mark>.<br />Go and look.</h1>
+      <p class="standfirst">The official ${fmtRate(officialClaimRate(tree.national))}
+        “has a girls’ toilet” figure counts every one of the
+        <strong>${fmtNum(tree.national.nonFunctional)}</strong> schools whose toilet does not
+        work. That is one thing, in one year’s data. Find your block below — then go and
+        tell us what you actually see: the toilet, the water, the wiring, the classroom.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="#data">Browse the record →</a>
-        <a class="btn btn-ghost" href="/app/#/methodology">How this works</a>
+        <a class="btn btn-primary" href="#data">Find your school →</a>
+        <a class="btn btn-ghost" href="/app/#/">Report what you find</a>
       </div>
     </div>
 
@@ -194,9 +195,12 @@ export function renderIndexPage(tree, geo) {
           statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate, m, nat)).join(''); })(),
       'Filter states…')}<label class="showall" for="showall">Show all ${tree.states.length} states</label></div></section>`,
     extra: `<section class="findmine">
-      <h2>Report a school</h2>
-      <p>Standing outside one of these schools? Open it from its block page and
-         send a photo — we need your location to confirm you are there.</p>
+      <h2>Whatever is broken, report it</h2>
+      <p>The figures above are girls’ toilets, because that is what this release
+         measures. What you can report is wider: the toilet, the drinking water,
+         the electricity, the classroom, the boundary wall, the ramp — or something
+         we have not thought of. Send a photo from the spot; we need your location
+         to confirm you are there.</p>
       <p>If the school you are at is <b>not</b> in the government’s record, you can
          still report it. Those are published separately, marked as reported by a
          citizen, and never counted inside the official figures.</p>

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { esc, fmtRate, renderBlockPage, renderStatePage, renderIndexPage }
   from '../scripts/lib/render.mjs';
+import { officialClaimRate } from '../scripts/lib/format.mjs';
 
 // State outlines, shaped like data/india-states.json but with two toy
 // shapes — renderIndexPage needs geometry, not the real 104KB of it.
@@ -165,3 +166,38 @@ describe('renderIndexPage', () => {
   });
 });
 
+
+describe('the homepage is about schools, not only about toilets', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('leads with the record being wrong, not with a toilet', () => {
+    // The site is School Thik Karo — get the school fixed. A headline
+    // about one fixture argued the whole project down to its narrowest
+    // possible claim.
+    const h1 = html.match(/<h1>[\s\S]*?<\/h1>/)[0];
+    expect(h1.toLowerCase()).not.toContain('toilet');
+  });
+
+  it('still states the toilet finding exactly, because that is the evidence', () => {
+    // Broader framing must not cost the precision the argument rests on.
+    // Derived from the fixture with the same helpers the page uses, so this
+    // asserts the wiring rather than a number copied from production.
+    expect(html).toContain(fmtRate(officialClaimRate(tree.national)));
+    expect(html).toContain(tree.national.nonFunctional.toLocaleString('en-IN'));
+  });
+
+  it('says plainly that the figures cover one thing only', () => {
+    expect(html).toMatch(/one thing, in one year’s data|that is what this release\s+measures/);
+  });
+
+  it('invites reports on everything the form now accepts', () => {
+    for (const thing of ['drinking water', 'electricity', 'classroom', 'ramp']) {
+      expect(html.toLowerCase()).toContain(thing);
+    }
+  });
+
+  it('offers reporting as a first-class action, not a footnote', () => {
+    const actions = html.match(/<div class="actions">[\s\S]*?<\/div>/)[0];
+    expect(actions).toContain('Report what you find');
+  });
+});
