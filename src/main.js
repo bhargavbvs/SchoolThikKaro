@@ -3,6 +3,8 @@ import { mountAdmin } from './admin/admin.js';
 import { initMap, showState, showAllStates } from './map/map.js';
 import { openSheet } from './map/sheet.js';
 import { mountTopbar } from './map/topbar.js';
+import { getSchool } from './lib/schools.js';
+import { openSubmitFlow } from './submit/submit.js';
 
 onRoute(/^\/admin/, () => {
   const el = document.getElementById('admin-root');
@@ -31,6 +33,25 @@ onRoute(/^\/(?:$|state\/)/, async () => {
     map.on('mouseenter', 'pins', () => (map.getCanvas().style.cursor = 'pointer'));
     map.on('mouseleave', 'pins', () => (map.getCanvas().style.cursor = ''));
   }
+});
+
+// The desktop gate prints a QR pointing here so a reporter can hand the
+// job off to the phone that has the camera and the GPS (src/submit/qr.js).
+// Without this route that QR led to a page that did nothing, which meant
+// the desktop half of the reporting flow had never worked. It also gives
+// every school row a direct way into the form, with no map in between.
+onRoute(/^\/report\//, async () => {
+  const code = (window.location.hash.match(/report\/(\d+)/) || [])[1];
+  if (!code) return;
+  const school = await getSchool(code);
+  if (!school) {
+    const el = document.getElementById('sheet');
+    el.innerHTML = '<p>That school is not in this release. '
+      + '<a href="/">Browse the record</a> to find it.</p>';
+    el.hidden = false;
+    return;
+  }
+  openSubmitFlow(school);
 });
 
 onRoute(/^\/methodology/, async () => {

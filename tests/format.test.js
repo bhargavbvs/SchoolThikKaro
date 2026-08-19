@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate }
+import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate, oneInN }
   from '../scripts/lib/format.mjs';
 
 describe('titleCase', () => {
@@ -105,5 +105,24 @@ describe('severityOf', () => {
   });
   it('falls back to mid when the baseline is unknown, rather than implying a judgement', () => {
     expect(severityOf(20, null)).toBe('is-mid');
+  });
+});
+
+describe('oneInN', () => {
+  it('turns the real national rate into the figure a reader can picture', () => {
+    expect(oneInN(5.63)).toBe(18); // 5.6% is abstract; 1 in 18 is a corridor
+  });
+  it('rounds to the nearest whole school rather than inventing precision', () => {
+    expect(oneInN(10)).toBe(10);
+    expect(oneInN(33.3)).toBe(3);
+  });
+  it('returns null rather than the meaningless "1 in 1" for a huge rate', () => {
+    expect(oneInN(80)).toBeNull();
+    expect(oneInN(100)).toBeNull();
+  });
+  it('returns null for a missing or nonsensical rate', () => {
+    expect(oneInN(0)).toBeNull();
+    expect(oneInN(null)).toBeNull();
+    expect(oneInN(NaN)).toBeNull();
   });
 });

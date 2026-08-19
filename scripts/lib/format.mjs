@@ -70,3 +70,12 @@ export function severityOf(rate, nationalRate) {
   if (ratio >= 0.67) return 'is-mid';
   return 'is-low';
 }
+
+/** A rate expressed as "1 in N", which is how a reader actually holds a
+ *  small percentage in their head: 5.6% is abstract, "1 in 18 schools" is
+ *  a classroom corridor they can picture. */
+export function oneInN(rate) {
+  if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return null;
+  const n = Math.round(100 / rate);
+  return n >= 2 ? n : null;
+}

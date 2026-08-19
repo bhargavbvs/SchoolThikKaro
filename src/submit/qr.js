@@ -2,7 +2,7 @@
 import { iconEl } from '../lib/icons.js';
 
 export function handoffURL(school, origin = window.location.origin) {
-  return `${origin}/#/report/${school.udise}`;
+  return `${origin}/app/#/report/${school.udise}`;
 }
 
 /** Renders the QR as an <img> pointing at a self-contained data URL produced

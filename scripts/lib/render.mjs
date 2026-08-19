@@ -2,7 +2,7 @@
 // structurally impossible to omit or drift. src/config.js imports cleanly
 // under plain Node (its import.meta.env access is optional-chained).
 import { SOURCE_YEAR } from '../../src/config.js';
-import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate } from './format.mjs';
+import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate, oneInN } from './format.mjs';
 import { esc } from './render-escape.mjs';
 import { renderChoropleth, renderLegend, stateKey } from './choropleth.mjs';
 
@@ -154,7 +154,7 @@ export function renderIndexPage(tree, geo) {
     // The official headline figure counts a toilet that does not work as a
     // toilet. That single sentence is the whole argument, so it is the page.
     headline: `<div class="hero">
-      <p class="kicker"><span class="dot"></span><span class="label">Live · ${fmtNum(tree.national.flagged)} schools across India</span></p>
+      <p class="kicker"><span class="dot"></span><span class="label">Girls at 1 in ${oneInN(tree.national.rate)} government schools have no working toilet</span></p>
       <h1>A toilet that<br /><mark>doesn’t work</mark><br />is still counted.</h1>
       <p class="standfirst"><strong>${fmtNum(tree.national.nonFunctional)}</strong> government schools have a
         girls’ toilet that does not function. The official
@@ -168,33 +168,31 @@ export function renderIndexPage(tree, geo) {
 
     <div class="stat-grid">
       <div>
-        <span class="label">Counted honestly</span>
         <div class="figure"><mark>${fmtNum(tree.national.flagged)}</mark></div>
-        <p class="note">schools with no girls’ toilet <b>or</b> one that does not
-          function — <b>${fmtRate(tree.national.rate)}</b> of all girls’ and co-ed schools.</p>
+        <p class="note">government schools have no working girls’ toilet —
+          <b>1 in ${oneInN(tree.national.rate)}</b> of every girls’ and co-ed school in India.</p>
       </div>
       <div>
-        <span class="label">Hidden by the official figure</span>
         <div class="figure">${fmtNum(tree.national.nonFunctional)}</div>
-        <p class="note">have a toilet that exists but does not work. Every one is
-          counted as <b>compliant</b>.</p>
+        <p class="note">of those have a toilet that exists but does not work, and the
+          official figure counts every one of them as <b>compliant</b>.</p>
       </div>
       <div>
-        <span class="label">Worst affected state</span>
         <div class="figure">${fmtRate(tree.states[0]?.rate)}</div>
-        <p class="note"><b>${esc(titleCase(tree.states[0]?.name ?? ''))}</b> —
-          ${fmtNum(tree.states[0]?.flagged)} of ${fmtNum(tree.states[0]?.total)} schools.</p>
+        <p class="note">of schools in <b>${esc(titleCase(tree.states[0]?.name ?? ''))}</b>, the worst
+          affected state — ${fmtNum(tree.states[0]?.flagged)} of ${fmtNum(tree.states[0]?.total)}.</p>
       </div>
     </div>`,
     // Map and table are one unit: the map answers "where", the table
     // answers "how many", and neither is trustworthy without the other in
     // view. The map carries no figures precisely because the table is
     // right beside it.
-    table: `<section class="atlas">${map}<div class="atlas-table">${statTable(
+    table: `<section class="atlas">${map}<div class="atlas-table">
+      <input id="showall" type="checkbox" hidden />${statTable(
       (() => { const m = maxRateOf(tree.states); const nat = tree.national.rate;
         return tree.states.map((s) =>
           statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate, m, nat)).join(''); })(),
-      'Filter states…')}</div></section>`,
+      'Filter states…')}<label class="showall" for="showall">Show all ${tree.states.length} states</label></div></section>`,
     extra: `<section class="findmine">
       <h2>Report a school</h2>
       <p>Standing outside one of these schools? The reporting map needs your

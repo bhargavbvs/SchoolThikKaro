@@ -7,7 +7,7 @@ const school = { udise: '28133390196', name: 'ST.PETERS HS ANKP' };
 describe('handoffURL', () => {
   it('deep-links to the report route for this exact school', () => {
     expect(handoffURL(school, 'https://shaala.in'))
-      .toBe('https://shaala.in/#/report/28133390196');
+      .toBe('https://shaala.in/app/#/report/28133390196');
   });
 });
 
@@ -22,6 +22,6 @@ describe('renderDesktopGateHTML', () => {
   });
   it('embeds the handoff URL so the QR encodes the right target', () => {
     expect(renderDesktopGateHTML(school, 'https://shaala.in'))
-      .toContain('https://shaala.in/#/report/28133390196');
+      .toContain('https://shaala.in/app/#/report/28133390196');
   });
 });

@@ -275,10 +275,24 @@ svg.india a:focus-visible { outline:none; }
   .atlas-table:has(#filter:not([hidden])) table.stats thead th { top:44px; }
 }
 
+/* On a phone the full list is a wall of 32 rows the reader has to thumb
+   past to reach anything else on the page, so it opens at the ten worst
+   and offers the rest. A checkbox and its label rather than a script: the
+   rows are all in the DOM either way, so crawlers see the whole table and
+   the control works with JavaScript disabled. */
+.showall { display:none; }
 @media (max-width:900px) {
   .atlas { grid-template-columns:minmax(0,1fr); gap:34px; }
   /* Stacked, width is the scarce dimension again, so hand it back. */
   .atlas-map svg.india { height:auto; width:100%; max-height:66vh; }
+
+  #showall:not(:checked) ~ table.stats tbody tr:nth-child(n+11) { display:none; }
+  .showall { display:block; margin-top:-1px; padding:15px; cursor:pointer;
+    border:1px solid var(--line); background:var(--panel); color:var(--ink);
+    font:600 12px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+    text-align:center; }
+  .showall:hover { background:var(--accent); }
+  #showall:checked ~ .showall { display:none; }
 }
 
 @media (max-width:640px) {
