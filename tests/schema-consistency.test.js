@@ -24,7 +24,7 @@ describe('reports table matches what the client actually sends', () => {
     const columns = new Set(columnsOf('reports'));
     const payload = buildPayload(
       { udise: '1', name: 'x' },
-      { finding: 'locked', severity: 'usable', blurApplied: true, facesFound: 2,
+      { category: 'girls_toilet', finding: 'locked', severity: 'usable', blurApplied: true, facesFound: 2,
         fix: { lat: 1, lng: 2, accuracyM: 3 }, tier: { tier: 'verified', distanceM: 4 } },
     );
     for (const key of Object.keys(payload)) {
@@ -37,7 +37,7 @@ describe('school_submissions matches what an unlisted-school report sends', () =
   const payload = buildPayload(
     { kind: 'unlisted', name: 'Govt UPS Nongrim', area: 'Nongrim Hills',
       district: 'East Khasi Hills', state: '', udise: '' },
-    { finding: 'no_toilet', severity: 'absent', blurApplied: true, facesFound: 1,
+    { category: 'drinking_water', finding: 'absent', severity: 'absent', blurApplied: true, facesFound: 1,
       fix: { lat: 25.57, lng: 91.88, accuracyM: 6 } },
   );
 

@@ -42,7 +42,7 @@ describe('renderAddSchoolHTML', () => {
     expect(html).not.toMatch(/UDISE code <span class="req">/);
   });
   it('offers the same findings as a report on a listed school', () => {
-    expect(html).toContain('value="no_toilet"');
+    expect(html).toContain('value="absent"');
     expect(html).toContain('value="working"');
   });
 });

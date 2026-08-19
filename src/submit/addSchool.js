@@ -9,7 +9,7 @@
 // figures this site publishes, which are the government's own record and
 // are worth nothing the moment they are mixed with anything else.
 
-import { FINDINGS, SEVERITIES, validateIdentity } from './submit.js';
+import { CATEGORIES, FINDINGS, SEVERITIES, validateIdentity } from './submit.js';
 
 export { validateIdentity };
 import { detectPlatform } from './gps.js';
@@ -47,6 +47,16 @@ export function renderAddSchoolHTML() {
         <input id="add-udise" type="text" inputmode="numeric" autocomplete="off" /></label>
     </fieldset>
 
+    <fieldset class="sub-category">
+      <legend>What is the problem with? <span class="req">*</span></legend>
+      ${CATEGORIES.map((c) => `
+        <label class="opt opt-cat">
+          <input type="radio" name="category" value="${c.value}" />
+          ${iconEl(c.icon, 'opt-icon')}
+          <span class="o-label">${esc(c.label)}</span>
+        </label>`).join('')}
+    </fieldset>
+
     <fieldset class="sub-findings">
       <legend>What did you find? <span class="req">*</span></legend>
       ${FINDINGS.map((f) => `
@@ -69,6 +79,10 @@ export function renderAddSchoolHTML() {
           </span>
         </label>`).join('')}
     </fieldset>
+
+    <label class="fld sub-note"><span>Anything else we should know?</span>
+      <textarea id="sub-note" rows="3"
+        placeholder="Optional — what you saw, in your own words"></textarea></label>
 
     <section class="sub-photo">
       <h3>Photo <span class="req">*</span></h3>

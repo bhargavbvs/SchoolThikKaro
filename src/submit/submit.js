@@ -4,12 +4,37 @@ import { detectPlatform } from './gps.js';
 import { renderDesktopGateHTML, paintQR, handoffURL } from './qr.js';
 import { iconEl } from '../lib/icons.js';
 
+/** What the report is about. A school fails its students in more ways than
+ *  one, and someone standing in front of a school with no drinking water
+ *  should not have to pretend it is a toilet problem to be heard.
+ *
+ *  The published FIGURES remain girls' toilets only, because that is what
+ *  the UDISE+ release measures. This list is what a citizen may report,
+ *  which is a wider thing than what the government counted. */
+export const CATEGORIES = [
+  { value: 'girls_toilet',   label: 'Girls\u2019 toilet',        icon: 'ban' },
+  { value: 'boys_toilet',    label: 'Boys\u2019 toilet',         icon: 'ban' },
+  { value: 'drinking_water', label: 'Drinking water',       icon: 'droplet' },
+  { value: 'handwashing',    label: 'Handwashing',          icon: 'droplet' },
+  { value: 'electricity',    label: 'Electricity',          icon: 'sun' },
+  { value: 'classroom',      label: 'Classrooms',           icon: 'warning' },
+  { value: 'boundary_wall',  label: 'Boundary wall or gate', icon: 'shield' },
+  { value: 'ramp',           label: 'Ramp or accessibility', icon: 'warning' },
+  { value: 'playground',     label: 'Playground',           icon: 'warning' },
+  { value: 'other',          label: 'Something else',       icon: 'warning' },
+];
+
+/** One condition set for every category, rather than a bespoke list each.
+ *  "There is none at all" means the same thing about a ramp as about a
+ *  toilet, and a reporter should not have to learn a new vocabulary per
+ *  facility. The category says what; this says what state it is in. */
 export const FINDINGS = [
-  { value: 'no_toilet', label: 'No toilet for girls at all', icon: 'ban' },
-  { value: 'locked',    label: 'Toilet exists but locked', icon: 'lock' },
-  { value: 'no_water',  label: 'Toilet exists, no water', icon: 'droplet' },
-  { value: 'unusable',  label: 'Toilet exists, unusable condition', icon: 'warning' },
-  { value: 'working',   label: 'Toilet is working fine', icon: 'checkCircle' },
+  { value: 'absent',     label: 'There is none at all', icon: 'ban' },
+  { value: 'broken',     label: 'It exists but is broken or unusable', icon: 'warning' },
+  { value: 'locked',     label: 'It exists but is locked or off-limits', icon: 'lock' },
+  { value: 'no_water',   label: 'It exists but there is no water', icon: 'droplet' },
+  { value: 'inadequate', label: 'It exists but is not enough for the students', icon: 'warning' },
+  { value: 'working',    label: 'This one is fine', icon: 'checkCircle' },
 ];
 
 // Amber -> red, mirroring the reference app's Minor/Moderate/Severe/Critical
@@ -45,6 +70,16 @@ export function renderFormHTML(school) {
         <strong>${esc(INDICATOR_TEXT[school.indicator] ?? 'Unknown')}</strong></p>
     </section>
 
+    <fieldset class="sub-category">
+      <legend>What is the problem with? <span class="req">*</span></legend>
+      ${CATEGORIES.map((c) => `
+        <label class="opt opt-cat">
+          <input type="radio" name="category" value="${c.value}" />
+          ${iconEl(c.icon, 'opt-icon')}
+          <span class="o-label">${esc(c.label)}</span>
+        </label>`).join('')}
+    </fieldset>
+
     <fieldset class="sub-findings">
       <legend>What did you find? <span class="req">*</span></legend>
       ${FINDINGS.map((f) => `
@@ -68,6 +103,10 @@ export function renderFormHTML(school) {
         </label>`).join('')}
     </fieldset>
 
+    <label class="fld sub-note"><span>Anything else we should know?</span>
+      <textarea id="sub-note" rows="3"
+        placeholder="Optional \u2014 what you saw, in your own words"></textarea></label>
+
     <section class="sub-photo">
       <h3>Photo <span class="req">*</span></h3>
       <p class="guidance">${iconEl('warning')} Photograph the facility only. Do not photograph students.</p>
@@ -82,8 +121,9 @@ export function renderFormHTML(school) {
   `;
 }
 
-export function validateSubmission({ finding, hasPhoto, gate }) {
+export function validateSubmission({ category, finding, hasPhoto, gate }) {
   const errors = [];
+  if (!category) errors.push('Choose what the problem is with.');
   if (!finding) errors.push('Choose what you found.');
   if (!hasPhoto) errors.push('A photo is required.');
   if (gate && !gate.canSubmit) errors.push(gate.reason);

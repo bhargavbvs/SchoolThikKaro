@@ -19,9 +19,16 @@ create table if not exists reports (
   id uuid primary key default gen_random_uuid(),
   udise_code text not null,
   school_name_snapshot text not null,
+  -- What the report is about. The published figures stay girls' toilets
+  -- only, because that is what UDISE+ measures — but a school fails its
+  -- students in more ways than one, and a citizen may report any of them.
+  category text not null default 'girls_toilet' check (category in
+    ('girls_toilet','boys_toilet','drinking_water','handwashing','electricity',
+     'classroom','boundary_wall','ramp','playground','other')),
   finding text not null check (finding in
-    ('no_toilet','locked','no_water','unusable','working')),
+    ('absent','broken','locked','no_water','inadequate','working')),
   severity text check (severity in ('usable','barely_usable','unusable','absent')),
+  note text,
   tier text not null default 'unverified' check (tier in ('verified','unverified')),
   lat double precision,
   lng double precision,
@@ -58,9 +65,13 @@ create table if not exists school_submissions (
   submitted_district text,
   submitted_state text,
   udise_code text,                 -- optional: only if the reporter knows it
+  category text not null default 'girls_toilet' check (category in
+    ('girls_toilet','boys_toilet','drinking_water','handwashing','electricity',
+     'classroom','boundary_wall','ramp','playground','other')),
   finding text not null check (finding in
-    ('no_toilet','locked','no_water','unusable','working')),
+    ('absent','broken','locked','no_water','inadequate','working')),
   severity text check (severity in ('usable','barely_usable','unusable','absent')),
+  note text,
   -- No 'verified' tier is possible here: there is no recorded location to
   -- check the reporter's fix against. See computeTier in src/submit/gps.js.
   tier text not null default 'unverified' check (tier = 'unverified'),
@@ -78,6 +89,26 @@ create table if not exists school_submissions (
 );
 create index if not exists school_submissions_status_idx
   on school_submissions (review_status, created_at desc);
+
+-- Reporting widened beyond girls' toilets after both tables had already
+-- shipped. CREATE TABLE IF NOT EXISTS above cannot retrofit an existing
+-- table, so these make this file safe to re-run against either shape.
+-- Existing rows predate categories and were all toilet reports, which is
+-- what the default records.
+do $$
+declare t text;
+begin
+  foreach t in array array['reports','school_submissions'] loop
+    execute format('alter table %I add column if not exists category text not null default %L', t, 'girls_toilet');
+    execute format('alter table %I add column if not exists note text', t);
+    execute format('alter table %I drop constraint if exists %I', t, t || '_category_check');
+    execute format('alter table %I add constraint %I check (category in (%s))', t, t || '_category_check',
+      '''girls_toilet'',''boys_toilet'',''drinking_water'',''handwashing'',''electricity'',''classroom'',''boundary_wall'',''ramp'',''playground'',''other''');
+    execute format('alter table %I drop constraint if exists %I', t, t || '_finding_check');
+    execute format('alter table %I add constraint %I check (finding in (%s))', t, t || '_finding_check',
+      '''absent'',''broken'',''locked'',''no_water'',''inadequate'',''working''');
+  end loop;
+end $$;
 
 create table if not exists fixes (
   id uuid primary key default gen_random_uuid(),

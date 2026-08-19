@@ -15,8 +15,10 @@ export function buildPayload(school, state) {
       submitted_district: school.district || null,
       submitted_state: school.state || null,
       udise_code: school.udise || null,
+      category: state.category,
       finding: state.finding,
       severity: state.severity ?? null,
+      note: state.note ?? null,
       // Structurally unverifiable — there is no recorded location to check
       // the reporter's fix against, so computeTier can only return this.
       tier: 'unverified',
@@ -31,8 +33,10 @@ export function buildPayload(school, state) {
   return {
     udise_code: school.udise,
     school_name_snapshot: school.name,
+    category: state.category,
     finding: state.finding,
     severity: state.severity ?? null,
+    note: state.note ?? null,
     tier: state.tier?.tier ?? 'unverified',
     lat: state.fix?.lat ?? null,
     lng: state.fix?.lng ?? null,
