@@ -395,9 +395,18 @@ describe('the headline says what this site adds to the movement', () => {
     expect(line).not.toMatch(/\bour campaign\b|\bwe are\b|official/i);
   });
 
-  it('says what the campaign does and what this adds, without overclaiming either', () => {
+  it('asks the reader to do something, rather than explaining the data', () => {
+    // The headline already makes the argument. The line under it is the
+    // ask: find your school, send a photo. Explaining the record twice
+    // spends the one line a reader will actually read.
     const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
-    expect(line).toMatch(/filming/i);
-    expect(line).toMatch(/already wrote down/i);
+    expect(line).toMatch(/send a photo/i);
+    expect(line).not.toMatch(/government|record|UDISE/i);
+  });
+
+  it('says how little it costs to report', () => {
+    // Anonymity and effort are the two things that stop people.
+    const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
+    expect(line).toMatch(/anonymous/i);
   });
 });

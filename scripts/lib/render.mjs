@@ -283,9 +283,8 @@ export function renderIndexPage(tree, geo) {
     headline: `<div class="hero">
       <p class="kicker"><span class="dot"></span><span class="label">The government’s own record · ${fmtNum(tree.national.flagged)} schools, block by block</span></p>
       <h1>They counted the schools.<br />They counted what was broken.<br />Then they called it fine.</h1>
-      <p class="standfirst">#SchoolThikKaro is filming what schools actually look like.
-        This is what the government already wrote down \u2014 every block in India,
-        from its own ${esc(SOURCE_YEAR)} records.</p>
+      <p class="standfirst">Find your school below, then send a photo of what you
+        actually see. Anonymous, from the spot, in a minute. #SchoolThikKaro</p>
       <div class="actions">
         <a class="btn btn-primary" href="#data">Find your school →</a>
         <a class="btn btn-ghost" href="/app/#/add">Report what you find</a>
