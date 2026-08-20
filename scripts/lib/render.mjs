@@ -283,6 +283,52 @@ fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot
 })();
 </script>`;
 
+/** Search across all 78,744 schools by name.
+ *
+ *  The index is sharded on the first three letters of each distinctive
+ *  word (see lib/school-index.mjs), so a search fetches one small file
+ *  rather than the 5.7MB the whole index would be. The input ships hidden
+ *  and is revealed here: with no JavaScript the reader still has the
+ *  state-by-state browse, which is a slower route to the same place
+ *  rather than a dead end. */
+const FINDER_SCRIPT = `<script>
+(function(){
+var q=document.getElementById('school-q'), out=document.getElementById('school-hits');
+if(!q||!out) return;
+q.hidden=false;
+var cache={}, seq=0;
+var norm=function(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+function show(html){ out.innerHTML=html; out.hidden=!html; }
+function search(){
+  var term=q.value.trim();
+  var key=norm(term).slice(0,3);
+  if(key.length<3){ show(''); return; }
+  var mine=++seq;
+  var render=function(rows){
+    if(mine!==seq) return;                       // a later keystroke won
+    var n=norm(term);
+    var hit=rows.filter(function(r){return norm(r[0]).indexOf(n)>-1;}).slice(0,8);
+    if(!hit.length){ show('<p class="finder-none">No school found by that name. '
+      + 'Only schools already in the government record can be searched \u2014 '
+      + '<a href="/app/#/add">report yours</a> if it is not here.</p>'); return; }
+    show(hit.map(function(r){
+      return '<a class="finder-hit" href="/app/#/report/'+esc(r[1])+'">'
+        +'<span class="h-name">'+esc(r[0])+'</span>'
+        +'<span class="h-where">'+esc(r[2].split('/').slice(1).join(' \u00b7 ').replace(/-/g,' '))+'</span></a>';
+    }).join(''));
+  };
+  if(cache[key]) return render(cache[key]);
+  show('<p class="finder-none">Searching\u2026</p>');
+  fetch('/data/si/'+key+'.json').then(function(r){return r.ok?r.json():[];})
+    .then(function(rows){ cache[key]=rows; render(rows); })
+    .catch(function(){ if(mine===seq) show(''); });
+}
+var t; q.addEventListener('input',function(){ clearTimeout(t); t=setTimeout(search,140); });
+})();
+</script>`;
+
 const PAGER = `<nav class="pager" id="pager" hidden aria-label="Pages">
   <button type="button" data-page="prev">\u2190 Previous</button>
   <span class="pager-status"></span>
@@ -416,8 +462,14 @@ export function renderIndexPage(tree, geo) {
       <h1>Find a <mark>school</mark>.<br />See what\u2019s <mark>missing</mark>.<br />Make someone <mark>answer</mark>.</h1>
       <p class="standfirst">Send a photo of what you actually see.
         Anonymous, from the spot, in a minute. #SchoolThikKaro</p>
+      <div class="finder">
+        <label class="sr-only" for="school-q">Search for a school by name</label>
+        <input id="school-q" type="search" autocomplete="off" hidden
+               placeholder="Type a school or village name…" />
+        <div id="school-hits" class="finder-hits" hidden></div>
+      </div>
       <div class="actions">
-        <a class="btn btn-primary" href="#data">Find a school →</a>
+        <a class="btn btn-primary" href="#data">Browse by state →</a>
         <a class="btn btn-ghost" href="/app/#/add">Report what you find</a>
       </div>
     </div>
@@ -474,7 +526,7 @@ export function renderIndexPage(tree, geo) {
       </div>
       <ul class="live-list" id="live-list"></ul>
     </section>
-    ${LIVE_SCRIPT}
+    ${LIVE_SCRIPT}${FINDER_SCRIPT}
 
     <section class="faq">
       <h2>Questions.</h2>

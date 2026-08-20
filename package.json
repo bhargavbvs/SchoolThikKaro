@@ -11,7 +11,7 @@
     "data:build": "node scripts/build-geo.mjs",
     "data:totals": "node scripts/crawl-totals.mjs",
     "data:agg": "node scripts/build-aggregates.mjs",
-    "data:pages": "node scripts/prerender.mjs",
+    "data:pages": "node scripts/prerender.mjs && node scripts/build-school-index.mjs",
     "validate": "node scripts/validate.mjs"
   },
   "dependencies": {
