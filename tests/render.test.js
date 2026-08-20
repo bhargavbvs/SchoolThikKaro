@@ -241,20 +241,29 @@ describe('the page uses the reader’s words, not ours', () => {
   });
 });
 
-describe('filtering works on a phone, where most rows start hidden', () => {
+describe('long lists are paged, not dumped', () => {
   const html = renderIndexPage(tree, geo);
 
-  it('shows a match with an explicit display value, not by clearing the style', () => {
-    // browse.css hides rows 11+ on narrow screens until "Show all" is
-    // tapped. Clearing the inline style hands the row straight back to
-    // that rule, so searching for a state outside the top ten returned an
-    // empty table. Only an inline value outranks the stylesheet.
-    expect(html).toContain("'table-row'");
-    expect(html).not.toMatch(/indexOf\(q\)>-1\?'':'none'/);
+  it('ships a pager, hidden until the script reveals it', () => {
+    // Without JavaScript the reader gets the whole list, which is the
+    // better fallback than controls that do nothing.
+    expect(html).toMatch(/<nav class="pager" id="pager" hidden/);
+    expect(html).toContain('pager.hidden=false');
   });
 
-  it('restores the ten-row view when the query is cleared', () => {
-    expect(html).toContain("!q?''");
+  it('pages the FILTERED set, not the whole table', () => {
+    // Paging the full table means searching for a district can land you
+    // on page 4 of results that no longer exist.
+    expect(html).toMatch(/q=input\.value[\s\S]*?page=0/);
+  });
+
+  it('keeps every row in the DOM, so crawlers still see the whole list', () => {
+    const bodyRows = (html.match(/<tr data-name=/g) ?? []).length;
+    expect(bodyRows).toBe(tree.states.length);
+  });
+
+  it('does not bother paging a list that already fits', () => {
+    expect(html).toContain('if(rows.length<=10) return;');
   });
 });
 

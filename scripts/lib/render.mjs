@@ -116,17 +116,60 @@ const statRow = (label, href, flagged, total, rate, maxRate, nationalRate) => `
 /** Rows are pre-rendered and visible with JavaScript off; this only hides
  *  non-matching ones. Kept inline and tiny so browse pages stay free of any
  *  bundle — the whole point of them being static. */
-// A match is shown with an explicit 'table-row', not by clearing the inline
-// style. On a phone, browse.css hides rows 11+ until "Show all" is tapped;
-// clearing the style hands the row back to that rule, so searching for a
-// state outside the top ten returned an empty table. An inline value beats
-// the stylesheet. An empty query clears the style so the ten-row view
-// comes back.
+// Filtering and paging are one script because they are one behaviour: the
+// pager must page the FILTERED set, not the whole table, or searching for
+// a district lands you on page 4 of results that no longer exist.
+//
+// Rows are all pre-rendered and all in the DOM. With JavaScript off the
+// whole list simply shows, which is the honest fallback — and it is why a
+// crawler still sees every district, block and school on the page.
+const PAGE_SIZE = 10;
 const FILTER_SCRIPT = `<script>
-(function(){var i=document.getElementById('filter');if(!i)return;var r=document.querySelectorAll('tbody tr[data-name]');
-i.hidden=false;i.addEventListener('input',function(){var q=i.value.trim().toLowerCase();
-for(var n=0;n<r.length;n++){r[n].style.display=!q?'':(r[n].dataset.name.indexOf(q)>-1?'table-row':'none');}});})();
+(function(){
+var rows=[].slice.call(document.querySelectorAll('table.stats tbody tr[data-name]'));
+if(rows.length<=${PAGE_SIZE}) return;
+var input=document.getElementById('filter');
+var pager=document.getElementById('pager');
+var per=${PAGE_SIZE}, page=0, q='';
+function render(){
+  var hit=[];
+  for(var n=0;n<rows.length;n++){
+    if(!q||rows[n].dataset.name.indexOf(q)>-1) hit.push(rows[n]);
+    else rows[n].style.display='none';
+  }
+  var pages=Math.max(1,Math.ceil(hit.length/per));
+  if(page>=pages) page=pages-1;
+  if(page<0) page=0;
+  for(var k=0;k<hit.length;k++){
+    hit[k].style.display=(k>=page*per&&k<(page+1)*per)?'table-row':'none';
+  }
+  if(pager){
+    pager.hidden=hit.length===0&&!q;
+    var from=hit.length?page*per+1:0, to=Math.min((page+1)*per,hit.length);
+    pager.querySelector('.pager-status').textContent=
+      hit.length?(from+'-'+to+' of '+hit.length):'nothing matches';
+    pager.querySelector('[data-page=prev]').disabled=page<=0;
+    pager.querySelector('[data-page=next]').disabled=page>=pages-1;
+  }
+}
+if(input){input.hidden=false;input.addEventListener('input',function(){
+  q=input.value.trim().toLowerCase();page=0;render();});}
+if(pager){pager.hidden=false;pager.addEventListener('click',function(e){
+  var b=e.target.closest('button[data-page]');if(!b)return;
+  page+=b.dataset.page==='next'?1:-1;render();
+  var t=document.querySelector('table.stats');if(t)t.scrollIntoView({block:'start'});});}
+render();
+})();
 </script>`;
+
+/** The pager markup. Ships hidden and is revealed by the script above, so a
+ *  reader without JavaScript is never shown controls that cannot do
+ *  anything — they get the full list instead, which is the better fallback. */
+const PAGER = `<nav class="pager" id="pager" hidden aria-label="Pages">
+  <button type="button" data-page="prev">\u2190 Previous</button>
+  <span class="pager-status"></span>
+  <button type="button" data-page="next">Next \u2192</button>
+</nav>`;
 
 const statTable = (rows, filterLabel, nameLabel = 'Name') => `
 ${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />` : ''}
@@ -134,6 +177,7 @@ ${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filt
   <thead><tr><th>${esc(nameLabel)}</th><th class="num">Schools with issues</th><th class="num">All schools</th><th class="num">How common</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
+${filterLabel ? PAGER : ''}
 <p class="table-note">“Issues” here means the one thing ${esc(SOURCE_YEAR)} records about
   girls’ toilets: the school has none, or has one that does not function. It is the only
   issue in this release — a school counted as having no issue may still have others.</p>
@@ -275,11 +319,11 @@ export function renderIndexPage(tree, geo) {
     // view. The map carries no figures precisely because the table is
     // right beside it.
     table: `<section class="atlas">${map}<div class="atlas-table">
-      <input id="showall" type="checkbox" hidden />${statTable(
+      ${statTable(
       (() => { const m = maxRateOf(tree.states); const nat = tree.national.rate;
         return tree.states.map((s) =>
           statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate, m, nat)).join(''); })(),
-      'Filter states…', 'State')}<label class="showall" for="showall">Show all ${tree.states.length} states</label></div></section>`,
+      'Filter states…', 'State')}</div></section>`,
     extra: `<section class="findmine">
       <h2>Whatever is broken, report it</h2>
       <p>The figures above are girls’ toilets, because that is what this release
@@ -364,7 +408,7 @@ export function renderBlockPage(state, district, block, nationalRate, repIndex =
 <input id="filter" type="search" hidden placeholder="Filter schools…" aria-label="Filter schools…" />
 <table class="stats schools">
       <thead><tr><th>School</th><th>UDISE</th><th>What its record shows</th></tr></thead>
-      <tbody>${rows}</tbody></table>${FILTER_SCRIPT}`,
+      <tbody>${rows}</tbody></table>${PAGER}${FILTER_SCRIPT}`,
     extra: `${issuePanel(block, titleCase(block.name))}${accountablePanel(block.schools, repIndex)}`,
   });
 }
