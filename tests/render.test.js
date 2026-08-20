@@ -365,29 +365,39 @@ describe('horizontal rules line up', () => {
   });
 });
 
-describe('the headline names the three things the site does', () => {
+describe('the headline says what this site adds to the movement', () => {
   const html = renderIndexPage(tree, geo);
   const h1 = html.match(/<h1>[\s\S]*?<\/h1>/)[0];
 
-  it('runs three parallel lines, not one sentence', () => {
+  it('turns on the third line rather than repeating a formula', () => {
+    // Two parallel lines then a turn. An anaphora with no turn is a
+    // template with our nouns dropped into it.
     expect((h1.match(/<br \/>/g) ?? []).length).toBe(2);
-    expect((h1.match(/Name the|Name who/g) ?? []).length).toBe(3);
+    expect((h1.match(/They counted/g) ?? []).length).toBe(2);
+    expect(h1).toMatch(/Then they called it fine\./);
+    // And it stays about the school, not one fixture in it — the record
+    // covers water, teachers, classrooms and ramps too, and we now hold
+    // all of it.
+    expect(h1.toLowerCase()).not.toContain('toilet');
   });
 
-  it('promises only what the site actually delivers', () => {
-    // Each line is a thing these pages really do: 78,744 named schools,
-    // the issues read off each school's own record, and the sitting
-    // member for the seat it sits in.
-    expect(h1).toContain('Name the school');
-    expect(h1).toContain('Name the fault');
-    expect(h1).toContain('Name who answers');
+  it('states the finding the site actually proves', () => {
+    // The second stat card computes it: the official figure counts a
+    // toilet that does not work as a toilet.
+    expect(html).toMatch(/counted as if they were fine/i);
   });
 
-  it('claims "anonymous to report" rather than "verified"', () => {
-    // "Verified" alone would overclaim: on this site it means a
-    // submission passed our checks, never that a finding is proven.
+  it('credits the campaign rather than claiming to be it', () => {
+    // #SchoolThikKaro is CJP's. This site is a companion to it, and the
+    // wording must not imply it speaks for them.
     const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
-    expect(line).toMatch(/Anonymous to report/);
-    expect(line).not.toMatch(/\bVerified\./);
+    expect(line).toContain('#SchoolThikKaro');
+    expect(line).not.toMatch(/\bour campaign\b|\bwe are\b|official/i);
+  });
+
+  it('says what the campaign does and what this adds, without overclaiming either', () => {
+    const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
+    expect(line).toMatch(/filming/i);
+    expect(line).toMatch(/already wrote down/i);
   });
 });

@@ -281,10 +281,11 @@ export function renderIndexPage(tree, geo) {
     // The official headline figure counts a toilet that does not work as a
     // toilet. That single sentence is the whole argument, so it is the page.
     headline: `<div class="hero">
-      <p class="kicker"><span class="dot"></span><span class="label">School Thik Karo · the government’s own record, block by block</span></p>
-      <h1>Name the school.<br />Name the fault.<br />Name who answers.</h1>
-      <p class="standfirst">India\u2019s schools, from the government\u2019s own record.
-        Free to browse. Anonymous to report. Permanently public.</p>
+      <p class="kicker"><span class="dot"></span><span class="label">The government’s own record · ${fmtNum(tree.national.flagged)} schools, block by block</span></p>
+      <h1>They counted the schools.<br />They counted what was broken.<br />Then they called it fine.</h1>
+      <p class="standfirst">#SchoolThikKaro is filming what schools actually look like.
+        This is what the government already wrote down \u2014 every block in India,
+        from its own ${esc(SOURCE_YEAR)} records.</p>
       <div class="actions">
         <a class="btn btn-primary" href="#data">Find your school →</a>
         <a class="btn btn-ghost" href="/app/#/add">Report what you find</a>
