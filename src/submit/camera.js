@@ -7,7 +7,11 @@ import { MAX_IMAGE_BYTES } from '../config.js';
 import { submitReport } from './api.js';
 import { iconEl } from '../lib/icons.js';
 
-export function mountCapture(slot, school, root) {
+/** `onChange` lets a caller own the submit button and the error line —
+ *  the three-step form does, because those live outside this slot and
+ *  belong to the step, not to the capture. Without it this manages them
+ *  itself, which is what the single-page flow still relies on. */
+export function mountCapture(slot, school, root, { onChange = null } = {}) {
   const state = {
     canvas: null, blob: null, fix: null, tier: null,
     detectorLoaded: false, facesFound: 0, blurApplied: false,
@@ -104,6 +108,16 @@ export function mountCapture(slot, school, root) {
     // An unlisted school also has to say which school it is. The Edge
     // Function refuses a nameless one anyway; this stops the reporter
     // taking a photo and only then being told.
+    if (onChange) {
+      // The step owns the button and the message; report the two things
+      // only this pipeline knows.
+      onChange({
+        hasPhoto: Boolean(state.canvas),
+        gateOpen: Boolean(gate.canSubmit) && Boolean(state.canvas),
+        gateReason: gate.canSubmit ? null : gate.reason,
+      });
+      return;
+    }
     const idErrors = school.kind === 'unlisted' ? validateIdentity(school).errors : [];
     const all = [...idErrors, ...errors];
     errBox.hidden = all.length === 0;

@@ -28,8 +28,10 @@ describe('renderAddSchoolHTML', () => {
     // The site's whole claim is that its numbers are the government's own
     // record. Anyone adding to it must be told their submission is not
     // joining those numbers.
+    // Now on the school step, where "is it in the record?" is the question
+    // being answered, rather than in a banner above the whole form.
     expect(html).toMatch(/never inside the official figures/i);
-    expect(html).toMatch(/reported by a\s+citizen/i);
+    expect(html).toMatch(/reported by\s+a citizen/i);
   });
   it('warns against photographing students, as the listed-school form does', () => {
     expect(html).toMatch(/Do not photograph students/);

@@ -1,5 +1,47 @@
+/* A centred column on paper, not a full-bleed panel. The form used to run
+   the whole width of a desktop window, which put the labels a screen away
+   from their fields and made a short form look enormous. */
 #submit-root { position:fixed; inset:0; z-index:20; overflow:auto;
-  background:var(--bg); padding:16px; }
+  background:var(--bg); padding:28px 20px 64px; }
+.sub-shell { max-width:680px; margin:0 auto; }
+.sub-title { margin:0 0 8px; font:700 34px/1.1 var(--serif); letter-spacing:-0.02em;
+  text-align:center; }
+.sub-sub { margin:0 auto 14px; max-width:46ch; text-align:center;
+  font-size:14.5px; line-height:1.55; color:var(--muted); }
+.sub-assure { display:flex; justify-content:center; flex-wrap:wrap; gap:18px;
+  margin:0 0 26px; padding:0; list-style:none;
+  font:500 11px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); }
+
+/* ---------- stepper ---------- */
+.stepper { display:flex; align-items:center; justify-content:center; gap:10px;
+  margin:0 0 26px; padding:0; list-style:none; }
+.stepper .step { display:flex; flex-direction:column; align-items:center; gap:7px; }
+.stepper .step-dot { display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%; border:1px solid var(--line);
+  font:600 13px/1 var(--mono); color:var(--muted); background:var(--panel); }
+.stepper .step-label { font-size:11.5px; color:var(--muted); text-align:center; }
+.stepper .is-now .step-dot, .stepper .is-done .step-dot {
+  background:var(--ink); border-color:var(--ink); color:var(--bg); }
+.stepper .is-now .step-label { color:var(--ink); font-weight:600; }
+.stepper .step-rule { flex:0 1 60px; height:1px; background:var(--line);
+  margin-bottom:22px; }
+
+/* ---------- the card each step lives in ---------- */
+.sub-card { background:var(--panel); border:1px solid var(--line);
+  padding:26px; }
+.sub-card > h3 { margin:0 0 4px; font:700 20px/1.25 var(--sans); }
+.sub-card > .lede { margin:0 0 20px; color:var(--muted); font-size:14px; }
+
+/* ---------- step controls ---------- */
+.sub-nav { display:flex; align-items:center; justify-content:space-between;
+  gap:12px; margin-top:24px; }
+.sub-nav button { font:600 13px/1 var(--sans); padding:13px 20px; cursor:pointer;
+  border:1px solid var(--line-strong); background:transparent; color:var(--ink); }
+.sub-nav .primary { background:var(--ink); color:var(--bg); }
+.sub-nav .primary:disabled { background:var(--muted); border-color:var(--muted);
+  cursor:not-allowed; }
+.sub-nav button:only-child { margin-left:auto; }
 
 .icon { display:inline-flex; align-items:center; justify-content:center;
   font-size:1.1em; line-height:1; vertical-align:-0.15em; }
@@ -137,13 +179,17 @@
 .sub-category { border:0; margin:0 0 18px; padding:0; }
 .sub-category > legend { margin-bottom:8px; }
 .sub-category .opt-cat {
-  display:flex; align-items:center; gap:8px; padding:10px 12px; }
+  display:flex; align-items:center; gap:9px; padding:12px 13px; }
 .sub-category .opt-cat .o-label { font-size:14px; }
-@media (min-width:380px) {
-  .sub-category {
-    display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+@media (min-width:520px) {
+  .sub-category { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .sub-category > legend { grid-column:1 / -1; }
 }
+/* Fieldset legends read as section headings inside a card. */
+#submit-root legend { padding:0; margin-bottom:10px;
+  font:500 11px/1 var(--mono); letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted); }
+#submit-root .req { color:var(--admitted); }
 
 .sub-note { display:block; margin:0 0 18px; }
 .sub-note > span { display:block; margin-bottom:6px; font-size:13px; font-weight:600; }
@@ -169,3 +215,8 @@
 .pick-manual button { width:100%; padding:12px; background:transparent;
   border:1px dashed var(--line); border-radius:8px; color:inherit;
   font:inherit; cursor:pointer; }
+
+.sub-school-note { margin:0 0 18px; padding:11px 13px; background:var(--panel-2);
+  font-size:13px; line-height:1.5; color:var(--body); }
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+  clip:rect(0 0 0 0); white-space:nowrap; }
