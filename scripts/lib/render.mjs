@@ -282,12 +282,7 @@ export function renderIndexPage(tree, geo) {
     // toilet. That single sentence is the whole argument, so it is the page.
     headline: `<div class="hero">
       <p class="kicker"><span class="dot"></span><span class="label">School Thik Karo · the government’s own record, block by block</span></p>
-      <h1>The record says<br />the school is <mark>fine</mark>.<br />Go and look.</h1>
-      <p class="standfirst">The official ${fmtRate(officialClaimRate(tree.national))}
-        “has a girls’ toilet” figure counts every one of the
-        <strong>${fmtNum(tree.national.nonFunctional)}</strong> schools whose toilet does not
-        work. That is one thing, in one year’s data. Find your block below — then go and
-        tell us what you actually see: the toilet, the water, the wiring, the classroom.</p>
+      <h1>The record says<br />the school is fine.<br />Go and look.</h1>
       <div class="actions">
         <a class="btn btn-primary" href="#data">Find your school →</a>
         <a class="btn btn-ghost" href="/app/#/add">Report what you find</a>
@@ -297,7 +292,7 @@ export function renderIndexPage(tree, geo) {
     <div class="stat-grid">
       <div>
         <h2 class="stat-head">Schools with no working toilet for girls</h2>
-        <div class="figure"><mark>${fmtNum(tree.national.flagged)}</mark></div>
+        <div class="figure">${fmtNum(tree.national.flagged)}</div>
         <p class="note">That is <b>1 in ${oneInN(tree.national.rate)}</b> of every government
           school girls attend.</p>
       </div>

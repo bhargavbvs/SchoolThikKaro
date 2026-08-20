@@ -179,12 +179,13 @@ describe('the homepage is about schools, not only about toilets', () => {
     expect(h1.toLowerCase()).not.toContain('toilet');
   });
 
-  it('still states the toilet finding exactly, because that is the evidence', () => {
-    // Broader framing must not cost the precision the argument rests on.
-    // Derived from the fixture with the same helpers the page uses, so this
-    // asserts the wiring rather than a number copied from production.
-    expect(html).toContain(fmtRate(officialClaimRate(tree.national)));
+  it('still states the count the official figure hides', () => {
+    // The standfirst that carried the official percentage was removed. The
+    // argument now rests entirely on the second stat card, so that card's
+    // figure and its framing are what must not drift.
     expect(html).toContain(tree.national.nonFunctional.toLocaleString('en-IN'));
+    expect(html).toMatch(/counted as if they were fine/i);
+    expect(html).toMatch(/official figure\s+counts it anyway/i);
   });
 
   it('says plainly that the figures cover one thing only', () => {
