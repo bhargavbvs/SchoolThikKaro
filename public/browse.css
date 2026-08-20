@@ -143,8 +143,12 @@ table.stats tbody tr:hover td .rate-val, table.stats tbody tr:hover td.udise,
 table.stats tbody tr:hover td.name a { color:#111214; }
 table.stats tbody tr:hover td.rate .bar { background:#111214; }
 
-table.stats td.num, table.stats th.num { text-align:right;
+table.stats td.num { text-align:right;
   font:500 14px/1 var(--mono); color:var(--body); }
+/* A numeric header is still a header. It takes the alignment and nothing
+   else, so it matches the first column instead of rendering larger and
+   darker than it — the font and colour come from `thead th` above. */
+table.stats th.num { text-align:right; }
 /* Region names are monospace too: in a ledger the name is data, not prose,
    and the fixed advance keeps the column reading as a record. */
 table.stats td.name a { color:var(--ink); text-decoration:none;

@@ -322,3 +322,20 @@ describe('theme', () => {
     expect(html).toContain("localStorage.setItem('shaala.theme'");
   });
 });
+
+describe('table headers', () => {
+  it('style every column heading the same, numeric or not', () => {
+    // th.num once inherited td.num's 14px body-coloured font, so "SCHOOLS
+    // WITH ISSUES" rendered larger and darker than "DISTRICT" beside it.
+    // A numeric header takes the alignment and nothing else.
+    const css = readFileSync('public/browse.css', 'utf8');
+    const thNum = css.match(/table\.stats th\.num \{[^}]*\}/)[0];
+    expect(thNum).toContain('text-align:right');
+    expect(thNum).not.toMatch(/font:|color:/);
+  });
+
+  it('still right-aligns the numbers in the body', () => {
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect(css).toMatch(/table\.stats td\.num \{[^}]*text-align:right/);
+  });
+});
