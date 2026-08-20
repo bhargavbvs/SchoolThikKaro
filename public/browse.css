@@ -461,3 +461,35 @@ table.stats tbody tr[data-name] { cursor:pointer; }
   .closer { padding:32px 22px; }
   .closer h2 { font-size:28px; }
 }
+
+/* Long column headings stacked three words deep on a phone. Both labels
+   ship; the stylesheet picks one, so no script is involved and a crawler
+   still reads the full wording. */
+table.stats th .sm { display:none; }
+@media (max-width:640px) {
+  table.stats th .lg { display:none; }
+  table.stats th .sm { display:inline; }
+
+  /* Everything a notch tighter: ten rows should be scannable in one
+     screen, not four. */
+  .ledger-head { padding:13px 14px; }
+  .ledger-head h2 { font-size:15px; }
+  .ledger-controls { padding:10px 14px; gap:8px; }
+  .sortby button { padding:7px 10px; font-size:10.5px; }
+  .ledger #filter { flex-basis:100%; padding:10px 12px; font-size:13px; }
+
+  table.stats thead th { padding:9px 10px; font-size:9.5px; letter-spacing:.1em; }
+  table.stats td { padding:10px; }
+  table.stats td.rank, table.stats th.rank { width:30px; font-size:11px; }
+  table.stats td.name a { font-size:13px; }
+  table.stats td.num { font-size:12.5px; }
+  table.stats td.rate { width:74px; }
+  table.stats td.rate .rate-val { font-size:12.5px; }
+  /* The bar and the figure say the same thing; on a narrow screen the
+     figure is the one that survives. */
+  table.stats td.rate .bar { display:none; }
+  table.stats td.rate .rate-wrap { grid-template-columns:auto; }
+  .table-note { padding:0 14px 14px; font-size:11.5px; }
+  .pager { padding:10px 12px; }
+  .pager button { padding:8px 10px; font-size:10px; }
+}

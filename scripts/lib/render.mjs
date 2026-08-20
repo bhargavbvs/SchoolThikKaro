@@ -216,7 +216,7 @@ const statTable = (rows, filterLabel, nameLabel = 'Name', ledgerLabel = 'Registr
     <input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />
   </div>` : ''}
 <table class="stats" id="data">
-  <thead><tr><th class="rank"><span class="sr-only">Rank</span></th><th>${esc(nameLabel)}</th><th class="num">Schools with issues</th><th class="num">How common</th></tr></thead>
+  <thead><tr><th class="rank"><span class="sr-only">Rank</span></th><th>${esc(nameLabel)}</th><th class="num"><span class="lg">Schools with issues</span><span class="sm">Issues</span></th><th class="num"><span class="lg">How common</span><span class="sm">Rate</span></th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
 ${filterLabel ? PAGER : ''}
