@@ -479,11 +479,13 @@ describe('the questions section', () => {
     expect(html).toMatch(/never counted inside the official figures/i);
   });
 
-  it('says plainly that this is not CJP’s site', () => {
-    // The campaign is theirs. Implying otherwise would be a liability for
-    // both of us — see the standfirst, which credits without claiming.
-    expect(html).toMatch(/#SchoolThikKaro is CJP’s campaign/);
-    expect(html).toMatch(/does not speak for them/);
+  it('still credits the campaign without claiming to be it', () => {
+    // The FAQ entry answering "Is this CJP's site?" was removed. The
+    // standfirst is now the only place the campaign is named, so it is
+    // the only thing keeping the site from reading as CJP's own.
+    const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
+    expect(line).toContain('#SchoolThikKaro');
+    expect(html).not.toMatch(/\bour campaign\b|an official|on behalf of CJP/i);
   });
 
   it('derives its figures rather than hardcoding them', () => {

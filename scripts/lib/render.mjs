@@ -469,9 +469,6 @@ export function renderIndexPage(tree, geo) {
          'Faces are blurred on your phone before anything is sent, and a photo that had '
          + 'faces in it and was not blurred is refused by the server. A moderator reviews '
          + 'every submission before it appears.'],
-        ['Is this CJP’s site?',
-         'No. #SchoolThikKaro is CJP’s campaign. This is a companion to it, built from the '
-         + 'government’s published data, and it does not speak for them.'],
       ].map(([q, a]) => `
       <details class="faq-item">
         <summary>${esc(q)}</summary>
