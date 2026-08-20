@@ -64,7 +64,7 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
 <link rel="stylesheet" href="${extraStyle}" />` : ''}
 </head>
 <body class="${esc(bodyClass)}">
-<header class="masthead">
+<div class="mast-bar"><header class="masthead">
   <a class="wordmark" href="/">SchoolThikKaro</a>
   <div class="mast-right">
     <span class="tag">${esc(SOURCE_YEAR)} · Government’s own record</span>

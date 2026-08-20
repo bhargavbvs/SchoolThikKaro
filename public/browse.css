@@ -34,7 +34,7 @@
 :root[data-theme="dark"] {
   --bg:#0e0f10; --panel:#161719; --ink:#f4f2ec; --body:#b5b2a9;
   --muted:#807d76; --line:#26282b; --line-strong:#f4f2ec; --rule:#2c2e31;
-  --accent:#f5c542; --accent-soft:#3a3222;
+  --accent:#e0651e; --accent-soft:#3a2417;
 }
 
 * { box-sizing:border-box; }
@@ -69,7 +69,9 @@ body.browse {
   border-bottom:1px solid var(--rule); display:block; }
 /* Serif is the editorial voice; mono is always the data. Keeping figures in
    the display serif blurred that line — every number on the site is mono. */
-.stat-grid .figure { font:700 40px/1 var(--mono); letter-spacing:-0.03em; }
+.stat-grid .figure { font:600 46px/1 var(--sans); letter-spacing:-0.03em;
+  font-variant-numeric:tabular-nums slashed-zero;
+  font-feature-settings:'zero' 1, 'tnum' 1; }
 .stat-grid .figure mark { background:var(--accent); color:#111214; padding:0 .06em; }
 .stat-grid .note { margin:10px 0 0; font-size:14px; color:var(--body); }
 .stat-grid .note b { color:var(--ink); font-weight:600; }
@@ -104,7 +106,7 @@ body.browse {
 .hero { padding:26px 0 56px; }
 .hero .kicker { display:flex; align-items:center; gap:9px; margin-bottom:30px; }
 .hero .kicker .dot { width:6px; height:6px; border-radius:50%; background:var(--ink); }
-.hero h1 { margin:0; font:900 clamp(38px, 7vw, 74px)/1.06 var(--serif);
+.hero h1 { margin:0; font:700 clamp(38px, 7vw, 74px)/1.06 var(--serif);
   letter-spacing:-0.02em; }
 .hero h1 em { font-style:italic; }
 /* The marker-pen highlight — a solid block of accent behind the word, with
@@ -144,7 +146,7 @@ table.stats td { padding:15px 14px; border-bottom:1px solid var(--line);
 table.stats tbody tr:last-child td { border-bottom:0; }
 /* Whole-row accent on hover, the way the reference marks a ledger row —
    a highlighter drawn across the line, not a subtle tint. */
-table.stats tbody tr:hover { background:var(--accent); }
+table.stats tbody tr:hover { background:var(--accent-soft); }
 table.stats tbody tr:hover td, table.stats tbody tr:hover td.num,
 table.stats tbody tr:hover td .rate-val, table.stats tbody tr:hover td.udise,
 table.stats tbody tr:hover td.name a { color:#111214; }
@@ -349,7 +351,7 @@ table.stats td.udise, .crumb, .label, .masthead .tag {
   padding:6px 10px; cursor:pointer; color:var(--muted);
   background:transparent; border:1px solid var(--line);
   font:600 10px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; }
-.theme-toggle:hover { color:var(--ink); border-color:var(--line-strong); background:var(--accent); }
+.theme-toggle:hover { color:var(--ink); border-color:var(--accent); background:var(--accent-soft); }
 .theme-toggle svg { width:13px; height:13px; }
 /* One button, two labels: the stylesheet shows whichever matches the theme
    in force, so the script only has to flip an attribute on <html>. */
@@ -385,7 +387,7 @@ table.stats td.udise, .crumb, .label, .masthead .tag {
 .who-list .src { grid-row:1 / span 2; align-self:center;
   font:600 10px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase;
   color:var(--muted); text-decoration:none; border:1px solid var(--line); padding:7px 10px; }
-.who-list .src:hover { background:var(--accent); color:var(--ink); border-color:var(--line-strong); }
+.who-list .src:hover { background:var(--accent-soft); color:var(--ink); border-color:var(--accent); }
 
 /* Extra findings on a school row, beside the toilet it is listed for. */
 table.stats td.what { display:table-cell; }
@@ -402,7 +404,7 @@ table.stats td.what .tag { display:inline-block; margin:2px 4px 2px 0; }
 .pager button { font:600 11px/1 var(--mono); letter-spacing:.12em; text-transform:uppercase;
   color:var(--ink); background:transparent; border:1px solid var(--line);
   padding:9px 13px; cursor:pointer; }
-.pager button:hover:not(:disabled) { background:var(--accent); border-color:var(--line-strong); }
+.pager button:hover:not(:disabled) { background:var(--accent-soft); border-color:var(--accent); }
 .pager button:disabled { color:var(--muted); cursor:default; opacity:.5; }
 .pager .pager-status { font:500 12px/1 var(--mono); color:var(--muted);
   font-variant-numeric:tabular-nums slashed-zero; font-feature-settings:'zero' 1,'tnum' 1; }
@@ -424,7 +426,7 @@ table.stats td.what .tag { display:inline-block; margin:2px 4px 2px 0; }
   border:1px solid var(--line); color:var(--body);
   font:600 11px/1 var(--mono); letter-spacing:.06em; }
 .sortby button.is-on { background:var(--ink); border-color:var(--ink); color:var(--bg); }
-.sortby button:hover:not(.is-on) { border-color:var(--line-strong); color:var(--ink); }
+.sortby button:hover:not(.is-on) { border-color:var(--accent); color:var(--accent); }
 .ledger #filter { flex:1 1 180px; width:auto; border:1px solid var(--line); }
 .ledger table.stats { border:0; }
 .ledger .pager { border:0; border-top:1px solid var(--line); }
@@ -510,7 +512,7 @@ svg.india .india-label { font:600 15px/1 var(--sans); fill:var(--bg);
 
 /* Hovering either view marks the other. */
 svg.india .st.is-linked { fill:var(--accent); }
-table.stats tbody tr.is-linked { background:var(--accent); }
+table.stats tbody tr.is-linked { background:var(--accent-soft); }
 table.stats tbody tr.is-linked td, table.stats tbody tr.is-linked td.name a,
 table.stats tbody tr.is-linked td .rate-val { color:#111214; }
 @media (max-width:640px) { svg.india .india-label { font-size:19px; } }
@@ -556,10 +558,10 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
   border-bottom:1px solid var(--line);
   font:500 10.5px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase;
   color:var(--muted); }
-.stat-grid .figure { font-family:var(--mono); letter-spacing:-0.02em; }
+.stat-grid .figure { letter-spacing:-0.03em; }
 .stat-mini { display:flex; gap:26px; margin:16px 0 0; }
 .stat-mini > div { margin:0; }
-.stat-mini dt { margin:0; font:700 19px/1 var(--mono);
+.stat-mini dt { margin:0; font:600 22px/1 var(--sans);
   font-variant-numeric:tabular-nums slashed-zero; font-feature-settings:'zero' 1,'tnum' 1; }
 .stat-mini dd { margin:4px 0 0; font-size:11.5px; line-height:1.3; color:var(--muted); }
 /* The live figures start as placeholders and are filled if reports exist;
@@ -583,3 +585,10 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
   .hero { padding:16px 0 34px; }
   .head { padding-bottom:26px; margin-bottom:28px; }
 }
+
+/* The bar spans the window; the wordmark inside it stays on the page's
+   own measure, so it lines up with everything below. */
+.mast-bar { border-bottom:1.5px solid var(--line-strong); margin-bottom:0;
+  width:100vw; margin-left:calc(50% - 50vw); background:var(--bg); }
+.mast-bar .masthead { max-width:1200px; margin:0 auto;
+  padding:18px 24px; border-bottom:0; }

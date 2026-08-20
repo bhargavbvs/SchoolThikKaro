@@ -615,3 +615,50 @@ describe('buttons', () => {
     expect(btn).toMatch(/padding:18px 34px/);
   });
 });
+
+describe('the accent colour', () => {
+  const css = readFileSync('public/browse.css', 'utf8');
+  const lum = (h) => {
+    const v = [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16) / 255)
+      .map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  };
+  const ratio = (a, b) =>
+    (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+
+  it('is CJP’s orange, not a highlighter yellow', () => {
+    expect(css).toMatch(/--accent:#e0651e/);
+  });
+
+  it('never carries white text, which fails on it', () => {
+    // Ink on this orange is 5.4:1 and passes; white is 3.5:1 and does
+    // not. Every solid use must set the dark ink explicitly.
+    for (const rule of css.match(/[^{}]*\{[^}]*background:var\(--accent\)[^}]*\}/g) ?? []) {
+      expect(rule, rule).not.toMatch(/color:\s*(#fff|#ffffff|var\(--bg\))/i);
+    }
+    expect(ratio('#111214', '#e0651e')).toBeGreaterThan(4.5);
+  });
+
+  it('hovers on the soft tint, so a hovered row stays readable', () => {
+    // A full row of solid orange under dark text is legible but shouts;
+    // the tint reads as a highlight rather than a block of colour.
+    expect(css).toMatch(/tr:hover \{ background:var\(--accent-soft\)/);
+    expect(ratio('#111214', '#fbe4d5')).toBeGreaterThan(7);
+  });
+});
+
+describe('the masthead', () => {
+  it('spans the window while its contents keep the page measure', () => {
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect(css).toMatch(/\.mast-bar \{[^}]*width:100vw/);
+    expect(css).toMatch(/\.mast-bar \.masthead \{[^}]*max-width:1200px/);
+  });
+});
+
+describe('headline weight', () => {
+  it('is not set in the heaviest cut available', () => {
+    // Playfair at 900 across three lines that size read as shouting.
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect(css).toMatch(/\.hero h1 \{ margin:0; font:700 /);
+  });
+});
