@@ -409,9 +409,10 @@ describe('the headline is the reader\'s path through the site', () => {
     expect((h1.match(/<br \/>/g) ?? []).length).toBe(2);
     // "a", not "your": most readers arriving from the campaign have no
     // school of their own, and the ask is to audit schools in your area.
-    expect(h1).toMatch(/Find a school\./);
-    expect(h1).toMatch(/See what’s missing\./);
-    expect(h1).toMatch(/Make someone answer\./);
+    // The key word on each line carries a highlight, so match around it.
+    expect(h1).toMatch(/Find a <mark>school<\/mark>\./);
+    expect(h1).toMatch(/See what’s <mark>missing<\/mark>\./);
+    expect(h1).toMatch(/Make someone <mark>answer<\/mark>\./);
   });
 
   it('each step is something the site actually supports', () => {
@@ -648,9 +649,12 @@ describe('the accent colour', () => {
 });
 
 describe('the masthead', () => {
-  it('spans the window while its contents keep the page measure', () => {
+  it('spans the window because body does, not by reaching out of a column', () => {
+    // The first attempt gave the bar width:100vw and a negative margin
+    // against a centred body. Moving the measure onto .page means the bar
+    // is simply as wide as its parent, which cannot fight anything.
     const css = readFileSync('public/browse.css', 'utf8');
-    expect(css).toMatch(/\.mast-bar \{[^}]*width:100vw/);
+    expect(css.match(/\.mast-bar \{[^}]*\}/)[0]).not.toMatch(/100vw|margin-left/);
     expect(css).toMatch(/\.mast-bar \.masthead \{[^}]*max-width:1200px/);
   });
 });
@@ -671,5 +675,52 @@ describe('the accent is defined once, consistently', () => {
     const css = readFileSync('public/browse.css', 'utf8');
     const accents = [...new Set(css.match(/--accent:#[0-9a-f]{6}/g) ?? [])];
     expect(accents).toEqual(['--accent:#e0651e']);
+  });
+});
+
+describe('page structure closes what it opens', () => {
+  // The full-width masthead shipped with its <div> never closed, because
+  // the edit that should have added it matched nothing and failed
+  // silently. The bar then wrapped the whole page, and since it carries
+  // width:100vw with a negative margin, it dragged every section
+  // full-bleed and left. Nothing else caught it.
+  const pages = () => ({
+    index: renderIndexPage(tree, geo),
+    state: renderStatePage(state, 5.63),
+    district: renderDistrictPage(state, district, 5.63),
+    block: renderBlockPage(state, district, block, 5.63),
+  });
+
+  it('balances every div on every page type', () => {
+    for (const [name, html] of Object.entries(pages())) {
+      const open = (html.match(/<div[\s>]/g) ?? []).length;
+      const close = (html.match(/<\/div>/g) ?? []).length;
+      expect(close, `${name}: ${open} open, ${close} close`).toBe(open);
+    }
+  });
+
+  it('closes the masthead bar before the page content begins', () => {
+    for (const [name, html] of Object.entries(pages())) {
+      expect(html, name).toMatch(/<\/header><\/div>\s*<script/);
+      expect(html, name).toContain('<div class="page">');
+    }
+  });
+
+  it('keeps the page measure off body, so a full-width bar needs no trick', () => {
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect(css).toMatch(/\.page \{ max-width:1200px/);
+    expect(css.match(/body\.browse \{[^}]*\}/)[0]).not.toMatch(/max-width/);
+    // And the bar itself no longer reaches out with a negative margin.
+    expect(css.match(/\.mast-bar \{[^}]*\}/)[0]).not.toMatch(/100vw|margin-left/);
+  });
+});
+
+describe('the headline highlight', () => {
+  it('marks one word on each of the three lines', () => {
+    const h1 = renderIndexPage(tree, geo).match(/<h1>[\s\S]*?<\/h1>/)[0];
+    expect((h1.match(/<mark>/g) ?? []).length).toBe(3);
+    expect(h1).toContain('<mark>school</mark>');
+    expect(h1).toContain('<mark>missing</mark>');
+    expect(h1).toContain('<mark>answer</mark>');
   });
 });

@@ -74,8 +74,9 @@ export function renderPage({ title, description, canonical, breadcrumb, headline
       <span class="t-light">${SUN}Light</span>
     </button>
   </div>
-</header>
+</header></div>
 ${THEME_SCRIPT}
+<div class="page">
 ${breadcrumb ? `<nav class="crumb">${breadcrumb}</nav>` : ''}
 <header class="head">${headline}</header>
 ${table}
@@ -85,6 +86,7 @@ ${extra}
      the school’s own record, not as our finding.</p>
   <p><a href="/app/#/methodology">How this works</a></p>
 </footer>
+</div>
 ${spa ? scriptTag : ''}
 </body>
 </html>`;
@@ -411,7 +413,7 @@ export function renderIndexPage(tree, geo) {
     // toilet. That single sentence is the whole argument, so it is the page.
     headline: `<div class="hero">
       <p class="kicker"><span class="dot"></span><span class="label">The government’s own record · ${fmtNum(tree.national.flagged)} schools, block by block</span></p>
-      <h1>Find a school.<br />See what\u2019s missing.<br />Make someone answer.</h1>
+      <h1>Find a <mark>school</mark>.<br />See what\u2019s <mark>missing</mark>.<br />Make someone <mark>answer</mark>.</h1>
       <p class="standfirst">Send a photo of what you actually see.
         Anonymous, from the spot, in a minute. #SchoolThikKaro</p>
       <div class="actions">

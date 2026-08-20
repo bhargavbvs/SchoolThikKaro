@@ -42,7 +42,7 @@
 * { box-sizing:border-box; }
 
 body.browse {
-  margin:0 auto; padding:34px 24px 80px; max-width:1200px;
+  margin:0; padding:0 0 80px;
   background:var(--bg); color:var(--ink);
   font:16px/1.6 var(--sans);
   -webkit-font-smoothing:antialiased;
@@ -590,7 +590,8 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
 
 /* The bar spans the window; the wordmark inside it stays on the page's
    own measure, so it lines up with everything below. */
-.mast-bar { border-bottom:1.5px solid var(--line-strong); margin-bottom:0;
-  width:100vw; margin-left:calc(50% - 50vw); background:var(--bg); }
+.mast-bar { border-bottom:1.5px solid var(--line-strong); background:var(--bg); }
 .mast-bar .masthead { max-width:1200px; margin:0 auto;
   padding:18px 24px; border-bottom:0; }
+/* Everything below the bar keeps the page's measure. */
+.page { max-width:1200px; margin:0 auto; padding:34px 24px 0; }
