@@ -99,3 +99,16 @@ describe('form controls match the rest of the site', () => {
     expect(css).toMatch(/::placeholder[^}]*font-family:var\(--sans\)/);
   });
 });
+
+describe('the whole app is square, not just the form', () => {
+  it('leaves no rounded corners in any app stylesheet except circles', () => {
+    // The map and admin chrome kept their own radii after the form was
+    // squared, so /app/ was half one shape and half the other.
+    for (const f of ['src/submit/style-submit.css', 'src/map/style-map.css',
+      'src/admin/style-admin.css', 'src/style.css']) {
+      for (const r of readFileSync(f, 'utf8').match(/border-radius:[^;]*/g) ?? []) {
+        expect(r, `${f}: ${r}`).toContain('50%');
+      }
+    }
+  });
+});

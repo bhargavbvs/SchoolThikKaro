@@ -8,17 +8,15 @@
   font-size:1.1em; transition:background .15s ease; }
 #theme-toggle:hover { background:var(--panel); }
 #topbar .brand { font-weight:700; letter-spacing:.02em; align-self:center; }
-#search-toggle { display:flex; align-items:center; gap:6px; padding:8px 14px;
-  border-radius:8px; border:1px solid var(--line);
+#search-toggle { display:flex; align-items:center; gap:6px; padding:8px 14px; border:1px solid var(--line);
   background:var(--panel-2); color:var(--ink); }
 #search-panel { flex-basis:100%; margin-top:8px; }
-#search-panel input[type="search"] { width:100%; max-width:420px; padding:10px;
-  border-radius:8px; border:1px solid var(--line); background:var(--panel-2);
+#search-panel input[type="search"] { width:100%; max-width:420px; padding:10px; border:1px solid var(--line); background:var(--panel-2);
   color:var(--ink); font:inherit; }
-#search-panel #near { margin-left:8px; padding:10px 14px; border-radius:8px;
+#search-panel #near { margin-left:8px; padding:10px 14px;
   border:1px solid var(--line); background:transparent; color:var(--body); }
 #search-panel .results { list-style:none; margin:10px 0 0; padding:0; max-height:40vh;
-  overflow:auto; background:var(--panel); border-radius:8px; }
+  overflow:auto; background:var(--panel); }
 #search-panel .results li { padding:10px 12px; border-bottom:1px solid var(--line);
   cursor:pointer; }
 #search-panel .results li:hover { background:var(--panel-2); }
@@ -34,10 +32,10 @@
 #sheet .claim-label { margin:0 0 4px; font-size:13px; color:var(--muted); }
 #sheet .claim-value { margin:0; font-weight:600; }
 #sheet .udise { font-size:12px; color:var(--muted); }
-#sheet #sheet-report { width:100%; padding:14px; border-radius:10px; border:0;
+#sheet #sheet-report { width:100%; padding:14px; border:0;
   background:var(--admitted); color:#fff; font-weight:600; margin-top:14px; }
 .sheet-secondary { display:flex; gap:8px; margin-top:8px; }
-.sheet-secondary button { flex:1; padding:10px; border-radius:8px;
+.sheet-secondary button { flex:1; padding:10px;
   border:1px solid var(--line); background:transparent; color:var(--body); }
 #sheet-fix { border-color:var(--fixed); color:var(--fixed); }
 #sheet-dispute { border-color:var(--disputed); }
