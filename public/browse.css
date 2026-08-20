@@ -108,7 +108,7 @@ body.browse {
 .hero { padding:26px 0 56px; }
 .hero .kicker { display:flex; align-items:center; gap:9px; margin-bottom:30px; }
 .hero .kicker .dot { width:6px; height:6px; border-radius:50%; background:var(--ink); }
-.hero h1 { margin:0; font:700 clamp(38px, 7vw, 74px)/1.06 var(--serif);
+.hero h1 { margin:0; font:700 clamp(30px, 4.6vw, 52px)/1.12 var(--serif);
   letter-spacing:-0.02em; }
 .hero h1 em { font-style:italic; }
 /* The marker-pen highlight — a solid block of accent behind the word, with
