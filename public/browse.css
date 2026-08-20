@@ -10,10 +10,12 @@
   --muted:#8a8780;
   --line:#e3e1da;
   --line-strong:#111214;
-  /* The single accent. Light enough that black type sits on it cleanly,
-     which is what makes the highlighter effect work. */
-  --accent:#f5c542;
-  --accent-soft:#fdf0c4;
+  /* CJP's own burnt orange (cjpparty.com). Dark type sits on it at
+     5.4:1; white does not, at 3.5:1, so solid uses set the ink
+     explicitly. The soft tint carries hovers, where a whole row of the
+     solid colour would shout. */
+  --accent:#e0651e;
+  --accent-soft:#fbe4d5;
   --rule:#d8d5cd;
 
   --serif:'Playfair Display', Georgia, 'Times New Roman', serif;

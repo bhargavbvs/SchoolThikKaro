@@ -662,3 +662,14 @@ describe('headline weight', () => {
     expect(css).toMatch(/\.hero h1 \{ margin:0; font:700 /);
   });
 });
+
+describe('the accent is defined once, consistently', () => {
+  it('has no theme block still carrying the old yellow', () => {
+    // The first edit changed the dark block and missed the light one,
+    // which is the default — so the live site kept the yellow while the
+    // tests passed on a value nobody saw.
+    const css = readFileSync('public/browse.css', 'utf8');
+    const accents = [...new Set(css.match(/--accent:#[0-9a-f]{6}/g) ?? [])];
+    expect(accents).toEqual(['--accent:#e0651e']);
+  });
+});
