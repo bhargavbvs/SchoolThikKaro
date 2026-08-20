@@ -1,6 +1,6 @@
 // src/admin/admin.js
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
-import { renderQueueHTML, summarise } from './queue.js';
+import { renderQueueHTML, summarise, normaliseRow } from './queue.js';
 import { sendMagicLink, sessionToken, captureTokenFromHash } from './auth.js';
 
 async function api(path, opts = {}) {
@@ -22,13 +22,25 @@ export async function mountAdmin(el) {
   if (!sessionToken()) return renderLogin(el);
 
   el.innerHTML = '<h1>Moderation queue</h1><div id="stats"></div><div id="q">Loading\u2026</div>';
-  const res = await api('reports?review_status=eq.pending&select=*&order=created_at.asc');
-  if (res.status === 401) return renderLogin(el, 'Session expired. Sign in again.');
-  const rows = await res.json();
+  // BOTH queues. school_submissions was invisible here until now, which
+  // meant a citizen could report a school the government record misses and
+  // no moderator would ever see it.
+  const query = 'review_status=eq.pending&select=*&order=created_at.asc';
+  const [rRes, sRes] = await Promise.all([
+    api(`reports?${query}`), api(`school_submissions?${query}`),
+  ]);
+  if (rRes.status === 401 || sRes.status === 401) {
+    return renderLogin(el, 'Session expired. Sign in again.');
+  }
+  const rows = [
+    ...(await rRes.json()).map((r) => normaliseRow(r, 'reports')),
+    ...(await sRes.json()).map((r) => normaliseRow(r, 'school_submissions')),
+  ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
   const s = summarise(rows);
   el.querySelector('#stats').textContent =
-    `${s.total} pending \u00b7 ${s.verified} verified \u00b7 ${s.unblurred} unblurred`;
+    `${s.total} pending \u00b7 ${s.verified} verified \u00b7 ${s.unblurred} unblurred`
+    + (s.unlisted ? ` \u00b7 ${s.unlisted} not in the record` : '');
   const q = el.querySelector('#q');
   q.innerHTML = renderQueueHTML(rows);
 
@@ -40,14 +52,17 @@ export async function mountAdmin(el) {
     const action = btn.dataset.act;
     btn.disabled = true;
 
-    await api(`reports?id=eq.${id}`, {
+    // Patch the table the row actually came from: approving an unlisted
+    // submission against `reports` would silently do nothing.
+    const table = card.dataset.table || 'reports';
+    await api(`${table}?id=eq.${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ review_status: action === 'approve' ? 'approved' : 'rejected' }),
     });
     await api('audit_log', {
       method: 'POST',
       body: JSON.stringify({
-        actor_email: 'session', action, target_table: 'reports', target_id: id,
+        actor_email: 'session', action, target_table: table, target_id: id,
       }),
     });
     card.remove();
