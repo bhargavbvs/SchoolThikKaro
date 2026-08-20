@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { distanceM, overpassQuery, fromOverpass, fromUdise, mergeCandidates }
   from '../src/submit/nearby.js';
-import { renderCandidate, NOTHING_NEARBY } from '../src/submit/picker.js';
+import { renderCandidate, NOTHING_NEARBY, renderPickerHTML } from '../src/submit/picker.js';
 
 describe('overpassQuery', () => {
   it('asks for ways as well as nodes', () => {
@@ -123,5 +123,26 @@ describe('the picker copes with recognising nothing', () => {
   it('escapes a school name rather than injecting it', () => {
     const out = renderCandidate({ id: 'x', name: '<script>alert(1)</script>', area: '', distanceM: 1, source: 'osm' });
     expect(out).not.toContain('<script>');
+  });
+});
+
+describe('the picker shares the form’s shell', () => {
+  it('sits in the same centred card as the step form, not full-bleed', () => {
+    // It was rendering into the bare #submit-root, so it ran the whole
+    // width of the window while the form beside it sat in a 680px column.
+    const html = renderPickerHTML();
+    expect(html).toContain('class="sub-shell"');
+    expect(html).toContain('class="sub-card"');
+  });
+
+  it('carries the same title and assurances, so the two screens read as one flow', () => {
+    const html = renderPickerHTML();
+    expect(html).toContain('Report a school');
+    expect(html).toMatch(/Anonymous/);
+    expect(html).toMatch(/No login/);
+  });
+
+  it('says why it wants a location before asking for one', () => {
+    expect(renderPickerHTML()).toMatch(/use your location to list what is nearby/i);
   });
 });

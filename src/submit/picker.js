@@ -17,17 +17,28 @@ function esc(s) {
 }
 
 export function renderPickerHTML() {
-  return `
-    <header class="sub-head">
-      <h2>Which school are you at?</h2>
-      <button id="sub-close" type="button" aria-label="Close">${iconEl('x')}</button>
-    </header>
-    <div id="pick-status" class="pick-status">${iconEl('pin')} Finding schools near you…</div>
-    <ul id="pick-list" class="pick-list"></ul>
-    <div class="pick-manual">
-      <p class="o-hint">Not the right one, or nothing listed?</p>
-      <button id="pick-type" type="button">Enter the school myself</button>
-    </div>`;
+  return `<div class="sub-shell">
+    <button id="sub-close" type="button" aria-label="Close">${iconEl('x')}</button>
+    <h1 class="sub-title">Report a school</h1>
+    <p class="sub-sub">Your identity is never recorded. We record where the
+      photo was taken, so the report can be checked.</p>
+    <ul class="sub-assure">
+      <li>· Anonymous</li><li>· No login</li><li>· Published once reviewed</li>
+    </ul>
+
+    <section class="sub-card">
+      <h3>Which school are you at?</h3>
+      <p class="lede">We use your location to list what is nearby.</p>
+      <div id="pick-status" class="pick-status">
+        <span class="pick-spin" aria-hidden="true"></span>Finding schools near you…
+      </div>
+      <ul id="pick-list" class="pick-list"></ul>
+      <div class="pick-manual">
+        <p class="o-hint">Not the right one, or nothing listed?</p>
+        <button id="pick-type" type="button" class="pick-type">Enter the school myself →</button>
+      </div>
+    </section>
+  </div>`;
 }
 
 /** One row. A school we hold is marked as being in the government record —
