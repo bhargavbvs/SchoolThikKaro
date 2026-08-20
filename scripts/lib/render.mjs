@@ -463,7 +463,8 @@ export function renderIndexPage(tree, geo) {
       <p class="standfirst">Send a photo of what you actually see.
         Anonymous, from the spot, in a minute. #SchoolThikKaro</p>
       <div class="finder">
-        <label class="sr-only" for="school-q">Search for a school by name</label>
+        <label class="finder-label" for="school-q">Schools index
+          <span>${fmtNum(tree.national.flagged)} schools, searchable by name</span></label>
         <input id="school-q" type="search" autocomplete="off" hidden
                placeholder="Type a school or village name…" />
         <div id="school-hits" class="finder-hits" hidden></div>

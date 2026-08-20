@@ -618,3 +618,12 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
 .finder-none { margin:0; padding:14px 16px; font-size:13.5px; line-height:1.55;
   color:var(--muted); }
 .finder-none a { color:var(--ink); }
+
+/* The search had a placeholder and nothing else, so it read as a stray
+   box. The name belongs here — not on the map, which shows states. */
+.finder-label { display:flex; align-items:baseline; justify-content:space-between;
+  gap:14px; flex-wrap:wrap; margin-bottom:10px; cursor:pointer;
+  font:500 10.5px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); }
+.finder-label span { text-transform:none; letter-spacing:0;
+  font:400 12.5px/1.3 var(--sans); }
