@@ -282,7 +282,7 @@ export function renderIndexPage(tree, geo) {
     // toilet. That single sentence is the whole argument, so it is the page.
     headline: `<div class="hero">
       <p class="kicker"><span class="dot"></span><span class="label">The government’s own record · ${fmtNum(tree.national.flagged)} schools, block by block</span></p>
-      <h1>They counted the schools.<br />They counted what was broken.<br />Then they called it fine.</h1>
+      <h1>Find your school.<br />See what\u2019s missing.<br />Make someone answer.</h1>
       <p class="standfirst">Find your school below, then send a photo of what you
         actually see. Anonymous, from the spot, in a minute. #SchoolThikKaro</p>
       <div class="actions">

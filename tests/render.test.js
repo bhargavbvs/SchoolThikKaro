@@ -365,48 +365,40 @@ describe('horizontal rules line up', () => {
   });
 });
 
-describe('the headline says what this site adds to the movement', () => {
+describe('the headline is the reader\'s path through the site', () => {
   const html = renderIndexPage(tree, geo);
   const h1 = html.match(/<h1>[\s\S]*?<\/h1>/)[0];
 
-  it('turns on the third line rather than repeating a formula', () => {
-    // Two parallel lines then a turn. An anaphora with no turn is a
-    // template with our nouns dropped into it.
+  it('runs three steps that escalate rather than repeat', () => {
+    // find (easy) -> see (look) -> make (act). Three of the same verb is
+    // a formula; three of the same weight is a list.
     expect((h1.match(/<br \/>/g) ?? []).length).toBe(2);
-    expect((h1.match(/They counted/g) ?? []).length).toBe(2);
-    expect(h1).toMatch(/Then they called it fine\./);
-    // And it stays about the school, not one fixture in it — the record
-    // covers water, teachers, classrooms and ramps too, and we now hold
-    // all of it.
+    expect(h1).toMatch(/Find your school\./);
+    expect(h1).toMatch(/See what’s missing\./);
+    expect(h1).toMatch(/Make someone answer\./);
+  });
+
+  it('each step is something the site actually supports', () => {
+    // Browse to a block, read the faults off each school's record, and
+    // see the sitting member for the seat it sits in.
+    expect(html).toContain('href="#data"');
+    expect(html).toMatch(/Report what you find/);
+  });
+
+  it('stays about the school, not one fixture in it', () => {
     expect(h1.toLowerCase()).not.toContain('toilet');
   });
 
-  it('states the finding the site actually proves', () => {
-    // The second stat card computes it: the official figure counts a
-    // toilet that does not work as a toilet.
-    expect(html).toMatch(/counted as if they were fine/i);
-  });
-
-  it('credits the campaign rather than claiming to be it', () => {
-    // #SchoolThikKaro is CJP's. This site is a companion to it, and the
-    // wording must not imply it speaks for them.
-    const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
-    expect(line).toContain('#SchoolThikKaro');
-    expect(line).not.toMatch(/\bour campaign\b|\bwe are\b|official/i);
-  });
-
-  it('asks the reader to do something, rather than explaining the data', () => {
-    // The headline already makes the argument. The line under it is the
-    // ask: find your school, send a photo. Explaining the record twice
-    // spends the one line a reader will actually read.
+  it('asks the reader to do something in the line underneath', () => {
     const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
     expect(line).toMatch(/send a photo/i);
+    expect(line).toMatch(/anonymous/i);
     expect(line).not.toMatch(/government|record|UDISE/i);
   });
 
-  it('says how little it costs to report', () => {
-    // Anonymity and effort are the two things that stop people.
+  it('credits the campaign rather than claiming to be it', () => {
     const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
-    expect(line).toMatch(/anonymous/i);
+    expect(line).toContain('#SchoolThikKaro');
+    expect(line).not.toMatch(/\bour campaign\b|\bwe are\b|official/i);
   });
 });
