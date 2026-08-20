@@ -377,8 +377,12 @@ describe('horizontal rules line up', () => {
   it('does not draw a second rule under the one .head already draws', () => {
     // .atlas breaks out to 1320px while the page is 1060px, so a rule of
     // its own stacked directly under .head's as two lines of two lengths.
-    const atlas = css.match(/\.atlas \{[^}]*\}/)[0];
-    expect(atlas).not.toMatch(/border-top/);
+    // EVERY .atlas rule, not the first one. A later block re-added the
+    // border once and this test passed anyway, because it only looked at
+    // the top of the file.
+    for (const rule of css.match(/\.atlas \{[^}]*\}/g) ?? []) {
+      expect(rule, rule).not.toMatch(/border-top/);
+    }
   });
 
   it('keeps every remaining rule at the page width, so they align', () => {

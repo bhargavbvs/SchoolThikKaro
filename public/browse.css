@@ -40,7 +40,7 @@
 * { box-sizing:border-box; }
 
 body.browse {
-  margin:0 auto; padding:28px 20px 64px; max-width:1060px;
+  margin:0 auto; padding:34px 24px 80px; max-width:1200px;
   background:var(--bg); color:var(--ink);
   font:16px/1.6 var(--sans);
   -webkit-font-smoothing:antialiased;
@@ -61,8 +61,9 @@ body.browse {
 
 /* ---------- stat strip ---------- */
 .stat-grid { display:grid; grid-template-columns:repeat(3, 1fr);
-  border:1px solid var(--line-strong); margin-bottom:48px; }
-.stat-grid > div { padding:22px 22px 26px; border-right:1px solid var(--line-strong); }
+  border:1px solid var(--line-strong); margin-bottom:16px; }
+.stat-grid > div { padding:30px 28px 34px; min-height:250px;
+  border-right:1px solid var(--line-strong); }
 .stat-grid > div:last-child { border-right:0; }
 .stat-grid .label { padding-bottom:12px; margin-bottom:16px;
   border-bottom:1px solid var(--rule); display:block; }
@@ -79,7 +80,7 @@ body.browse {
 .crumb a { color:var(--body); text-decoration:none; }
 .crumb a:hover { color:var(--ink); }
 
-.head { padding-bottom:26px; margin-bottom:26px; border-bottom:1.5px solid var(--line-strong); }
+.head { padding-bottom:40px; margin-bottom:44px; border-bottom:1.5px solid var(--line-strong); }
 .head h1 { margin:0 0 18px; font:900 clamp(32px, 5.5vw, 54px)/1.05 var(--serif);
   letter-spacing:-0.02em; }
 .head .hero-rate { margin:0; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
@@ -100,8 +101,8 @@ body.browse {
    Declared after .head deliberately: the index page's hero renders inside
    .head, and .head h1 / .hero h1 have identical specificity, so source order
    is what decides. Moving this above .head silently shrinks the hero. */
-.hero { padding:8px 0 40px; }
-.hero .kicker { display:flex; align-items:center; gap:9px; margin-bottom:22px; }
+.hero { padding:26px 0 56px; }
+.hero .kicker { display:flex; align-items:center; gap:9px; margin-bottom:30px; }
 .hero .kicker .dot { width:6px; height:6px; border-radius:50%; background:var(--ink); }
 .hero h1 { margin:0; font:900 clamp(38px, 7vw, 74px)/1.06 var(--serif);
   letter-spacing:-0.02em; }
@@ -115,7 +116,7 @@ body.browse {
 .standfirst { margin:20px 0 0; max-width:46ch; font-size:16px; line-height:1.55;
   color:var(--muted); }
 .hero .standfirst strong { color:var(--ink); font-weight:600; }
-.hero .actions { display:flex; gap:12px; margin-top:28px; flex-wrap:wrap; }
+.hero .actions { display:flex; gap:14px; margin-top:40px; flex-wrap:wrap; }
 /* Small type in a generous box. Uppercase mono with wide letterspacing
    made a short label occupy as much width as a sentence, so the buttons
    read as large and the words inside them as shouted. */
@@ -564,3 +565,21 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
 /* The live figures start as placeholders and are filled if reports exist;
    an em dash is not a number, so it should not be sized like one. */
 #latest-figure { font-size:26px; line-height:1.2; letter-spacing:0; }
+
+/* Space between the major sections, set once. They were each carrying
+   their own margin against a tight baseline, so the page read as one
+   block rather than as parts a reader can rest between. */
+.atlas, .findmine, .live, .faq { margin-top:72px; }
+/* No rule of its own: .head closes with one directly above, and the stat
+   grid sits inside .head, so the two would land adjacent. Spacing does
+   the separating here. */
+.atlas { padding-top:8px; }
+.closer { margin-top:72px; padding:56px 48px; }
+.foot { margin-top:64px; padding-top:26px; }
+@media (max-width:760px) {
+  .atlas, .findmine, .live, .faq, .closer { margin-top:44px; }
+  .atlas { padding-top:4px; }
+  .stat-grid > div { min-height:0; padding:22px 20px 26px; }
+  .hero { padding:16px 0 34px; }
+  .head { padding-bottom:26px; margin-bottom:28px; }
+}
