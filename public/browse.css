@@ -110,7 +110,10 @@ body.browse {
    the ink sitting on top of it. */
 .hero h1 mark { background:var(--accent); color:#111214; font-style:italic;
   padding:0 .1em; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
-.hero .standfirst { margin:26px 0 0; max-width:34em; font-size:17px; color:var(--body); }
+.hero /* One line under the headline, not the paragraph it used to be: tighter
+   measure, and it sits close enough to read as part of the same block. */
+.standfirst { margin:20px 0 0; max-width:46ch; font-size:16px; line-height:1.55;
+  color:var(--muted); }
 .hero .standfirst strong { color:var(--ink); font-weight:600; }
 .hero .actions { display:flex; gap:12px; margin-top:28px; flex-wrap:wrap; }
 .btn { display:inline-block; padding:13px 22px; font:500 13px/1 var(--mono);

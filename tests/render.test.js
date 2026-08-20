@@ -364,3 +364,30 @@ describe('horizontal rules line up', () => {
     expect(css).toMatch(/\.atlas-table \.table-note \{[^}]*max-width:100%/);
   });
 });
+
+describe('the headline names the three things the site does', () => {
+  const html = renderIndexPage(tree, geo);
+  const h1 = html.match(/<h1>[\s\S]*?<\/h1>/)[0];
+
+  it('runs three parallel lines, not one sentence', () => {
+    expect((h1.match(/<br \/>/g) ?? []).length).toBe(2);
+    expect((h1.match(/Name the|Name who/g) ?? []).length).toBe(3);
+  });
+
+  it('promises only what the site actually delivers', () => {
+    // Each line is a thing these pages really do: 78,744 named schools,
+    // the issues read off each school's own record, and the sitting
+    // member for the seat it sits in.
+    expect(h1).toContain('Name the school');
+    expect(h1).toContain('Name the fault');
+    expect(h1).toContain('Name who answers');
+  });
+
+  it('claims "anonymous to report" rather than "verified"', () => {
+    // "Verified" alone would overclaim: on this site it means a
+    // submission passed our checks, never that a finding is proven.
+    const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
+    expect(line).toMatch(/Anonymous to report/);
+    expect(line).not.toMatch(/\bVerified\./);
+  });
+});
