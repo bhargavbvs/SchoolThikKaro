@@ -402,3 +402,62 @@ table.stats td.what .tag { display:inline-block; margin:2px 4px 2px 0; }
 .pager button:disabled { color:var(--muted); cursor:default; opacity:.5; }
 .pager .pager-status { font:500 12px/1 var(--mono); color:var(--muted);
   font-variant-numeric:tabular-nums slashed-zero; font-feature-settings:'zero' 1,'tnum' 1; }
+
+/* ---------- the ledger panel ---------- */
+.ledger { border:1px solid var(--line); background:var(--panel); }
+.ledger-head { display:flex; align-items:baseline; justify-content:space-between;
+  gap:16px; padding:16px 18px; border-bottom:1px solid var(--line); }
+.ledger-head h2 { margin:0; font:700 17px/1 var(--serif); letter-spacing:.01em;
+  text-transform:uppercase; }
+.ledger-tag { font:500 10px/1 var(--mono); letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); }
+.ledger-controls { display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:12px 18px; border-bottom:1px solid var(--line); }
+.sortby { display:flex; align-items:center; gap:8px; }
+.sort-label { font:500 10px/1 var(--mono); letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); }
+.sortby button { padding:8px 12px; cursor:pointer; background:transparent;
+  border:1px solid var(--line); color:var(--body);
+  font:600 11px/1 var(--mono); letter-spacing:.06em; }
+.sortby button.is-on { background:var(--ink); border-color:var(--ink); color:var(--bg); }
+.sortby button:hover:not(.is-on) { border-color:var(--line-strong); color:var(--ink); }
+.ledger #filter { flex:1 1 180px; width:auto; border:1px solid var(--line); }
+.ledger table.stats { border:0; }
+.ledger .pager { border:0; border-top:1px solid var(--line); }
+.ledger .table-note { padding:0 18px 16px; }
+
+/* Rank sits with the row it numbers, quiet enough not to compete with it. */
+table.stats td.rank, table.stats th.rank { width:46px; padding-right:0;
+  text-align:right; font:500 12px/1 var(--mono); color:var(--muted);
+  font-variant-numeric:tabular-nums slashed-zero; font-feature-settings:'zero' 1,'tnum' 1; }
+table.stats tbody tr:hover td.rank { color:#111214; }
+/* The whole row is a target once the script is running. */
+table.stats tbody tr[data-name] { cursor:pointer; }
+
+/* ---------- questions ---------- */
+.faq { margin-top:52px; padding-top:26px; border-top:1.5px solid var(--line-strong); }
+.faq h2 { margin:0 0 22px; font:900 34px/1.05 var(--serif); letter-spacing:-0.02em; }
+.faq-item { border-bottom:1px solid var(--line); }
+.faq-item summary { display:flex; align-items:center; justify-content:space-between;
+  gap:16px; padding:17px 2px; cursor:pointer; list-style:none;
+  font:600 15.5px/1.4 var(--sans); }
+.faq-item summary::-webkit-details-marker { display:none; }
+.faq-item summary::after { content:'+'; font:400 20px/1 var(--mono); color:var(--muted); }
+.faq-item[open] summary::after { content:'−'; }
+.faq-item summary:hover { color:var(--body); }
+.faq-body { padding:0 2px 18px; max-width:68ch; }
+.faq-body p { margin:0; font-size:14.5px; line-height:1.65; color:var(--body); }
+
+/* ---------- closing band ---------- */
+.closer { margin-top:52px; padding:44px 40px; background:var(--ink); color:var(--bg); }
+.closer h2 { margin:0 0 14px; font:900 36px/1.1 var(--serif); letter-spacing:-0.02em; }
+.closer p { margin:0 0 22px; max-width:52ch; color:rgba(250,249,245,0.72); }
+.closer .btn-accent { display:inline-block; padding:15px 22px;
+  background:var(--accent); color:#111214; border:1px solid var(--accent);
+  font:600 12px/1 var(--mono); letter-spacing:.12em; text-transform:uppercase;
+  text-decoration:none; }
+.closer .btn-accent:hover { background:transparent; color:var(--accent); }
+@media (max-width:640px) {
+  .closer { padding:32px 22px; }
+  .closer h2 { font-size:28px; }
+}

@@ -108,8 +108,9 @@ const hero = (name, { flagged, total, rate }, comparison, baseline) => {
 /* `total` is deliberately absent: the table shows the count and how common
    it is, and "1 in 3" already states the ratio the denominator would. The
    full "13,328 of 1,20,652" still leads every region page. */
-const statRow = (label, href, flagged, rate, maxRate, nationalRate) => `
-  <tr data-name="${esc(titleCase(label).toLowerCase())}">
+const statRow = (label, href, flagged, rate, maxRate, nationalRate, rank) => `
+  <tr data-name="${esc(titleCase(label).toLowerCase())}" data-rate="${rate ?? 0}" data-count="${flagged ?? 0}">
+    <td class="rank">${String(rank).padStart(2, '0')}</td>
     <td class="name"><a href="${esc(href)}">${esc(titleCase(label))}</a></td>
     <td class="num">${fmtNum(flagged)}</td>
     <td class="num rate"><span class="rate-wrap"><span class="bar ${severityOf(rate, nationalRate)}" style="--w:${barWidth(rate, maxRate)}%" aria-hidden="true"></span><span class="rate-val ${severityOf(rate, nationalRate)}">${oneInLabel(rate) ?? '—'}</span></span></td>
@@ -128,11 +129,24 @@ const statRow = (label, href, flagged, rate, maxRate, nationalRate) => `
 const PAGE_SIZE = 10;
 const FILTER_SCRIPT = `<script>
 (function(){
-var rows=[].slice.call(document.querySelectorAll('table.stats tbody tr[data-name]'));
-if(rows.length<=${PAGE_SIZE}) return;
+var table=document.querySelector('table.stats'); if(!table) return;
+var body=table.tBodies[0];
+var rows=[].slice.call(body.querySelectorAll('tr[data-name]'));
 var input=document.getElementById('filter');
 var pager=document.getElementById('pager');
-var per=${PAGE_SIZE}, page=0, q='';
+var sortby=document.getElementById('sortby');
+var per=${PAGE_SIZE}, page=0, q='', key='rate';
+
+// Whole rows are clickable. The name is still a real link — that is what a
+// crawler follows and what a keyboard reaches — this only widens the target
+// to the rest of the row, which on a phone is the difference between one
+// tap and three.
+body.addEventListener('click', function(e){
+  if(e.target.closest('a')) return;
+  var a=e.target.closest('tr')&&e.target.closest('tr').querySelector('td.name a');
+  if(a) a.click();
+});
+
 function render(){
   var hit=[];
   for(var n=0;n<rows.length;n++){
@@ -144,9 +158,14 @@ function render(){
   if(page<0) page=0;
   for(var k=0;k<hit.length;k++){
     hit[k].style.display=(k>=page*per&&k<(page+1)*per)?'table-row':'none';
+    // The rank follows the order on screen; a row is 03 because it is
+    // third in what you are looking at, not third in some other sort.
+    var c=hit[k].querySelector('td.rank');
+    if(c) c.textContent=String(k+1).length<2?'0'+(k+1):String(k+1);
   }
   if(pager){
-    pager.hidden=hit.length===0&&!q;
+    // A list that fits on one page has nothing to page through.
+    pager.hidden=pages<=1;
     var from=hit.length?page*per+1:0, to=Math.min((page+1)*per,hit.length);
     pager.querySelector('.pager-status').textContent=
       hit.length?(from+'-'+to+' of '+hit.length):'nothing matches';
@@ -154,12 +173,21 @@ function render(){
     pager.querySelector('[data-page=next]').disabled=page>=pages-1;
   }
 }
+function resort(){
+  rows.sort(function(a,b){ return (+b.dataset[key])-(+a.dataset[key]); });
+  for(var i=0;i<rows.length;i++) body.appendChild(rows[i]);
+}
 if(input){input.hidden=false;input.addEventListener('input',function(){
   q=input.value.trim().toLowerCase();page=0;render();});}
-if(pager){pager.hidden=false;pager.addEventListener('click',function(e){
+if(sortby){sortby.hidden=false;sortby.addEventListener('click',function(e){
+  var b=e.target.closest('button[data-sort]'); if(!b) return;
+  key=b.dataset.sort; page=0;
+  [].forEach.call(sortby.querySelectorAll('button'),function(x){x.classList.toggle('is-on',x===b);});
+  resort(); render();});}
+if(pager){pager.addEventListener('click',function(e){
   var b=e.target.closest('button[data-page]');if(!b)return;
   page+=b.dataset.page==='next'?1:-1;render();
-  var t=document.querySelector('table.stats');if(t)t.scrollIntoView({block:'start'});});}
+  table.scrollIntoView({block:'start'});});}
 render();
 })();
 </script>`;
@@ -173,13 +201,26 @@ const PAGER = `<nav class="pager" id="pager" hidden aria-label="Pages">
   <button type="button" data-page="next">Next \u2192</button>
 </nav>`;
 
-const statTable = (rows, filterLabel, nameLabel = 'Name') => `
-${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />` : ''}
+const statTable = (rows, filterLabel, nameLabel = 'Name', ledgerLabel = 'Registry') => `
+<section class="ledger">
+  <header class="ledger-head">
+    <h2>${esc(ledgerLabel)}</h2>
+    <span class="ledger-tag">${esc(SOURCE_YEAR)}</span>
+  </header>
+  ${filterLabel ? `<div class="ledger-controls">
+    <div class="sortby" id="sortby" hidden>
+      <span class="sort-label">Sort</span>
+      <button type="button" data-sort="rate" class="is-on">Most affected</button>
+      <button type="button" data-sort="count">Most schools</button>
+    </div>
+    <input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />
+  </div>` : ''}
 <table class="stats" id="data">
-  <thead><tr><th>${esc(nameLabel)}</th><th class="num">Schools with issues</th><th class="num">How common</th></tr></thead>
+  <thead><tr><th class="rank"><span class="sr-only">Rank</span></th><th>${esc(nameLabel)}</th><th class="num">Schools with issues</th><th class="num">How common</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
 ${filterLabel ? PAGER : ''}
+</section>
 <p class="table-note">“Issues” here means the one thing ${esc(SOURCE_YEAR)} records about
   girls’ toilets: the school has none, or has one that does not function. It is the only
   issue in this release — a school counted as having no issue may still have others.</p>
@@ -320,9 +361,9 @@ export function renderIndexPage(tree, geo) {
     table: `<section class="atlas">${map}<div class="atlas-table">
       ${statTable(
       (() => { const m = maxRateOf(tree.states); const nat = tree.national.rate;
-        return tree.states.map((s) =>
-          statRow(s.name, `/state/${s.slug}`, s.flagged, s.rate, m, nat)).join(''); })(),
-      'Filter states…', 'State')}</div></section>`,
+        return tree.states.map((s, i) =>
+          statRow(s.name, `/state/${s.slug}`, s.flagged, s.rate, m, nat, i + 1)).join(''); })(),
+      'Filter states…', 'State', 'State registry')}</div></section>`,
     extra: `<section class="findmine">
       <h2>Whatever is broken, report it</h2>
       <p>The figures here are girls’ toilets — that is all this release counts.
@@ -331,6 +372,42 @@ export function renderIndexPage(tree, geo) {
       <p class="actions">
         <a class="btn btn-primary" href="/app/#/add">Report a school →</a>
       </p>
+    </section>
+
+    <section class="faq">
+      <h2>Questions.</h2>
+      ${[
+        ['Is my report really anonymous?',
+         'We never record who you are — no account, no name, no email. We do record where '
+         + 'the photo was taken, because that is what lets a report be checked. Your IP is '
+         + 'hashed with a secret and kept only to stop one person flooding the queue.'],
+        ['What if my school is not listed?',
+         'Most are not. This site can only enumerate the ' + fmtNum(tree.national.flagged)
+         + ' schools the government already flagged — about 1 in ' + oneInN(tree.national.rate)
+         + '. Report it anyway: those go to a separate record, marked as reported by a '
+         + 'citizen, and are never counted inside the official figures.'],
+        ['Where do these numbers come from?',
+         'Every figure on this site is from ' + SOURCE_YEAR + ', the government’s own '
+         + 'release, as each school reported it. We publish them as the school’s record, '
+         + 'not as our finding. Nothing here is our estimate.'],
+        ['What happens to my photo?',
+         'Faces are blurred on your phone before anything is sent, and a photo that had '
+         + 'faces in it and was not blurred is refused by the server. A moderator reviews '
+         + 'every submission before it appears.'],
+        ['Is this CJP’s site?',
+         'No. #SchoolThikKaro is CJP’s campaign. This is a companion to it, built from the '
+         + 'government’s published data, and it does not speak for them.'],
+      ].map(([q, a]) => `
+      <details class="faq-item">
+        <summary>${esc(q)}</summary>
+        <div class="faq-body"><p>${esc(a)}</p></div>
+      </details>`).join('')}
+    </section>
+
+    <section class="closer">
+      <h2>Every report is one<br />school someone looked at.</h2>
+      <p>A minute on your phone. Anonymous. Published once a moderator has checked it.</p>
+      <p><a class="btn btn-accent" href="/app/#/add">Report a school →</a></p>
     </section>`,
   });
 }
@@ -343,9 +420,9 @@ export function renderStatePage(state, nationalRate) {
     canonical: `${SITE}/state/${state.slug}`,
     breadcrumb: crumb([{ label: 'India', href: '/' }, { label: state.name }]),
     headline: hero(state.name, state, compareToBaseline(state.rate, nationalRate, 'national average'), nationalRate),
-    table: statTable(state.districts.map((d) =>
-      statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.rate, m, nationalRate)).join(''),
-      'Filter districts…', 'District'),
+    table: statTable(state.districts.map((d, i) =>
+      statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.rate, m, nationalRate, i + 1)).join(''),
+      'Filter districts…', 'District', 'District registry'),
     extra: issuePanel(state, titleCase(state.name)),
   });
 }
@@ -360,9 +437,9 @@ export function renderDistrictPage(state, district, nationalRate) {
       { label: state.name, href: `/state/${state.slug}` }, { label: district.name }]),
     headline: hero(district.name, district,
       compareToBaseline(district.rate, state.rate, `${titleCase(state.name)} average`), nationalRate),
-    table: statTable(district.blocks.map((b) =>
-      statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.rate, m, nationalRate)).join(''),
-      'Filter blocks…', 'Block'),
+    table: statTable(district.blocks.map((b, i) =>
+      statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.rate, m, nationalRate, i + 1)).join(''),
+      'Filter blocks…', 'Block', 'Block registry'),
     extra: issuePanel(district, titleCase(district.name)),
   });
 }

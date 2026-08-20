@@ -29,12 +29,16 @@ describe('published artifacts carry no personal data', () => {
     expect(PERSONAL_FIELDS.length).toBeGreaterThanOrEqual(4);
   });
 
+  /** Looks for the FIELD, not the word. "no name, no email" is prose in a
+   *  FAQ; `"email":` is a leak. An earlier version of this guard flagged
+   *  the former, and a guard that cries wolf is one someone deletes. */
+  const leaks = (text) => PERSONAL_FIELDS.filter((f) =>
+    new RegExp(`["']${f}["']\\s*:|\\b${f}\\s*=`).test(text));
+
   it('keeps them out of the committed data directory', () => {
     for (const file of filesUnder('data', ['.json'])) {
-      const text = readFileSync(file, 'utf8');
-      for (const field of PERSONAL_FIELDS) {
-        expect(text.includes(field), `${file} contains ${field}`).toBe(false);
-      }
+      const found = leaks(readFileSync(file, 'utf8'));
+      expect(found, `${file} carries ${found.join(', ')}`).toEqual([]);
     }
   });
 
@@ -43,10 +47,8 @@ describe('published artifacts carry no personal data', () => {
     // between this data and the public.
     const pages = filesUnder('dist', ['.html', '.json', '.xml']);
     for (const file of pages) {
-      const text = readFileSync(file, 'utf8');
-      for (const field of PERSONAL_FIELDS) {
-        expect(text.includes(field), `${file} contains ${field}`).toBe(false);
-      }
+      const found = leaks(readFileSync(file, 'utf8'));
+      expect(found, `${file} carries ${found.join(', ')}`).toEqual([]);
     }
   });
 

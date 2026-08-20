@@ -255,7 +255,9 @@ describe('long lists are paged, not dumped', () => {
     // Without JavaScript the reader gets the whole list, which is the
     // better fallback than controls that do nothing.
     expect(html).toMatch(/<nav class="pager" id="pager" hidden/);
-    expect(html).toContain('pager.hidden=false');
+    // It is revealed only when there is more than one page — the script
+    // decides, so a short list never shows dead controls either.
+    expect(html).toContain('pager.hidden=pages<=1');
   });
 
   it('pages the FILTERED set, not the whole table', () => {
@@ -269,8 +271,21 @@ describe('long lists are paged, not dumped', () => {
     expect(bodyRows).toBe(tree.states.length);
   });
 
-  it('does not bother paging a list that already fits', () => {
-    expect(html).toContain('if(rows.length<=10) return;');
+  it('hides the pager when everything fits on one page', () => {
+    expect(html).toContain('pager.hidden=pages<=1');
+  });
+
+  it('numbers rows by their position on screen, not by a fixed rank', () => {
+    // A row is 03 because it is third in what you are looking at. Sorting
+    // by a different column renumbers them.
+    expect(html).toContain("c.textContent=String(k+1)");
+  });
+
+  it('makes the whole row a target without removing the link', () => {
+    // The anchor is what a crawler follows and what a keyboard reaches;
+    // the row click only widens the target around it.
+    expect(html).toMatch(/td\.name a/);
+    expect(html).toMatch(/if\(e\.target\.closest\('a'\)\) return;/);
   });
 });
 
@@ -437,5 +452,77 @@ describe('the page keeps one width', () => {
     // And it no longer explains the unlisted path in prose: the picker
     // handles that itself, so the reader never has to choose a route.
     expect(section).not.toMatch(/published separately|marked as reported by a citizen/);
+  });
+});
+
+describe('the questions section', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('opens without JavaScript, because <details> does', () => {
+    expect(html).toMatch(/<details class="faq-item">/);
+    expect((html.match(/<summary>/g) ?? []).length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('answers the objection that actually stops people', () => {
+    expect(html).toMatch(/never record who you are/i);
+    expect(html).toMatch(/IP is hashed|hashed with a secret/i);
+  });
+
+  it('is straight about how little of India this site holds', () => {
+    // Roughly one school in eighteen. A visitor whose school is missing
+    // should learn why here rather than conclude the site is broken.
+    expect(html).toMatch(/Most are not/);
+    expect(html).toMatch(/never counted inside the official figures/i);
+  });
+
+  it('says plainly that this is not CJP’s site', () => {
+    // The campaign is theirs. Implying otherwise would be a liability for
+    // both of us — see the standfirst, which credits without claiming.
+    expect(html).toMatch(/#SchoolThikKaro is CJP’s campaign/);
+    expect(html).toMatch(/does not speak for them/);
+  });
+
+  it('derives its figures rather than hardcoding them', () => {
+    expect(html).toContain(tree.national.flagged.toLocaleString('en-IN'));
+  });
+});
+
+describe('the closing band', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('ends the page on the ask, not on a footnote', () => {
+    const closer = html.match(/<section class="closer">[\s\S]*?<\/section>/)[0];
+    expect(closer).toContain('href="/app/#/add"');
+  });
+
+  it('claims a minute, not a promise about what happens next', () => {
+    const closer = html.match(/<section class="closer">[\s\S]*?<\/section>/)[0];
+    expect(closer).toMatch(/A minute on your phone/);
+    expect(closer).toMatch(/once a moderator has checked it/);
+    // Never "it will be fixed" — nothing on this site can promise that.
+    expect(closer).not.toMatch(/will be fixed|guarantee/i);
+  });
+});
+
+describe('the ledger panel', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('offers both readings of the data instead of picking one', () => {
+    // Ranking by count is a population map; ranking by rate hides where
+    // the largest numbers of children are. The reader can have either.
+    expect(html).toContain('data-sort="rate"');
+    expect(html).toContain('data-sort="count"');
+  });
+
+  it('defaults to the honest ranking', () => {
+    expect(html).toMatch(/data-sort="rate" class="is-on"/);
+  });
+
+  it('carries the sort keys on every row', () => {
+    expect(html).toMatch(/<tr data-name="[^"]*" data-rate="[\d.]+" data-count="\d+"/);
+  });
+
+  it('ships the sort control hidden, like every other enhancement here', () => {
+    expect(html).toMatch(/<div class="sortby" id="sortby" hidden>/);
   });
 });
