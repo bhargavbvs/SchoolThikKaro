@@ -286,7 +286,7 @@ export function renderIndexPage(tree, geo) {
       <p class="standfirst">Send a photo of what you actually see.
         Anonymous, from the spot, in a minute. #SchoolThikKaro</p>
       <div class="actions">
-        <a class="btn btn-primary" href="#data">Find your school →</a>
+        <a class="btn btn-primary" href="#data">Find a school →</a>
         <a class="btn btn-ghost" href="/app/#/add">Report what you find</a>
       </div>
     </div>
