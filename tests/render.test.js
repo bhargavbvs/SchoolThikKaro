@@ -340,3 +340,27 @@ describe('table headers', () => {
     expect(css).toMatch(/table\.stats td\.num \{[^}]*text-align:right/);
   });
 });
+
+describe('horizontal rules line up', () => {
+  const css = readFileSync('public/browse.css', 'utf8');
+
+  it('does not draw a second rule under the one .head already draws', () => {
+    // .atlas breaks out to 1320px while the page is 1060px, so a rule of
+    // its own stacked directly under .head's as two lines of two lengths.
+    const atlas = css.match(/\.atlas \{[^}]*\}/)[0];
+    expect(atlas).not.toMatch(/border-top/);
+  });
+
+  it('keeps every remaining rule at the page width, so they align', () => {
+    // Anything that draws a full-width rule must not also break out.
+    for (const sel of ['.findmine', '.head']) {
+      const rule = css.match(new RegExp(`\\${sel} \\{[^}]*\\}`))[0];
+      expect(rule).not.toMatch(/--atlas-w|100vw/);
+    }
+  });
+
+  it('wraps the table note to its column beside the map', () => {
+    // 70ch inside the 420px column ran the note off the side of the page.
+    expect(css).toMatch(/\.atlas-table \.table-note \{[^}]*max-width:100%/);
+  });
+});

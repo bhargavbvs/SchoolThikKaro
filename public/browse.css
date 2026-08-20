@@ -197,11 +197,13 @@ table.stats td.rate .rate-val.is-low { color:var(--muted); }
    text column India was the smallest thing on a page that is mostly about
    India. No transform is used to centre it: a transformed ancestor would
    change the containing block for the sticky header inside the table. */
+/* No rule of its own: .head already draws one directly above, at the
+   page's width rather than this section's wider one. Two rules of two
+   different lengths, stacked, is what that looked like. */
 .atlas { --atlas-w:min(1320px, calc(100vw - 60px));
   width:var(--atlas-w); margin-left:calc(50% - var(--atlas-w) / 2);
   display:grid; grid-template-columns:minmax(0,1fr) minmax(0,420px);
-  gap:34px; align-items:start; margin-top:44px; padding-top:28px;
-  border-top:1.5px solid var(--line-strong); }
+  gap:34px; align-items:start; margin-top:8px; }
 .atlas-table { min-width:0; }
 .atlas-table table.stats td { padding:11px 12px; }
 .atlas-table table.stats thead th { padding:11px 12px; }
@@ -328,6 +330,9 @@ table.stats td.udise, .crumb, .label, .masthead .tag {
    the numbers rather than only in prose further up the page. */
 .table-note { margin:12px 0 0; max-width:70ch;
   font:400 12px/1.6 var(--sans); color:var(--muted); }
+/* Beside the map the table sits in a 420px column, where a 70ch measure
+   overflows the page. The note wraps to its column instead. */
+.atlas-table .table-note { max-width:100%; }
 
 /* ---------- theme toggle ---------- */
 .theme-toggle { display:inline-flex; align-items:center; gap:6px;
