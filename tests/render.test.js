@@ -373,7 +373,9 @@ describe('the headline is the reader\'s path through the site', () => {
     // find (easy) -> see (look) -> make (act). Three of the same verb is
     // a formula; three of the same weight is a list.
     expect((h1.match(/<br \/>/g) ?? []).length).toBe(2);
-    expect(h1).toMatch(/Find your school\./);
+    // "a", not "your": most readers arriving from the campaign have no
+    // school of their own, and the ask is to audit schools in your area.
+    expect(h1).toMatch(/Find a school\./);
     expect(h1).toMatch(/See what’s missing\./);
     expect(h1).toMatch(/Make someone answer\./);
   });
@@ -394,6 +396,8 @@ describe('the headline is the reader\'s path through the site', () => {
     expect(line).toMatch(/send a photo/i);
     expect(line).toMatch(/anonymous/i);
     expect(line).not.toMatch(/government|record|UDISE/i);
+    // And it does not simply repeat the headline's first line.
+    expect(line).not.toMatch(/Find (a|your) school/i);
   });
 
   it('credits the campaign rather than claiming to be it', () => {
