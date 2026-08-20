@@ -190,7 +190,11 @@ describe('the homepage is about schools, not only about toilets', () => {
     // It now sits in the third headline box, beside the figure it
     // qualifies, rather than in a card of its own.
     expect(html).toContain(tree.national.nonFunctional.toLocaleString('en-IN'));
-    expect(html).toMatch(/toilet that does not work — counted as fine/i);
+    expect(html).toMatch(/toilet that does not work, counted as fine/i);
+    // And says whose finding it is. The schools were found short by the
+    // government's own report, not by us — the footer says so, and now
+    // the figure itself does too.
+    expect(html).toMatch(/found short of a working girls’ toilet by the/i);
   });
 
   it('says plainly that the figures cover one thing only', () => {
@@ -585,5 +589,25 @@ describe('the accountability panel reaches districts', () => {
     // Silence must not read as "this district has no MLA".
     const html = renderDistrictPage(state, district, 5.63, null);
     expect(html).not.toMatch(/class="accountable"/);
+  });
+});
+
+describe('buttons', () => {
+  it('use small sentence-case type, not shouted mono', () => {
+    // Uppercase mono with wide letterspacing made a two-word label
+    // occupy the width of a sentence, so the button read as large and
+    // the words inside it as shouted.
+    const css = readFileSync('public/browse.css', 'utf8');
+    const btn = css.match(/\.btn \{[^}]*\}/)[0];
+    expect(btn).toMatch(/var\(--sans\)/);
+    expect(btn).toMatch(/text-transform:none/);
+    expect(btn).toMatch(/letter-spacing:0/);
+  });
+
+  it('sit in a box with room around the words', () => {
+    const css = readFileSync('public/browse.css', 'utf8');
+    const btn = css.match(/\.btn \{[^}]*\}/)[0];
+    expect(btn).toMatch(/min-width:200px/);
+    expect(btn).toMatch(/padding:18px 34px/);
   });
 });

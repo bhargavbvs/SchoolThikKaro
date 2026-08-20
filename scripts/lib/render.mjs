@@ -438,9 +438,10 @@ export function renderIndexPage(tree, geo) {
       <div class="stat">
         <span class="stat-label">Schools in the record</span>
         <div class="figure">${fmtNum(tree.national.flagged)}</div>
-        <p class="note">That is <b>1 in ${oneInN(tree.national.rate)}</b> of every government
-          school girls attend. <b>${fmtNum(tree.national.nonFunctional)}</b> of them have a
-          toilet that does not work — counted as fine.</p>
+        <p class="note">found short of a working girls’ toilet by the
+          <b>${esc(SOURCE_YEAR)}</b> report — <b>1 in ${oneInN(tree.national.rate)}</b> of every
+          government school girls attend. <b>${fmtNum(tree.national.nonFunctional)}</b> of them
+          have a toilet that does not work, counted as fine.</p>
       </div>
     </div>`,
     // Map and table are one unit: the map answers "where", the table

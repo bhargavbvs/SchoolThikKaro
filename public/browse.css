@@ -116,9 +116,12 @@ body.browse {
   color:var(--muted); }
 .hero .standfirst strong { color:var(--ink); font-weight:600; }
 .hero .actions { display:flex; gap:12px; margin-top:28px; flex-wrap:wrap; }
-.btn { display:inline-block; padding:13px 22px; font:500 13px/1 var(--mono);
-  letter-spacing:.08em; text-transform:uppercase; text-decoration:none;
-  border:1.5px solid var(--line-strong); }
+/* Small type in a generous box. Uppercase mono with wide letterspacing
+   made a short label occupy as much width as a sentence, so the buttons
+   read as large and the words inside them as shouted. */
+.btn { display:inline-block; padding:18px 34px; min-width:200px; text-align:center;
+  font:500 15px/1.2 var(--sans); letter-spacing:0; text-transform:none;
+  text-decoration:none; border:1.5px solid var(--line-strong); }
 .btn-primary { background:var(--line-strong); color:var(--bg); }
 .btn-ghost { background:transparent; color:var(--ink); }
 
