@@ -493,3 +493,42 @@ table.stats th .sm { display:none; }
   .pager { padding:10px 12px; }
   .pager button { padding:8px 10px; font-size:10px; }
 }
+
+/* No data is a hatch, not a paler tone. As a tone it measured 1.09:1
+   against the lightest bin — invisible — so an unmeasured state looked
+   exactly like a state doing well. */
+svg.india .nodata { fill:url(#nodata); }
+
+/* Only the worst few are named; the rest are a tap away. */
+svg.india .india-label { font:600 15px/1 var(--sans); fill:var(--bg);
+  paint-order:stroke; stroke:rgba(17,18,20,0.55); stroke-width:3px;
+  pointer-events:none; letter-spacing:-0.01em; }
+
+/* Hovering either view marks the other. */
+svg.india .st.is-linked { fill:var(--accent); }
+table.stats tbody tr.is-linked { background:var(--accent); }
+table.stats tbody tr.is-linked td, table.stats tbody tr.is-linked td.name a,
+table.stats tbody tr.is-linked td .rate-val { color:#111214; }
+@media (max-width:640px) { svg.india .india-label { font-size:19px; } }
+
+/* ---------- live reports ---------- */
+/* Hidden until something has actually been approved: an empty "no reports
+   yet" panel on the front page advertises that nobody has used this. */
+.live { margin-top:52px; padding-top:26px; border-top:1.5px solid var(--line-strong); }
+.live-head { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,44ch);
+  gap:24px; align-items:start; margin-bottom:20px; }
+.live-head h2 { margin:0; font:900 38px/1.05 var(--serif); letter-spacing:-0.02em; }
+.live-head h2 em { font-style:italic; }
+.live-head p { margin:0; font-size:14px; line-height:1.6; color:var(--muted); }
+.live-list { list-style:none; margin:0; padding:0;
+  border-top:1.5px solid var(--line-strong); border-bottom:1.5px solid var(--line-strong); }
+.live-list li { display:flex; align-items:center; gap:10px; padding:13px 4px;
+  font:500 13px/1.4 var(--mono); color:var(--body); }
+.live-list li + li { border-top:1px solid var(--line); }
+.live-list .dot { width:7px; height:7px; border-radius:50%; background:var(--ink);
+  flex:none; }
+.live-list .when { color:var(--muted); }
+@media (max-width:760px) {
+  .live-head { grid-template-columns:minmax(0,1fr); gap:10px; }
+  .live-head h2 { font-size:30px; }
+}

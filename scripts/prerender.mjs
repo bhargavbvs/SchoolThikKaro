@@ -56,7 +56,7 @@ let n = 1;
 for (const s of tree.states) {
   write(`/state/${s.slug}`, renderStatePage(s, tree.national.rate)); n++;
   for (const d of s.districts) {
-    write(`/state/${s.slug}/${d.slug}`, renderDistrictPage(s, d, tree.national.rate)); n++;
+    write(`/state/${s.slug}/${d.slug}`, renderDistrictPage(s, d, tree.national.rate, repIndex)); n++;
     for (const b of d.blocks) {
       write(`/state/${s.slug}/${d.slug}/${b.slug}`, renderBlockPage(s, d, b, tree.national.rate, repIndex)); n++;
     }

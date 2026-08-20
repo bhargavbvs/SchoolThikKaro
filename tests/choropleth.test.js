@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { binBreaks, binOf, renderChoropleth, renderLegend, stateKey, BIN_MULTIPLES }
+import { binBreaks, binOf, renderChoropleth, renderLegend, stateKey, pathCentroid, BIN_MULTIPLES }
   from '../scripts/lib/choropleth.mjs';
 
 const NATIONAL = 5.63; // the real national rate
@@ -124,5 +124,54 @@ describe('renderLegend', () => {
     // five bins do not have.
     const visible = legend.replace(/<[^>]*>/g, '');
     expect(visible).not.toMatch(/\d/);
+  });
+});
+
+describe('pathCentroid', () => {
+  it('weights by area rather than taking a bounding-box centre', () => {
+    // A bounding box centre for an L-shape sits outside the shape. For
+    // Meghalaya it would put the label out over Bangladesh.
+    const square = 'M0 0L10 0L10 10L0 10Z';
+    const c = pathCentroid(square);
+    expect(c[0]).toBeCloseTo(5, 1);
+    expect(c[1]).toBeCloseTo(5, 1);
+  });
+  it('uses the largest ring, ignoring outlying islands', () => {
+    const big = 'M0 0L10 0L10 10L0 10Z';
+    const speck = 'M900 900L901 900L901 901L900 901Z';
+    const c = pathCentroid(big + speck);
+    expect(c[0]).toBeLessThan(50);
+  });
+  it('returns null for path data with no usable ring', () => {
+    expect(pathCentroid('')).toBeNull();
+    expect(pathCentroid('M0 0L1 1Z')).toBeNull();
+  });
+});
+
+describe('no-data states are categorically different, not paler', () => {
+  const shapes = [
+    { key: 'A', label: 'Aaa', d: 'M0 0L10 0L10 10L0 10Z' },
+    { key: 'B', label: 'Bbb', d: 'M20 20L30 20L30 30L20 30Z' },
+  ];
+  const svg = renderChoropleth({
+    shapes, viewBox: '0 0 100 100', nationalRate: 5.63, title: 't', labelTop: 1,
+    byKey: new Map([['A', { slug: 'a', rate: 29.7, label: 'Aaa — 1 in 3' }]]),
+  });
+
+  it('fills an unmeasured state with a hatch, not a tone', () => {
+    // As a tone it measured 1.09:1 against the lightest bin, so "we have
+    // no figures" and "almost none" looked identical.
+    expect(svg).toContain('<pattern id="nodata"');
+    expect(svg).toMatch(/class="st nodata"/);
+  });
+
+  it('labels only the worst, not every state', () => {
+    expect((svg.match(/class="india-label"/g) ?? []).length).toBe(1);
+    expect(svg).toContain('>Aaa<');
+    expect(svg).not.toMatch(/india-label[^>]*>Bbb</);
+  });
+
+  it('gives every state a key the table can match', () => {
+    expect(svg).toMatch(/<path class="st [^"]*" d="[^"]*" data-key="A"/);
   });
 });

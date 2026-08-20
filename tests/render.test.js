@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import { esc, fmtRate, renderBlockPage, renderStatePage, renderIndexPage }
+import { esc, fmtRate, renderBlockPage, renderStatePage, renderDistrictPage, renderIndexPage }
   from '../scripts/lib/render.mjs';
 import { officialClaimRate } from '../scripts/lib/format.mjs';
+import { indexRepresentatives } from '../scripts/lib/accountable.mjs';
 
 // State outlines, shaped like data/india-states.json but with two toy
 // shapes — renderIndexPage needs geometry, not the real 104KB of it.
@@ -16,7 +17,10 @@ const geo = {
 
 const block = { slug: 'mylliem', name: 'MYLLIEM', flagged: 7, total: 196, rate: 3.571,
   noToilet: 4, nonFunctional: 3,
-  schools: [{ udise: '17040300201', name: 'GOVT LP MYLLIEM', indicator: 'no_girls_toilet' }] };
+  // Carries a constituency as UDISE+ spells it, so the accountability
+  // panel is exercised rather than skipped.
+  schools: [{ udise: '17040300201', name: 'GOVT LP MYLLIEM', indicator: 'no_girls_toilet',
+    constituency: 'Paderu(ST)' }] };
 const district = { slug: 'east-khasi-hills', name: 'EAST KHASI HILLS', flagged: 312,
   total: 1204, rate: 25.9, noToilet: 200, nonFunctional: 112, blocks: [block] };
 const state = { slug: 'meghalaya', name: 'MEGHALAYA', flagged: 4326, total: 14555,
@@ -519,10 +523,54 @@ describe('the ledger panel', () => {
   });
 
   it('carries the sort keys on every row', () => {
-    expect(html).toMatch(/<tr data-name="[^"]*" data-rate="[\d.]+" data-count="\d+"/);
+    expect(html).toMatch(/<tr data-name="[^"]*" data-key="[A-Z]+" data-rate="[\d.]+" data-count="\d+"/);
   });
 
   it('ships the sort control hidden, like every other enhancement here', () => {
     expect(html).toMatch(/<div class="sortby" id="sortby" hidden>/);
+  });
+});
+
+describe('the live reports band', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('starts hidden and is revealed only when reports exist', () => {
+    // An empty "no reports yet" panel on the front page advertises that
+    // nobody has used this, which is worse than not mentioning it.
+    expect(html).toMatch(/<section class="live" id="live" hidden>/);
+    expect(html).toContain('if(!rows.length) return;');
+    expect(html).toContain('sec.hidden=false;');
+  });
+
+  it('asks only for approved reports', () => {
+    // Pending submissions are unreviewed claims; RLS refuses them anyway,
+    // but the query should not be asking.
+    expect(html).toContain('review_status=eq.approved');
+  });
+
+  it('requests no field that could identify a reporter', () => {
+    const q = html.match(/reports\?select=([^&']*)/)[1];
+    expect(q.split(',').sort()).toEqual(['category', 'created_at', 'finding']);
+  });
+
+  it('fails silently rather than breaking the page', () => {
+    // The band is an extra. A dead network must not take the record with it.
+    expect(html).toContain('.catch(function(){});');
+  });
+});
+
+describe('the accountability panel reaches districts', () => {
+  it('names members on a district page, not only a block', () => {
+    // A block is often one seat; a district is the level at which a
+    // reader recognises their own representative.
+    const html = renderDistrictPage(state, district, 5.63,
+      indexRepresentatives(JSON.parse(readFileSync('data/representatives.json', 'utf8'))));
+    expect(html).toMatch(/class="accountable"/);
+  });
+
+  it('renders nothing where we hold no representatives', () => {
+    // Silence must not read as "this district has no MLA".
+    const html = renderDistrictPage(state, district, 5.63, null);
+    expect(html).not.toMatch(/class="accountable"/);
   });
 });

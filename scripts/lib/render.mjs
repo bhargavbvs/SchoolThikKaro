@@ -10,6 +10,12 @@ import { accountableFor, askLine } from './accountable.mjs';
 
 export const SITE = 'https://shaala-flax.vercel.app';
 
+// Read from the same env Vite gives the app, so the static pages and the
+// SPA can never disagree about which project they are talking to.
+const SUPABASE_REST = process.env.VITE_SUPABASE_URL
+  ? `${process.env.VITE_SUPABASE_URL}/rest/v1` : '';
+const SUPABASE_ANON = process.env.VITE_SUPABASE_ANON_KEY ?? '';
+
 const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
 const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 
@@ -109,7 +115,7 @@ const hero = (name, { flagged, total, rate }, comparison, baseline) => {
    it is, and "1 in 3" already states the ratio the denominator would. The
    full "13,328 of 1,20,652" still leads every region page. */
 const statRow = (label, href, flagged, rate, maxRate, nationalRate, rank) => `
-  <tr data-name="${esc(titleCase(label).toLowerCase())}" data-rate="${rate ?? 0}" data-count="${flagged ?? 0}">
+  <tr data-name="${esc(titleCase(label).toLowerCase())}" data-key="${esc(stateKey(label))}" data-rate="${rate ?? 0}" data-count="${flagged ?? 0}">
     <td class="rank">${String(rank).padStart(2, '0')}</td>
     <td class="name"><a href="${esc(href)}">${esc(titleCase(label))}</a></td>
     <td class="num">${fmtNum(flagged)}</td>
@@ -189,12 +195,71 @@ if(pager){pager.addEventListener('click',function(e){
   page+=b.dataset.page==='next'?1:-1;render();
   table.scrollIntoView({block:'start'});});}
 render();
+
+// The map and the ledger are two views of one thing. Hovering either
+// marks the other, which is what makes them read as one — and is the
+// reason the pin map was replaced by something this could be done to.
+var svg=document.querySelector('svg.india');
+if(svg){
+  var byKey={};
+  for(var r=0;r<rows.length;r++) if(rows[r].dataset.key) byKey[rows[r].dataset.key]=rows[r];
+  var mark=function(key,on){
+    var row=byKey[key]; if(row) row.classList.toggle('is-linked',on);
+    var p=svg.querySelector('path[data-key="'+key+'"]');
+    if(p) p.classList.toggle('is-linked',on);
+  };
+  svg.addEventListener('mouseover',function(e){
+    var p=e.target.closest('path[data-key]'); if(p) mark(p.dataset.key,true); });
+  svg.addEventListener('mouseout',function(e){
+    var p=e.target.closest('path[data-key]'); if(p) mark(p.dataset.key,false); });
+  body.addEventListener('mouseover',function(e){
+    var t=e.target.closest('tr[data-key]'); if(t) mark(t.dataset.key,true); });
+  body.addEventListener('mouseout',function(e){
+    var t=e.target.closest('tr[data-key]'); if(t) mark(t.dataset.key,false); });
+}
 })();
 </script>`;
 
 /** The pager markup. Ships hidden and is revealed by the script above, so a
  *  reader without JavaScript is never shown controls that cannot do
  *  anything — they get the full list instead, which is the better fallback. */
+/** Approved reports, fetched at view time.
+ *
+ *  These pages are static and the reports are not, so the band starts
+ *  hidden and only appears once something has actually been approved. An
+ *  empty "no reports yet" panel on the front page advertises that nobody
+ *  has used this, which is worse than not mentioning it. */
+const LIVE_SCRIPT = `<script>
+(function(){
+var sec=document.getElementById('live'), list=document.getElementById('live-list');
+if(!sec) return;
+var url=${JSON.stringify(SUPABASE_REST)};
+if(!url) return;
+fetch(url+'/reports?select=category,finding,created_at&review_status=eq.approved'
+  +'&order=created_at.desc&limit=6',
+  {headers:{apikey:${JSON.stringify(SUPABASE_ANON)},Authorization:'Bearer '+${JSON.stringify(SUPABASE_ANON)}}})
+ .then(function(r){return r.ok?r.json():[];})
+ .then(function(rows){
+   if(!rows.length) return;
+   var ago=function(t){var m=Math.round((Date.now()-new Date(t))/60000);
+     if(m<60) return m+'m ago'; if(m<1440) return Math.round(m/60)+'h ago';
+     return Math.round(m/1440)+'d ago';};
+   var say={girls_toilet:"girls’ toilet",boys_toilet:"boys’ toilet",
+     drinking_water:'drinking water',handwashing:'handwashing',electricity:'electricity',
+     classroom:'a classroom',boundary_wall:'the boundary wall',ramp:'a ramp',
+     playground:'the playground',other:'something else'};
+   var found={absent:'nothing at all',broken:'it broken',locked:'it locked',
+     no_water:'no water',inadequate:'not enough',working:'it working'};
+   list.innerHTML=rows.map(function(r){
+     return '<li><span class="dot"></span>Someone reported '
+       +(found[r.finding]||'a problem')+' for '+(say[r.category]||'a facility')
+       +' <span class="when">· '+ago(r.created_at)+'</span></li>';
+   }).join('');
+   sec.hidden=false;
+ }).catch(function(){});
+})();
+</script>`;
+
 const PAGER = `<nav class="pager" id="pager" hidden aria-label="Pages">
   <button type="button" data-page="prev">\u2190 Previous</button>
   <span class="pager-status"></span>
@@ -300,6 +365,7 @@ export function renderIndexPage(tree, geo) {
       ${renderChoropleth({
         shapes: geo.shapes, viewBox: geo.viewBox, byKey, nationalRate: tree.national.rate,
         title: 'Share of government schools with no working girls\u2019 toilet, by state',
+        labelTop: 4,
       })}
       ${renderLegend()}
       <figcaption>Shading is the share of a state\u2019s girls\u2019 and co-ed government
@@ -374,6 +440,16 @@ export function renderIndexPage(tree, geo) {
       </p>
     </section>
 
+    <section class="live" id="live" hidden>
+      <div class="live-head">
+        <h2>Live <em>reports</em>.</h2>
+        <p>What people have sent from the spot. Every one is anonymous,
+           checked by a moderator, and permanent.</p>
+      </div>
+      <ul class="live-list" id="live-list"></ul>
+    </section>
+    ${LIVE_SCRIPT}
+
     <section class="faq">
       <h2>Questions.</h2>
       ${[
@@ -427,7 +503,7 @@ export function renderStatePage(state, nationalRate) {
   });
 }
 
-export function renderDistrictPage(state, district, nationalRate) {
+export function renderDistrictPage(state, district, nationalRate, repIndex = null) {
   const m = maxRateOf(district.blocks);
   return renderPage({
     title: `${titleCase(district.name)}, ${titleCase(state.name)} — ${fmtNum(district.flagged)} schools with no working girls’ toilet · SchoolThikKaro`,
@@ -440,7 +516,8 @@ export function renderDistrictPage(state, district, nationalRate) {
     table: statTable(district.blocks.map((b, i) =>
       statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.rate, m, nationalRate, i + 1)).join(''),
       'Filter blocks…', 'Block', 'Block registry'),
-    extra: issuePanel(district, titleCase(district.name)),
+    extra: `${issuePanel(district, titleCase(district.name))}${
+      accountablePanel(district.blocks.flatMap((b) => b.schools), repIndex)}`,
   });
 }
 

@@ -53,7 +53,44 @@ export function binOf(rate, breaks) {
  *  are read. A number floating on a map invites comparing two states by
  *  eye across different areas, which is exactly the misreading the table is
  *  there to prevent. */
-export function renderChoropleth({ shapes, viewBox, byKey, nationalRate, title }) {
+/** Centroid of a path's largest ring, for placing a label.
+ *
+ *  Area-weighted, not a bounding-box centre: a bounding box puts
+ *  Meghalaya's label out over Bangladesh, because the box spans a shape
+ *  that is nowhere near rectangular. */
+export function pathCentroid(d) {
+  const rings = String(d ?? '').split('M').filter(Boolean).map((r) =>
+    [...r.matchAll(/(-?[\d.]+)\s+(-?[\d.]+)/g)].map((m) => [+m[1], +m[2]]));
+  let best = null;
+  let bestArea = 0;
+  for (const pts of rings) {
+    if (pts.length < 3) continue;
+    let a = 0, cx = 0, cy = 0;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const f = pts[j][0] * pts[i][1] - pts[i][0] * pts[j][1];
+      a += f; cx += (pts[j][0] + pts[i][0]) * f; cy += (pts[j][1] + pts[i][1]) * f;
+    }
+    if (!a) continue;
+    const area = Math.abs(a / 2);
+    if (area > bestArea) { bestArea = area; best = [cx / (3 * a), cy / (3 * a)]; }
+  }
+  return best;
+}
+
+/** Diagonal hatch for states with no figures.
+ *
+ *  It used to be the palest step on the same ramp, which measured 1.09:1
+ *  against the lightest shaded bin — invisible. A state we have not
+ *  measured then looked exactly like a state doing well, which is the one
+ *  claim this map must never make. A hatch is categorically different from
+ *  a tone, so it cannot be misread as "a bit less". */
+const HATCH = `<defs><pattern id="nodata" width="6" height="6"
+  patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+  <rect width="6" height="6" fill="var(--b-nodata)"/>
+  <line x1="0" y1="0" x2="0" y2="6" stroke="var(--rule)" stroke-width="1.6"/>
+</pattern></defs>`;
+
+export function renderChoropleth({ shapes, viewBox, byKey, nationalRate, title, labelTop = 0 }) {
   const breaks = binBreaks(nationalRate);
   const paths = shapes.map((s) => {
     const row = byKey.get(s.key);
@@ -62,12 +99,31 @@ export function renderChoropleth({ shapes, viewBox, byKey, nationalRate, title }
     const label = row ? `${row.label}` : `${s.label} — not in this release`;
     // No <a> for a state we have no page for: a link to nothing is worse
     // than no link, and the "not in this release" title says why.
-    const shape = `<path class="st ${cls}" d="${s.d}"><title>${esc(label)}</title></path>`;
-    return row ? `<a href="/state/${esc(row.slug)}" aria-label="${esc(label)}">${shape}</a>` : shape;
+    // data-key lets the ledger beside the map find its state and vice
+    // versa, which is what makes the two one view rather than two.
+    const shape = `<path class="st ${cls}" d="${s.d}" data-key="${esc(s.key)}"><title>${esc(label)}</title></path>`;
+    return row ? `<a href="/state/${esc(row.slug)}" aria-label="${esc(label)}" data-key="${esc(s.key)}">${shape}</a>` : shape;
   });
+  // Labels only for the worst few. Every state named turns the map into
+  // an unreadable list; the darkest are the ones a reader is trying to
+  // identify, and the rest are a tap or a hover away.
+  const ranked = shapes
+    .map((s) => ({ s, rate: byKey.get(s.key)?.rate ?? null }))
+    .filter((x) => typeof x.rate === 'number')
+    .sort((a, b) => b.rate - a.rate)
+    .slice(0, labelTop);
+  const labels = ranked.map(({ s }) => {
+    const c = pathCentroid(s.d);
+    if (!c) return '';
+    return `<text class="india-label" x="${c[0].toFixed(0)}" y="${c[1].toFixed(0)}"
+      text-anchor="middle">${esc(s.label)}</text>`;
+  }).join('\n');
+
   return `<svg class="india" viewBox="${esc(viewBox)}" role="img" aria-label="${esc(title)}" xmlns="http://www.w3.org/2000/svg">
 <title>${esc(title)}</title>
+${HATCH}
 ${paths.join('\n')}
+${labels}
 </svg>`;
 }
 
