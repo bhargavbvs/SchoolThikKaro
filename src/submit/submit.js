@@ -3,6 +3,7 @@ import { SOURCE_YEAR } from '../config.js';
 import { detectPlatform } from './gps.js';
 import { renderDesktopGateHTML, paintQR, handoffURL } from './qr.js';
 import { iconEl } from '../lib/icons.js';
+import { closeFlow } from './close.js';
 
 /** What the report is about. A school fails its students in more ways than
  *  one, and someone standing in front of a school with no drinking water
@@ -156,6 +157,6 @@ export async function openSubmitFlow(school) {
   }
 
   root.querySelector('#sub-close').addEventListener('click', () => {
-    root.hidden = true; root.innerHTML = '';
+    closeFlow(root);
   });
 }

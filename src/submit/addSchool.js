@@ -16,6 +16,7 @@ import { renderStepper, canAdvance, blockingReason, nextStep, prevStep, isLast }
 export { validateIdentity };
 import { detectPlatform } from './gps.js';
 import { iconEl } from '../lib/icons.js';
+import { closeFlow } from './close.js';
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -227,7 +228,7 @@ export async function openAddSchoolFlow(candidate = null) {
   root.addEventListener('change', render);
   root.addEventListener('input', render);
   root.querySelector('#sub-close').addEventListener('click', () => {
-    root.hidden = true; root.innerHTML = '';
+    closeFlow(root);
   });
 
   render();

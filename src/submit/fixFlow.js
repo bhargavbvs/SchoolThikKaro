@@ -2,6 +2,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { normaliseImage, toJpegBlob } from './blur.js';
 import { renderFixHTML, renderDisputeHTML, buildFixPayload, buildDisputePayload } from './fix.js';
 import { iconEl } from '../lib/icons.js';
+import { closeFlow } from './close.js';
 
 const doneHTML = (message) => `<div class="done">
   <span class="done-badge">${iconEl('checkCircle')}</span>
@@ -65,7 +66,7 @@ export function openFixFlow(school) {
   });
 
   root.querySelector('#flow-close').addEventListener('click', () => {
-    root.hidden = true; root.innerHTML = '';
+    closeFlow(root);
   });
 }
 
@@ -83,6 +84,6 @@ export function openDisputeFlow(school) {
   });
 
   root.querySelector('#flow-close').addEventListener('click', () => {
-    root.hidden = true; root.innerHTML = '';
+    closeFlow(root);
   });
 }

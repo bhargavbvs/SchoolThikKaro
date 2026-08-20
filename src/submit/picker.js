@@ -10,6 +10,7 @@
 import { nearbySchools } from './nearby.js';
 import { getFix } from './gps.js';
 import { iconEl } from '../lib/icons.js';
+import { closeFlow } from './close.js';
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -71,7 +72,7 @@ export async function openPicker(onPick) {
   const list = root.querySelector('#pick-list');
 
   root.querySelector('#sub-close').addEventListener('click', () => {
-    root.hidden = true; root.innerHTML = '';
+    closeFlow(root);
   });
   root.querySelector('#pick-type').addEventListener('click', () => onPick(null));
 
