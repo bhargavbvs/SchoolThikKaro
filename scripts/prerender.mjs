@@ -2,12 +2,18 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { renderIndexPage, renderStatePage, renderDistrictPage, renderBlockPage, SITE } from './lib/render.mjs';
 import { collectUrls, renderSitemap } from './lib/sitemap.mjs';
+import { indexRepresentatives } from './lib/accountable.mjs';
 
 const tree = JSON.parse(readFileSync('data/aggregates.json', 'utf8'));
 // State outlines for the homepage map, built once by
 // scripts/build-india-svg.mjs and committed. Not derived at build time: its
 // input is a ~74MB boundary file that is deliberately not in this repo.
 const geo = JSON.parse(readFileSync('data/india-states.json', 'utf8'));
+// Sitting members, for the "who answers for these schools" panel. Only the
+// states we have collected appear; a block elsewhere simply renders no
+// panel, which says nothing either way about its representatives.
+const repIndex = indexRepresentatives(
+  JSON.parse(readFileSync('data/representatives.json', 'utf8')));
 
 // This script runs AFTER `vite build` (see the package.json change below),
 // writing directly into dist/ — never into public/. See the "Why dist/, not
@@ -52,7 +58,7 @@ for (const s of tree.states) {
   for (const d of s.districts) {
     write(`/state/${s.slug}/${d.slug}`, renderDistrictPage(s, d, tree.national.rate)); n++;
     for (const b of d.blocks) {
-      write(`/state/${s.slug}/${d.slug}/${b.slug}`, renderBlockPage(s, d, b, tree.national.rate)); n++;
+      write(`/state/${s.slug}/${d.slug}/${b.slug}`, renderBlockPage(s, d, b, tree.national.rate, repIndex)); n++;
     }
   }
 }

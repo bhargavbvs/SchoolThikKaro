@@ -352,3 +352,37 @@ table.stats td.udise, .crumb, .label, .masthead .tag {
 :root[data-theme="dark"] .theme-toggle .t-dark { display:none; }
 :root[data-theme="dark"] .theme-toggle .t-light { display:inline-flex; }
 .masthead .mast-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
+/* ---------- what else these schools report ---------- */
+.issues, .accountable { margin-top:48px; padding-top:26px;
+  border-top:1.5px solid var(--line-strong); }
+.issues h2, .accountable h2 { margin:0 0 10px; font:900 28px/1.15 var(--serif);
+  letter-spacing:-0.02em; }
+.issues > .note, .accountable > .note { margin:0 0 20px; max-width:64ch;
+  font:400 13px/1.6 var(--sans); color:var(--muted); }
+.issue-list { list-style:none; margin:0; padding:0;
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:0; }
+.issue-list li { display:flex; align-items:baseline; gap:12px;
+  padding:12px 14px; border:1px solid var(--line); margin:-1px 0 0 -1px; }
+.issue-list .n { font:700 17px/1 var(--mono); min-width:4.5em; text-align:right;
+  font-variant-numeric:tabular-nums slashed-zero; font-feature-settings:'zero' 1,'tnum' 1; }
+.issue-list .l { font:400 13px/1.35 var(--sans); color:var(--body); }
+
+/* ---------- who answers ---------- */
+.who-list { list-style:none; margin:0; padding:0; }
+.who-list li { display:grid; grid-template-columns:1fr auto; gap:4px 16px;
+  align-items:baseline; padding:14px; border:1px solid var(--line); margin-top:-1px; }
+.who-list .who { font:600 15px/1.3 var(--sans); }
+.who-list .party { font:500 11px/1 var(--mono); letter-spacing:.08em;
+  color:var(--muted); margin-left:6px; }
+.who-list .seat { grid-column:1; font:400 12.5px/1.4 var(--mono); color:var(--muted); }
+.who-list .src { grid-row:1 / span 2; align-self:center;
+  font:600 10px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); text-decoration:none; border:1px solid var(--line); padding:7px 10px; }
+.who-list .src:hover { background:var(--accent); color:var(--ink); border-color:var(--line-strong); }
+
+/* Extra findings on a school row, beside the toilet it is listed for. */
+table.stats td.what { display:table-cell; }
+.tag-more { background:transparent; border:1px solid var(--line); color:var(--body); }
+.tag-count { background:transparent; border:1px dashed var(--line); color:var(--muted); }
+table.stats td.what .tag { display:inline-block; margin:2px 4px 2px 0; }

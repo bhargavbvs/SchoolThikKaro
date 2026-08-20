@@ -5,6 +5,8 @@ import { SOURCE_YEAR } from '../../src/config.js';
 import { titleCase, compareToBaseline, barWidth, severityOf, officialClaimRate, oneInN, oneInLabel } from './format.mjs';
 import { esc } from './render-escape.mjs';
 import { renderChoropleth, renderLegend, stateKey } from './choropleth.mjs';
+import { ISSUE_LABELS } from './school-detail.mjs';
+import { accountableFor, askLine } from './accountable.mjs';
 
 export const SITE = 'https://shaala-flax.vercel.app';
 
@@ -137,6 +139,54 @@ ${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filt
   issue in this release — a school counted as having no issue may still have others.</p>
 ${filterLabel ? FILTER_SCRIPT : ''}`;
 
+/** What the schools in a region show beyond the toilet they are listed for.
+ *
+ *  Counted from each school's own UDISE+ record. The denominator is stated
+ *  because it is not the region's whole school population: these are the
+ *  schools already flagged for a girls' toilet, so the figures describe
+ *  THEM, not every school in the block. Reading them as the latter would
+ *  overstate the problem, and the caption exists to stop that. */
+const issuePanel = (node, label) => {
+  const counts = node.issueCounts ?? {};
+  const rows = Object.entries(counts)
+    .filter(([key]) => key !== 'no_girls_toilet')     // that is why they are listed
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, n]) => `
+      <li><span class="n">${fmtNum(n)}</span>
+        <span class="l">${esc(ISSUE_LABELS[key] ?? key)}</span></li>`).join('');
+  if (!rows) return '';
+  return `<section class="issues">
+    <h2>What else these schools report</h2>
+    <p class="note">Of the <b>${fmtNum(node.flagged)}</b> schools in ${esc(label)} listed here,
+      this is what their own ${esc(SOURCE_YEAR)} records show. These counts describe those
+      schools, not every school in ${esc(label)}.</p>
+    <ul class="issue-list">${rows}</ul>
+  </section>`;
+};
+
+/** Who currently holds the seats these schools sit in.
+ *
+ *  A statement of fact, not an accusation: the record predates most terms.
+ *  Rendered only where we hold representative data — nothing is implied by
+ *  its absence elsewhere. */
+const accountablePanel = (schools, repIndex) => {
+  if (!repIndex) return '';
+  const entries = accountableFor(schools, repIndex).filter((e) => e.member);
+  if (!entries.length) return '';
+  const rows = entries.map((e) => `
+    <li>
+      <span class="who">${esc(e.member)}${e.party ? ` <span class="party">${esc(e.party)}</span>` : ''}</span>
+      <span class="seat">${esc(e.constituency)} · ${fmtNum(e.schools)} of these schools</span>
+      ${e.source ? `<a class="src" href="${esc(e.source)}" rel="nofollow noopener">Record</a>` : ''}
+    </li>`).join('');
+  return `<section class="accountable">
+    <h2>Who answers for these schools</h2>
+    <p class="note">The sitting members for the assembly seats these schools fall in.
+      Listed because they are who to ask — not as a claim that they caused it.</p>
+    <ul class="who-list">${rows}</ul>
+  </section>`;
+};
+
 const maxRateOf = (nodes) => Math.max(0, ...nodes.map((n) => n.rate ?? 0));
 
 // `geo` is the state outline data built once by scripts/build-india-svg.mjs
@@ -259,6 +309,7 @@ export function renderStatePage(state, nationalRate) {
     table: statTable(state.districts.map((d) =>
       statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.total, d.rate, m, nationalRate)).join(''),
       'Filter districts…', 'District'),
+    extra: issuePanel(state, titleCase(state.name)),
   });
 }
 
@@ -275,10 +326,11 @@ export function renderDistrictPage(state, district, nationalRate) {
     table: statTable(district.blocks.map((b) =>
       statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.total, b.rate, m, nationalRate)).join(''),
       'Filter blocks…', 'Block'),
+    extra: issuePanel(district, titleCase(district.name)),
   });
 }
 
-export function renderBlockPage(state, district, block, nationalRate) {
+export function renderBlockPage(state, district, block, nationalRate, repIndex = null) {
   // Straight into the report form for this exact school. Until the
   // /report/<udise> route existed, the best a row could do was open the
   // state map and leave the reader to find the pin themselves.
@@ -290,7 +342,12 @@ export function renderBlockPage(state, district, block, nationalRate) {
     <tr data-name="${esc(s.name.toLowerCase())}">
       <td class="name"><a href="${reportHref(s.udise)}">${esc(s.name)}</a></td>
       <td class="udise">${esc(s.udise)}</td>
-      <td><span class="tag ${s.indicator === 'no_girls_toilet' ? 'tag-none' : 'tag-broken'}">${esc(INDICATOR_TEXT[s.indicator] ?? 'Unknown')}</span></td>
+      <td class="what">
+        <span class="tag ${s.indicator === 'no_girls_toilet' ? 'tag-none' : 'tag-broken'}">${esc(INDICATOR_TEXT[s.indicator] ?? 'Unknown')}</span>
+        ${(s.issues ?? []).filter((k) => k !== 'no_girls_toilet').map((k) =>
+          `<span class="tag tag-more">${esc(ISSUE_LABELS[k] ?? k)}</span>`).join('')}
+        ${typeof s.teachers === 'number' ? `<span class="tag tag-count">${fmtNum(s.teachers)} teacher${s.teachers === 1 ? '' : 's'}${typeof s.students === 'number' ? ` · ${fmtNum(s.students)} children` : ''}</span>` : ''}
+      </td>
     </tr>`).join('');
 
   return renderPage({
@@ -306,7 +363,8 @@ export function renderBlockPage(state, district, block, nationalRate) {
     table: `
 <input id="filter" type="search" hidden placeholder="Filter schools…" aria-label="Filter schools…" />
 <table class="stats schools">
-      <thead><tr><th>School</th><th>UDISE</th><th>Reported issue</th></tr></thead>
+      <thead><tr><th>School</th><th>UDISE</th><th>What its record shows</th></tr></thead>
       <tbody>${rows}</tbody></table>${FILTER_SCRIPT}`,
+    extra: `${issuePanel(block, titleCase(block.name))}${accountablePanel(block.schools, repIndex)}`,
   });
 }
