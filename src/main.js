@@ -58,9 +58,24 @@ onRoute(/^\/report\//, async () => {
 // its own destination: the submission goes to school_submissions, not into
 // the published figures.
 onRoute(/^\/add/, async () => {
-  const { openAddSchoolFlow } = await import('./submit/addSchool.js');
   document.getElementById('map').style.display = 'none';
-  await openAddSchoolFlow();
+  const [{ openPicker }, { openAddSchoolFlow }] = await Promise.all([
+    import('./submit/picker.js'), import('./submit/addSchool.js'),
+  ]);
+  // The picker runs first. Picking a school we already hold sends the
+  // reader to that school's own form, with the government's record beside
+  // it; anything else prefills the unlisted form so nothing is retyped.
+  await openPicker(async (candidate) => {
+    if (candidate?.udise) {
+      const { getSchool } = await import('./lib/schools.js');
+      const school = await getSchool(candidate.udise);
+      if (school) {
+        const { openSubmitFlow } = await import('./submit/submit.js');
+        return openSubmitFlow(school);
+      }
+    }
+    return openAddSchoolFlow(candidate);
+  });
 });
 
 onRoute(/^\/methodology/, async () => {

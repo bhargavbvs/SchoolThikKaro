@@ -115,13 +115,25 @@ export function readSchoolIdentity(root) {
   };
 }
 
-export async function openAddSchoolFlow() {
+/** Prefills the identity fields from a school the picker found, so a
+ *  reader who recognised their school does not retype it. A UDISE match
+ *  carries its code through; an OSM one does not have one to carry. */
+export function applyCandidate(root, candidate) {
+  if (!candidate) return;
+  const set = (id, v) => { const el = root.querySelector(id); if (el && v) el.value = v; };
+  set('#add-name', candidate.name);
+  set('#add-area', candidate.area);
+  set('#add-udise', candidate.udise ?? '');
+}
+
+export async function openAddSchoolFlow(candidate = null) {
   const root = document.getElementById('submit-root');
   root.hidden = false;
   root.innerHTML = renderAddSchoolHTML();
 
   // A live object the capture pipeline holds a reference to, so what the
   // reporter types is read at submit time rather than at mount time.
+  applyCandidate(root, candidate);
   const school = readSchoolIdentity(root);
   const sync = () => Object.assign(school, readSchoolIdentity(root));
   root.addEventListener('input', sync);
