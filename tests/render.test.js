@@ -187,9 +187,10 @@ describe('the homepage is about schools, not only about toilets', () => {
     // The standfirst that carried the official percentage was removed. The
     // argument now rests entirely on the second stat card, so that card's
     // figure and its framing are what must not drift.
+    // It now sits in the third headline box, beside the figure it
+    // qualifies, rather than in a card of its own.
     expect(html).toContain(tree.national.nonFunctional.toLocaleString('en-IN'));
-    expect(html).toMatch(/counted as if they were fine/i);
-    expect(html).toMatch(/official figure\s+counts it anyway/i);
+    expect(html).toMatch(/toilet that does not work — counted as fine/i);
   });
 
   it('says plainly that the figures cover one thing only', () => {
@@ -240,7 +241,7 @@ describe('the page uses the reader’s words, not ours', () => {
   it('gives every headline figure a heading in ordinary words', () => {
     // A bare number with a trailing sentence makes the reader meet the
     // figure before learning what it counts.
-    const heads = [...index.matchAll(/<h2 class="stat-head">([^<]*)<\/h2>/g)].map((m) => m[1]);
+    const heads = [...index.matchAll(/<span class="stat-label">([^<]*)<\/span>/g)].map((m) => m[1]);
     expect(heads).toHaveLength(3);
     for (const h of heads) expect(h).not.toMatch(/flagged|rate|indicator/i);
   });
@@ -550,9 +551,19 @@ describe('the live reports band', () => {
     expect(html).toContain('review_status=eq.approved');
   });
 
-  it('requests no field that could identify a reporter', () => {
-    const q = html.match(/reports\?select=([^&']*)/)[1];
-    expect(q.split(',').sort()).toEqual(['category', 'created_at', 'finding']);
+  it('never requests where the reporter was standing', () => {
+    // lat/lng on a report is where the PHOTO was taken, which is where
+    // the person was. Naming the risk beats whitelisting fields: a
+    // whitelist blocks the next useful column and teaches nobody why.
+    const q = html.match(/reports\?select=([^&']*)/)[1].split(',');
+    for (const forbidden of ['lat', 'lng', 'gps_accuracy_m', 'ip_hash', 'distance_m']) {
+      expect(q, `query asks for ${forbidden}`).not.toContain(forbidden);
+    }
+  });
+
+  it('asks only for what the three panels render', () => {
+    const q = html.match(/reports\?select=([^&']*)/)[1].split(',').sort();
+    expect(q).toEqual(['category', 'created_at', 'finding', 'school_name_snapshot', 'tier']);
   });
 
   it('fails silently rather than breaking the page', () => {

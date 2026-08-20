@@ -543,3 +543,21 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
 .legend .sw-nodata { background:var(--b-nodata);
   background-image:repeating-linear-gradient(45deg, var(--rule) 0 1.5px, transparent 1.5px 5px); }
 .legend .sw-nodata { margin-left:14px; }
+
+/* ---------- headline figures ---------- */
+/* Label, rule, figure, detail — the order a reader needs them in. The
+   label was removed once and put back: a bare number makes the reader
+   meet the figure before learning what it counts. */
+.stat-grid .stat-label { display:block; margin:0 0 10px; padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+  font:500 10.5px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); }
+.stat-grid .figure { font-family:var(--mono); letter-spacing:-0.02em; }
+.stat-mini { display:flex; gap:26px; margin:16px 0 0; }
+.stat-mini > div { margin:0; }
+.stat-mini dt { margin:0; font:700 19px/1 var(--mono);
+  font-variant-numeric:tabular-nums slashed-zero; font-feature-settings:'zero' 1,'tnum' 1; }
+.stat-mini dd { margin:4px 0 0; font-size:11.5px; line-height:1.3; color:var(--muted); }
+/* The live figures start as placeholders and are filled if reports exist;
+   an em dash is not a number, so it should not be sized like one. */
+#latest-figure { font-size:26px; line-height:1.2; letter-spacing:0; }

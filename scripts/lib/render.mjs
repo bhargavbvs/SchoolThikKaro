@@ -231,31 +231,52 @@ if(svg){
  *  has used this, which is worse than not mentioning it. */
 const LIVE_SCRIPT = `<script>
 (function(){
-var sec=document.getElementById('live'), list=document.getElementById('live-list');
-if(!sec) return;
-var url=${JSON.stringify(SUPABASE_REST)};
+var url=${JSON.stringify(SUPABASE_REST)}, key=${JSON.stringify(SUPABASE_ANON)};
 if(!url) return;
-fetch(url+'/reports?select=category,finding,created_at&review_status=eq.approved'
-  +'&order=created_at.desc&limit=6',
-  {headers:{apikey:${JSON.stringify(SUPABASE_ANON)},Authorization:'Bearer '+${JSON.stringify(SUPABASE_ANON)}}})
+var H={apikey:key,Authorization:'Bearer '+key};
+var say={girls_toilet:"the girls’ toilet",boys_toilet:"the boys’ toilet",
+  drinking_water:'drinking water',handwashing:'handwashing',electricity:'electricity',
+  classroom:'a classroom',boundary_wall:'the boundary wall',ramp:'a ramp',
+  playground:'the playground',other:'something else'};
+var found={absent:'nothing at all',broken:'it broken',locked:'it locked',
+  no_water:'no water',inadequate:'not enough',working:'it working'};
+var ago=function(t){var m=Math.round((Date.now()-new Date(t))/60000);
+  if(m<60) return m+'m ago'; if(m<1440) return Math.round(m/60)+'h ago';
+  return Math.round(m/1440)+'d ago';};
+var set=function(id,v){var el=document.getElementById(id); if(el) el.textContent=v;};
+
+// One request serves all three panels: the two live figures at the top
+// and the band further down. The columns are chosen so nothing that could
+// identify a reporter is ever requested.
+fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot'
+  +'&review_status=eq.approved&order=created_at.desc&limit=50',{headers:H})
  .then(function(r){return r.ok?r.json():[];})
  .then(function(rows){
    if(!rows.length) return;
-   var ago=function(t){var m=Math.round((Date.now()-new Date(t))/60000);
-     if(m<60) return m+'m ago'; if(m<1440) return Math.round(m/60)+'h ago';
-     return Math.round(m/1440)+'d ago';};
-   var say={girls_toilet:"girls’ toilet",boys_toilet:"boys’ toilet",
-     drinking_water:'drinking water',handwashing:'handwashing',electricity:'electricity',
-     classroom:'a classroom',boundary_wall:'the boundary wall',ramp:'a ramp',
-     playground:'the playground',other:'something else'};
-   var found={absent:'nothing at all',broken:'it broken',locked:'it locked',
-     no_water:'no water',inadequate:'not enough',working:'it working'};
-   list.innerHTML=rows.map(function(r){
-     return '<li><span class="dot"></span>Someone reported '
-       +(found[r.finding]||'a problem')+' for '+(say[r.category]||'a facility')
-       +' <span class="when">· '+ago(r.created_at)+'</span></li>';
-   }).join('');
-   sec.hidden=false;
+   var top=rows[0];
+   set('latest-figure', say[top.category]||'a facility');
+   set('latest-note', (found[top.finding]||'a problem')+' \u00b7 '
+     +(top.school_name_snapshot||'a school')+' \u00b7 '+ago(top.created_at));
+   set('filed-figure', rows.length>=50 ? '50+' : String(rows.length));
+   var mini=document.getElementById('filed-mini');
+   if(mini){
+     set('mini-verified', String(rows.filter(function(r){return r.tier==='verified';}).length));
+     // Distinct schools, not states: the query does not ask for a state,
+     // and labelling this "states" would have been a number that meant
+     // something other than what it said.
+     var names={}; rows.forEach(function(r){ if(r.school_name_snapshot) names[r.school_name_snapshot]=1; });
+     set('mini-schools', String(Object.keys(names).length));
+     mini.hidden=false;
+   }
+   var sec=document.getElementById('live'), list=document.getElementById('live-list');
+   if(sec&&list){
+     list.innerHTML=rows.slice(0,6).map(function(r){
+       return '<li><span class="dot"></span>Someone reported '
+         +(found[r.finding]||'a problem')+' for '+(say[r.category]||'a facility')
+         +' <span class="when">\u00b7 '+ago(r.created_at)+'</span></li>';
+     }).join('');
+     sec.hidden=false;
+   }
  }).catch(function(){});
 })();
 </script>`;
@@ -400,23 +421,26 @@ export function renderIndexPage(tree, geo) {
     </div>
 
     <div class="stat-grid">
-      <div>
-        <h2 class="stat-head">Schools with no working toilet for girls</h2>
+      <div class="stat" id="stat-latest">
+        <span class="stat-label">Latest report</span>
+        <div class="figure" id="latest-figure">—</div>
+        <p class="note" id="latest-note">No reports yet. Yours would be the first.</p>
+      </div>
+      <div class="stat" id="stat-filed">
+        <span class="stat-label">Reports filed</span>
+        <div class="figure" id="filed-figure">0</div>
+        <p class="note">from people standing at the school.</p>
+        <dl class="stat-mini" id="filed-mini" hidden>
+          <div><dt id="mini-schools">0</dt><dd>schools</dd></div>
+          <div><dt id="mini-verified">0</dt><dd>verified on-site</dd></div>
+        </dl>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Schools in the record</span>
         <div class="figure">${fmtNum(tree.national.flagged)}</div>
         <p class="note">That is <b>1 in ${oneInN(tree.national.rate)}</b> of every government
-          school girls attend.</p>
-      </div>
-      <div>
-        <h2 class="stat-head">Of those, counted as if they were fine</h2>
-        <div class="figure">${fmtNum(tree.national.nonFunctional)}</div>
-        <p class="note">The toilet is there. It does not work. The official figure
-          counts it anyway.</p>
-      </div>
-      <div>
-        <h2 class="stat-head">Worst state: ${esc(titleCase(tree.states[0]?.name ?? ''))}</h2>
-        <div class="figure">${oneInLabel(tree.states[0]?.rate) ?? '—'}</div>
-        <p class="note">of its schools — ${fmtNum(tree.states[0]?.flagged)} out of
-          ${fmtNum(tree.states[0]?.total)}.</p>
+          school girls attend. <b>${fmtNum(tree.national.nonFunctional)}</b> of them have a
+          toilet that does not work — counted as fine.</p>
       </div>
     </div>`,
     // Map and table are one unit: the map answers "where", the table
