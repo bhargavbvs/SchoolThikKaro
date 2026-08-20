@@ -105,11 +105,13 @@ const hero = (name, { flagged, total, rate }, comparison, baseline) => {
   ${comparison ? `<p class="cmp ${comparison.startsWith('below') ? 'is-low' : ''}">${esc(comparison)}</p>` : ''}`;
 };
 
-const statRow = (label, href, flagged, total, rate, maxRate, nationalRate) => `
+/* `total` is deliberately absent: the table shows the count and how common
+   it is, and "1 in 3" already states the ratio the denominator would. The
+   full "13,328 of 1,20,652" still leads every region page. */
+const statRow = (label, href, flagged, rate, maxRate, nationalRate) => `
   <tr data-name="${esc(titleCase(label).toLowerCase())}">
     <td class="name"><a href="${esc(href)}">${esc(titleCase(label))}</a></td>
     <td class="num">${fmtNum(flagged)}</td>
-    <td class="num">${fmtNum(total)}</td>
     <td class="num rate"><span class="rate-wrap"><span class="bar ${severityOf(rate, nationalRate)}" style="--w:${barWidth(rate, maxRate)}%" aria-hidden="true"></span><span class="rate-val ${severityOf(rate, nationalRate)}">${oneInLabel(rate) ?? '—'}</span></span></td>
   </tr>`;
 
@@ -174,7 +176,7 @@ const PAGER = `<nav class="pager" id="pager" hidden aria-label="Pages">
 const statTable = (rows, filterLabel, nameLabel = 'Name') => `
 ${filterLabel ? `<input id="filter" type="search" hidden placeholder="${esc(filterLabel)}" aria-label="${esc(filterLabel)}" />` : ''}
 <table class="stats" id="data">
-  <thead><tr><th>${esc(nameLabel)}</th><th class="num">Schools with issues</th><th class="num">All schools</th><th class="num">How common</th></tr></thead>
+  <thead><tr><th>${esc(nameLabel)}</th><th class="num">Schools with issues</th><th class="num">How common</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
 ${filterLabel ? PAGER : ''}
@@ -319,7 +321,7 @@ export function renderIndexPage(tree, geo) {
       ${statTable(
       (() => { const m = maxRateOf(tree.states); const nat = tree.national.rate;
         return tree.states.map((s) =>
-          statRow(s.name, `/state/${s.slug}`, s.flagged, s.total, s.rate, m, nat)).join(''); })(),
+          statRow(s.name, `/state/${s.slug}`, s.flagged, s.rate, m, nat)).join(''); })(),
       'Filter states…', 'State')}</div></section>`,
     extra: `<section class="findmine">
       <h2>Whatever is broken, report it</h2>
@@ -342,7 +344,7 @@ export function renderStatePage(state, nationalRate) {
     breadcrumb: crumb([{ label: 'India', href: '/' }, { label: state.name }]),
     headline: hero(state.name, state, compareToBaseline(state.rate, nationalRate, 'national average'), nationalRate),
     table: statTable(state.districts.map((d) =>
-      statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.total, d.rate, m, nationalRate)).join(''),
+      statRow(d.name, `/state/${state.slug}/${d.slug}`, d.flagged, d.rate, m, nationalRate)).join(''),
       'Filter districts…', 'District'),
     extra: issuePanel(state, titleCase(state.name)),
   });
@@ -359,7 +361,7 @@ export function renderDistrictPage(state, district, nationalRate) {
     headline: hero(district.name, district,
       compareToBaseline(district.rate, state.rate, `${titleCase(state.name)} average`), nationalRate),
     table: statTable(district.blocks.map((b) =>
-      statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.total, b.rate, m, nationalRate)).join(''),
+      statRow(b.name, `/state/${state.slug}/${district.slug}/${b.slug}`, b.flagged, b.rate, m, nationalRate)).join(''),
       'Filter blocks…', 'Block'),
     extra: issuePanel(district, titleCase(district.name)),
   });

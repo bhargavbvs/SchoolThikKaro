@@ -216,7 +216,11 @@ describe('the page uses the reader’s words, not ours', () => {
     const thead = index.match(/<thead>[\s\S]*?<\/thead>/)[0];
     expect(thead).not.toMatch(/Flagged|Rate<\/th>/);
     expect(thead).toContain('Schools with issues');
-    expect(thead).toContain('All schools');
+    expect(thead).toContain('How common');
+    // The denominator column is gone: "1 in 3" already carries the ratio,
+    // and four columns wrapped the headings onto three lines on a phone.
+    // The full count still leads every region page's hero.
+    expect(thead).not.toContain('All schools');
   });
 
   it('names the column for what it actually lists on each page', () => {
