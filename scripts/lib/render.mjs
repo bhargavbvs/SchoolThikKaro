@@ -323,17 +323,11 @@ export function renderIndexPage(tree, geo) {
       'Filter states…', 'State')}</div></section>`,
     extra: `<section class="findmine">
       <h2>Whatever is broken, report it</h2>
-      <p>The figures above are girls’ toilets, because that is what this release
-         measures. What you can report is wider: the toilet, the drinking water,
-         the electricity, the classroom, the boundary wall, the ramp — or something
-         we have not thought of. Send a photo from the spot; we need your location
-         to confirm you are there.</p>
-      <p>If the school you are at is <b>not</b> in the government’s record, you can
-         still report it. Those are published separately, marked as reported by a
-         citizen, and never counted inside the official figures.</p>
+      <p>The figures here are girls’ toilets — that is all this release counts.
+         What you can report is anything: the water, the wiring, the classroom,
+         the wall, the ramp. Any school, whether it is in the record or not.</p>
       <p class="actions">
-        <a class="btn btn-primary" href="/app/#/">Open the reporting map \u2192</a>
-        <a class="btn btn-ghost" href="/app/#/add">Report an unlisted school</a>
+        <a class="btn btn-primary" href="/app/#/add">Report a school →</a>
       </p>
     </section>`,
   });

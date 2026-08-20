@@ -203,10 +203,12 @@ table.stats td.rate .rate-val.is-low { color:var(--muted); }
 /* No rule of its own: .head already draws one directly above, at the
    page's width rather than this section's wider one. Two rules of two
    different lengths, stacked, is what that looked like. */
-.atlas { --atlas-w:min(1320px, calc(100vw - 60px));
-  width:var(--atlas-w); margin-left:calc(50% - var(--atlas-w) / 2);
-  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,420px);
-  gap:34px; align-items:start; margin-top:8px; }
+/* Page width, like everything else. It used to break out to 1320px, which
+   made the map bigger and made every left edge and every rule on the page
+   disagree with its neighbours. The map keeps most of that size by taking
+   it from the table column beside it instead. */
+.atlas { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,340px);
+  gap:30px; align-items:start; margin-top:8px; }
 .atlas-table { min-width:0; }
 .atlas-table table.stats td { padding:11px 12px; }
 .atlas-table table.stats thead th { padding:11px 12px; }
@@ -223,7 +225,7 @@ table.stats td.rate .rate-val.is-low { color:var(--muted); }
    still leaves the map far larger than the half-text-column it was.
    width:auto lets the intrinsic aspect ratio from the viewBox pick the
    width, so it is never stretched. */
-.atlas-map svg.india { height:min(74vh, 900px); width:auto; max-width:100%;
+.atlas-map svg.india { height:min(66vh, 760px); width:auto; max-width:100%;
   display:block; margin-inline:auto; }
 
 /* Five shades, cut at multiples of the national rate (see BIN_MULTIPLES in
@@ -261,7 +263,8 @@ svg.india a:focus-visible { outline:none; }
 /* ---------- report call-out (index only) ---------- */
 .findmine { margin-top:52px; padding-top:26px; border-top:1.5px solid var(--line-strong); }
 .findmine h2 { margin:0 0 12px; font:900 30px/1.1 var(--serif); letter-spacing:-0.02em; }
-.findmine p { margin:0 0 16px; max-width:60ch; color:var(--body); }
+.findmine p { margin:0 0 20px; max-width:56ch; color:var(--body); }
+.findmine .actions { margin:0; }
 
 /* The state list scrolls inside its own panel so the map stays beside it.
    32 rows are taller than the map, and a reader comparing a state's shading

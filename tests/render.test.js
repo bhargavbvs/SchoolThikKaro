@@ -189,11 +189,13 @@ describe('the homepage is about schools, not only about toilets', () => {
   });
 
   it('says plainly that the figures cover one thing only', () => {
-    expect(html).toMatch(/one thing, in one year’s data|that is what this release\s+measures/);
+    expect(html).toMatch(/that is all this release counts|only issue in this release/);
   });
 
   it('invites reports on everything the form now accepts', () => {
-    for (const thing of ['drinking water', 'electricity', 'classroom', 'ramp']) {
+    // Named in the reader's words rather than ours — "the wiring", not
+    // "electricity" — but the point is that it is plainly more than a toilet.
+    for (const thing of ['water', 'wiring', 'classroom', 'ramp']) {
       expect(html.toLowerCase()).toContain(thing);
     }
   });
@@ -404,5 +406,32 @@ describe('the headline is the reader\'s path through the site', () => {
     const line = html.match(/<p class="standfirst">[\s\S]*?<\/p>/)[0];
     expect(line).toContain('#SchoolThikKaro');
     expect(line).not.toMatch(/\bour campaign\b|\bwe are\b|official/i);
+  });
+});
+
+describe('the page keeps one width', () => {
+  const css = readFileSync('public/browse.css', 'utf8');
+
+  it('has no section that breaks out of the text column', () => {
+    // The atlas used to sit at 1320px while everything else sat at 1060,
+    // so no two left edges lined up and the rules were different lengths.
+    expect(css).not.toContain('--atlas-w');
+    expect(css.match(/\.atlas \{[^}]*\}/)[0]).not.toMatch(/width:|100vw/);
+  });
+
+  it('sends the reader straight to the picker, not the old map', () => {
+    const html = renderIndexPage(tree, geo);
+    const section = html.match(/<section class="findmine">[\s\S]*?<\/section>/)[0];
+    expect(section).toContain('href="/app/#/add"');
+    expect(section).not.toContain('href="/app/#/"');
+  });
+
+  it('makes one ask instead of two competing ones', () => {
+    const html = renderIndexPage(tree, geo);
+    const section = html.match(/<section class="findmine">[\s\S]*?<\/section>/)[0];
+    expect((section.match(/class="btn/g) ?? []).length).toBe(1);
+    // And it no longer explains the unlisted path in prose: the picker
+    // handles that itself, so the reader never has to choose a route.
+    expect(section).not.toMatch(/published separately|marked as reported by a citizen/);
   });
 });
