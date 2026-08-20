@@ -8,15 +8,22 @@ import { buildPayload } from '../src/submit/api.js';
  *  column, Postgres rejects the whole insert at request time — exactly what
  *  happened when faces_found was added to the payload without a matching
  *  ALTER TABLE. This test would have caught that before it shipped. */
+/** Columns added by the idempotent migration blocks after the CREATE
+ *  TABLE — invisible to the body parse below, but just as real. */
+const MIGRATED = { reports: ['category', 'note', 'categories'],
+  school_submissions: ['category', 'note', 'categories'] };
+
 function columnsOf(table) {
   const sql = readFileSync('supabase/schema.sql', 'utf8');
   const match = sql.match(
     new RegExp(`create table if not exists ${table} \\(([\\s\\S]*?)\\n\\);`));
   const body = match[1];
+  const extra = MIGRATED[table] ?? [];
   return body.split('\n')
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('--'))
-    .map((l) => l.split(/\s+/)[0].replace(/,$/, ''));
+    .map((l) => l.split(/\s+/)[0].replace(/,$/, ''))
+    .concat(extra);
 }
 
 describe('reports table matches what the client actually sends', () => {

@@ -58,10 +58,10 @@ export function renderAddSchoolHTML() {
       <h3>What is wrong?</h3>
       <p class="lede">One thing per report. Send another if there is more.</p>
       <fieldset class="sub-category">
-        <legend>What is the problem with? <span class="req">*</span></legend>
+        <legend>What is the problem with? <span class="req">*</span> <span class="legend-hint">choose all that apply</span></legend>
         ${CATEGORIES.map((c) => `
           <label class="opt opt-cat">
-            <input type="radio" name="category" value="${c.value}" />
+            <input type="checkbox" name="category" value="${c.value}" />
             ${iconEl(c.icon, 'opt-icon')}
             <span class="o-label">${esc(c.label)}</span>
           </label>`).join('')}
@@ -164,6 +164,7 @@ export async function openAddSchoolFlow(candidate = null) {
     return {
       schoolReady: validateIdentity(school).valid,
       category: root.querySelector('input[name=category]:checked')?.value ?? null,
+      categories: [...root.querySelectorAll('input[name=category]:checked')].map((i) => i.value),
       finding: root.querySelector('input[name=finding]:checked')?.value ?? null,
       hasPhoto: capture.hasPhoto,
       gateOpen: capture.gateOpen,

@@ -65,3 +65,33 @@ describe('payload carries what the report is about', () => {
     expect(p.udise_code).toBeNull();
   });
 });
+
+describe('a report can name more than one problem', () => {
+  it('sends every category the reporter chose', () => {
+    // A school short of a toilet AND of drinking water is one school in
+    // one state. Two reports would lose that.
+    const p = buildPayload({ udise: '1', name: 'x' }, {
+      categories: ['girls_toilet', 'drinking_water'], finding: 'absent',
+      blurApplied: true, facesFound: 0, fix: null, tier: null,
+    });
+    expect(p.categories).toEqual(['girls_toilet', 'drinking_water']);
+  });
+
+  it('keeps `category` in step as the first of them', () => {
+    // Every existing index and filter reads the single column.
+    const p = buildPayload({ udise: '1', name: 'x' }, {
+      categories: ['drinking_water', 'ramp'], finding: 'absent',
+      blurApplied: true, facesFound: 0, fix: null, tier: null,
+    });
+    expect(p.category).toBe('drinking_water');
+  });
+
+  it('still accepts a single category from the older shape', () => {
+    const p = buildPayload({ udise: '1', name: 'x' }, {
+      category: 'electricity', finding: 'broken',
+      blurApplied: true, facesFound: 0, fix: null, tier: null,
+    });
+    expect(p.categories).toEqual(['electricity']);
+    expect(p.category).toBe('electricity');
+  });
+});

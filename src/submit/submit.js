@@ -71,10 +71,10 @@ export function renderFormHTML(school) {
     </section>
 
     <fieldset class="sub-category">
-      <legend>What is the problem with? <span class="req">*</span></legend>
+      <legend>What is the problem with? <span class="req">*</span> <span class="legend-hint">choose all that apply</span></legend>
       ${CATEGORIES.map((c) => `
         <label class="opt opt-cat">
-          <input type="radio" name="category" value="${c.value}" />
+          <input type="checkbox" name="category" value="${c.value}" />
           ${iconEl(c.icon, 'opt-icon')}
           <span class="o-label">${esc(c.label)}</span>
         </label>`).join('')}

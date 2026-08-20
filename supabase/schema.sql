@@ -95,6 +95,24 @@ create index if not exists school_submissions_status_idx
 -- table, so these make this file safe to re-run against either shape.
 -- Existing rows predate categories and were all toilet reports, which is
 -- what the default records.
+-- A school can be short of a toilet AND of drinking water. Reporting that
+-- as two submissions loses the fact that it is one school in one state, so
+-- `categories` holds the whole set. `category` stays as the first of them:
+-- it is what every index and filter already reads, and keeping it in step
+-- costs one array subscript.
+do $$
+declare t text;
+begin
+  foreach t in array array['reports','school_submissions'] loop
+    execute format('alter table %I add column if not exists categories text[] not null default ''{}''', t);
+    execute format('alter table %I drop constraint if exists %I', t, t || '_categories_check');
+    execute format($f$alter table %I add constraint %I check (
+      categories <@ ARRAY['girls_toilet','boys_toilet','drinking_water','handwashing',
+        'electricity','classroom','boundary_wall','ramp','playground','other']::text[])$f$,
+      t, t || '_categories_check');
+  end loop;
+end $$;
+
 do $$
 declare t text;
 begin

@@ -88,12 +88,15 @@ export function mountCapture(slot, school, root, { onChange = null } = {}) {
   function recompute() {
     const gate = blurGate(state);
     const finding = root.querySelector('input[name=finding]:checked')?.value ?? null;
-    const category = root.querySelector('input[name=category]:checked')?.value ?? null;
+    // Every checked box, not one radio: a school can be short of a toilet
+    // and of drinking water, and making that two reports loses the fact
+    // that it is one school in one state.
+    const categories = [...root.querySelectorAll('input[name=category]:checked')].map((i) => i.value);
     // Recorded onto state, not just read for validation: buildPayload reads
     // these, and without it every submission sent no finding at all against
     // a NOT NULL column — the insert failed every time.
     state.finding = finding;
-    state.category = category;
+    state.categories = categories;
     state.severity = root.querySelector('input[name=severity]:checked')?.value ?? null;
     state.note = root.querySelector('#sub-note')?.value.trim() || null;
     const t = computeTier({
@@ -103,7 +106,7 @@ export function mountCapture(slot, school, root, { onChange = null } = {}) {
     });
     state.tier = t;
     const { valid, errors } = validateSubmission({
-      category, finding, hasPhoto: Boolean(state.canvas), gate,
+      category: categories[0] ?? null, finding, hasPhoto: Boolean(state.canvas), gate,
     });
     // An unlisted school also has to say which school it is. The Edge
     // Function refuses a nameless one anyway; this stops the reporter

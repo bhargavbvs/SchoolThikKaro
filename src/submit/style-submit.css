@@ -180,6 +180,12 @@
 .sub-category > legend { margin-bottom:8px; }
 .sub-category .opt-cat {
   display:flex; align-items:center; gap:9px; padding:12px 13px; }
+/* The categories had no checked state, so choosing one looked like
+   nothing happened. Selected is now solid, the way the eye expects a
+   pressed control to look, and more than one can be on at once. */
+.opt-cat:has(input:checked) { background:var(--ink); border-color:var(--ink); color:var(--bg); }
+.opt-cat:has(input:checked) .opt-icon { color:var(--bg); }
+.opt-cat:has(input:checked) .o-label { font-weight:600; }
 .sub-category .opt-cat .o-label { font-size:14px; }
 @media (min-width:520px) {
   .sub-category { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
@@ -231,3 +237,5 @@
 /* The close control sits with the shell, not in the page flow. */
 .sub-shell { position:relative; }
 .sub-shell > #sub-close { position:absolute; top:0; right:0; }
+.legend-hint { margin-left:6px; text-transform:none; letter-spacing:0;
+  font:400 11px/1 var(--sans); color:var(--muted); }
