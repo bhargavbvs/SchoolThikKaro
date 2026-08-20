@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { STEPS, renderStepper, canAdvance, blockingReason, nextStep, prevStep, isLast }
   from '../src/submit/wizard.js';
 
@@ -60,5 +61,41 @@ describe('navigation', () => {
   it('knows the last step, which submits rather than continuing', () => {
     expect(isLast(2)).toBe(true);
     expect(isLast(0)).toBe(false);
+  });
+});
+
+describe('only one action is offered per step', () => {
+  const css = readFileSync('src/submit/style-submit.css', 'utf8');
+
+  it('lets the hidden attribute win over any display rule', () => {
+    // #sub-send sets display:flex, which outranks [hidden] — so the submit
+    // button rendered beside Next on step one. The guard is global because
+    // the next rule to do this will not be that one.
+    expect(css).toMatch(/#submit-root \[hidden\] \{ display:none !important; \}/);
+  });
+
+  it('does not push a lone Next against the left edge', () => {
+    // With Back and Submit both hidden, space-between left Next stranded.
+    const nav = css.match(/\.sub-nav \{[^}]*\}/)[0];
+    expect(nav).toContain('justify-content:flex-end');
+    expect(css).toMatch(/\.sub-nav #sub-back \{ margin-right:auto; \}/);
+  });
+});
+
+describe('form controls match the rest of the site', () => {
+  const css = readFileSync('src/submit/style-submit.css', 'utf8');
+
+  it('has no rounded corners except genuine circles', () => {
+    // The ledger pages are square throughout; the form was the only place
+    // with rounded corners. 50% is kept for the stepper dots.
+    const radii = css.match(/border-radius:[^;]*/g) ?? [];
+    for (const r of radii) expect(r).toContain('50%');
+  });
+
+  it('names the field font instead of inheriting it', () => {
+    // `font:inherit` on a form control is unreliable, and the fields were
+    // rendering in the browser's own face beside labels using the site's.
+    expect(css).toMatch(/font:400 15px\/1\.4 var\(--sans\)/);
+    expect(css).toMatch(/::placeholder[^}]*font-family:var\(--sans\)/);
   });
 });
