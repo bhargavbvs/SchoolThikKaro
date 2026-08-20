@@ -362,17 +362,16 @@ export function renderIndexPage(tree, geo) {
     label: `${titleCase(s.name)} — ${oneInLabel(s.rate) ?? '—'} schools has an issue in the record`,
   }]));
   const map = `<figure class="atlas-map">
+      <header class="map-head">
+        <h2>India, by state</h2>
+        <p>Darker is more common. Hover a state or a row to link the two.</p>
+      </header>
       ${renderChoropleth({
         shapes: geo.shapes, viewBox: geo.viewBox, byKey, nationalRate: tree.national.rate,
         title: 'Share of government schools with no working girls\u2019 toilet, by state',
         labelTop: 4,
       })}
       ${renderLegend()}
-      <figcaption>Shading is the share of a state\u2019s girls\u2019 and co-ed government
-        schools with no working girls\u2019 toilet, cut at multiples of the national
-        rate of ${esc(oneInLabel(tree.national.rate) ?? '—')} schools. Unshaded states are
-        not in this release.
-        Figures are in the table beside it.</figcaption>
     </figure>`;
   return renderPage({
     bodyClass: 'browse',

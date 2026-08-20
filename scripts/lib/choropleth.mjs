@@ -130,5 +130,9 @@ ${labels}
 /** The legend: five swatches, no numbers, matching the map's shades. */
 export function renderLegend() {
   const swatches = [0, 1, 2, 3, 4].map((i) => `<span class="sw b${i}"></span>`).join('');
-  return `<div class="legend"><span class="lo">Fewer</span>${swatches}<span class="hi">More</span></div>`;
+  // "No data" belongs in the legend, not in a paragraph underneath. It is
+  // the one thing about this map a reader can get wrong, and a key is
+  // where they look when a shade puzzles them.
+  return `<div class="legend"><span class="lo">Fewer</span>${swatches}<span class="hi">More</span>`
+    + `<span class="sw sw-nodata"></span><span class="hi">No data</span></div>`;
 }

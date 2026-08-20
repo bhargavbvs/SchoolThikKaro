@@ -532,3 +532,14 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
   .live-head { grid-template-columns:minmax(0,1fr); gap:10px; }
   .live-head h2 { font-size:30px; }
 }
+
+/* Map header, matching the ledger's beside it. */
+.map-head { display:flex; align-items:baseline; justify-content:space-between;
+  gap:20px; flex-wrap:wrap; margin-bottom:14px; }
+.map-head h2 { margin:0; font:700 17px/1 var(--serif); letter-spacing:.01em;
+  text-transform:uppercase; }
+.map-head p { margin:0; max-width:36ch; font-size:12.5px; line-height:1.5;
+  color:var(--muted); }
+.legend .sw-nodata { background:var(--b-nodata);
+  background-image:repeating-linear-gradient(45deg, var(--rule) 0 1.5px, transparent 1.5px 5px); }
+.legend .sw-nodata { margin-left:14px; }
