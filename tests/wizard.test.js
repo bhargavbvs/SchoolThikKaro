@@ -112,3 +112,13 @@ describe('the whole app is square, not just the form', () => {
     }
   });
 });
+
+describe('fieldsets', () => {
+  it('clears the default border on every one, not a named few', () => {
+    // A fieldset's default border draws a box with the legend notched into
+    // its top edge. Two were cleared by name and two were not, so half the
+    // step had boxes around it and half did not.
+    const css = readFileSync('src/submit/style-submit.css', 'utf8');
+    expect(css).toMatch(/#submit-root fieldset \{[^}]*border:0/);
+  });
+});

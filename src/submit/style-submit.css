@@ -177,7 +177,12 @@
 /* ---------- unlisted-school identity fields ---------- */
 /* Only the add-a-school form has these: a report on a listed school takes
    its identity from the government record, not from anything typed. */
-.sub-identity { border:0; margin:0 0 18px; padding:0; }
+/* Every fieldset, not the two I happened to name. A fieldset's default
+   border draws a box with the legend notched into its top edge, which is
+   what "How bad is it?" and "What did you find?" were still doing while
+   the two above them sat flush. */
+#submit-root fieldset { border:0; margin:0 0 22px; padding:0; min-width:0; }
+.sub-identity { margin:0 0 18px; }
 .sub-identity .fld { display:block; margin-bottom:12px; }
 .sub-identity .fld > span { display:block; margin-bottom:6px;
   font-size:13px; font-weight:600; }
@@ -189,10 +194,13 @@
 /* Ten categories as a single column would push the findings off the first
    two screens on a phone, so they lay out two-up: short labels, chosen at
    a glance, before the longer condition sentences below. */
-.sub-category { border:0; margin:0 0 18px; padding:0; }
+.sub-category { margin:0 0 18px; }
 .sub-category > legend { margin-bottom:8px; }
 .sub-category .opt-cat {
   display:flex; align-items:center; gap:9px; padding:12px 13px; }
+/* Findings and severities read as one list rather than a stack of
+   separate cards: shared borders, no gaps between them. */
+.sub-findings .opt, .sub-severity .opt { margin:0 0 -1px; }
 /* The categories had no checked state, so choosing one looked like
    nothing happened. Selected is now solid, the way the eye expects a
    pressed control to look, and more than one can be on at once. */
