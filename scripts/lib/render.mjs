@@ -292,19 +292,17 @@ fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot
      // index the search uses, then upgrade the row to a link. Done after
      // paint so a slow lookup never holds up the band.
      shown.forEach(function(r,i){
-       var name=String(r.school_name_snapshot||'').toUpperCase();
-       var stop={SCHOOL:1,SCHOOLS:1,GOVT:1,GOVERNMENT:1,PRIMARY:1,UPPER:1,LOWER:1,
-         HIGH:1,SECONDARY:1,THE:1,AND:1,MPPS:1,ZPHS:1,VIDYALAYA:1};
-       var words=(name.match(/[A-Z]{3,}/g)||[]);
-       var pick=words.filter(function(w){return !stop[w];});
-       var key=((pick.length?pick:words)[0]||'').slice(0,3);
-       if(key.length<3||!r.udise_code) return;
-       fetch('/data/si/'+key+'.json').then(function(x){return x.ok?x.json():[];})
+       // Keyed on the UDISE code, not the school's name: the name stored
+       // with a report is a snapshot and can drift from the index, and a
+       // link that silently stops resolving is worse than none.
+       if(!r.udise_code) return;
+       fetch('/data/su/'+String(r.udise_code).slice(0,3)+'.json')
+        .then(function(x){return x.ok?x.json():[];})
         .then(function(idx){
-          var hit=idx.find(function(e){return e[1]===r.udise_code;});
+          var hit=idx.find(function(e){return e[0]===r.udise_code;});
           if(!hit) return;
           var li=list.children[i];
-          if(li) li.innerHTML=line(r,'/state/'+hit[2]).replace(/^<li>|<\/li>$/g,'');
+          if(li) li.innerHTML=line(r,'/state/'+hit[1]).replace(/^<li>|<\/li>$/g,'');
         }).catch(function(){});
      });
      sec.hidden=false;

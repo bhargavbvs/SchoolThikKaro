@@ -733,8 +733,10 @@ describe('the live band goes somewhere', () => {
   it('resolves each report to its school’s page', () => {
     // The row named the school and could not be clicked, so a reader
     // learned a report existed and could not reach the school.
-    expect(html).toContain("'/state/'+hit[2]");
-    expect(html).toMatch(/'\/data\/si\/'\+key\+'\.json'/);
+    // Keyed on the code, not the name: a stored name is a snapshot and
+    // can drift from the index.
+    expect(html).toContain("'/state/'+hit[1]");
+    expect(html).toMatch(/'\/data\/su\/'\+String\(r\.udise_code\)/);
   });
 
   it('renders as plain text first and upgrades to a link after', () => {
