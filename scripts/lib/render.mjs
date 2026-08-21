@@ -290,11 +290,11 @@ fetch(url+'/reports?select=id,category,finding,tier,created_at,school_name_snaps
          +'<span class="l-meta">'+(r.tier==='verified'
              ? '<b class="l-ok">Verified on-site</b>' : 'Unverified')
          +' \u00b7 '+ago(r.created_at)+'</span></div>';
-       return href ? '<li><a href="'+esc2(href)+'">'+img+body+'</a></li>'
-                   : '<li><span class="norow">'+img+body+'</span></li>';
+       return href ? '<a href="'+esc2(href)+'">'+img+body+'</a>'
+                   : '<span class="norow">'+img+body+'</span>';
      };
      var shown=rows.slice(0,6);
-     list.innerHTML=shown.map(function(r){return card(r,null);}).join('');
+     list.innerHTML=shown.map(function(r){return '<li>'+card(r,null)+'</li>';}).join('');
      shown.forEach(function(r,i){
        // Keyed on the UDISE code, not the school's name: the name stored
        // with a report is a snapshot and can drift from the index.
@@ -305,7 +305,7 @@ fetch(url+'/reports?select=id,category,finding,tier,created_at,school_name_snaps
           var hit=idx.find(function(e){return e[0]===r.udise_code;});
           if(!hit) return;
           var li=list.children[i];
-          if(li) li.innerHTML=card(r,'/state/'+hit[1]).replace(/^<li>|<\/li>$/g,'');
+          if(li) li.innerHTML=card(r,'/state/'+hit[1]);
         }).catch(function(){});
      });
      sec.hidden=false;

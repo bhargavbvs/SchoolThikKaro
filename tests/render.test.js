@@ -763,3 +763,32 @@ describe('the live band goes somewhere', () => {
     expect(html).not.toMatch(/class="india-label"/);
   });
 });
+
+describe('inline scripts are valid JavaScript', () => {
+  // Every enhancement on these pages — filter, pager, sort, theme, the
+  // live band, the school search — is an inline script inside a template
+  // literal. A stray escape kills the whole script silently: the page
+  // still renders, the figures just sit at their placeholders forever.
+  // That is exactly how "Reports filed: 0" survived ten approved reports.
+  const parse = (html, label) => {
+    for (const [, code] of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
+      expect(() => new Function(code), `${label}: ${code.slice(0, 80)}`).not.toThrow();
+    }
+  };
+
+  it('parses on the homepage, which carries the most of them', () => {
+    parse(renderIndexPage(tree, geo), 'index');
+  });
+
+  it('parses on every region page', () => {
+    parse(renderStatePage(state, 5.63), 'state');
+    parse(renderDistrictPage(state, district, 5.63), 'district');
+    parse(renderBlockPage(state, district, block, 5.63), 'block');
+  });
+
+  it('has no regex literal carrying an unescaped closing tag', () => {
+    // `<\/li>` inside a template literal collapses to `</li>`, which ends
+    // the regex early. Building the markup directly avoids the trap.
+    expect(renderIndexPage(tree, geo)).not.toMatch(/\/\^?<li>\|<\/li>/);
+  });
+});
