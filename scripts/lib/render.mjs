@@ -355,9 +355,9 @@ const statTable = (rows, filterLabel, nameLabel = 'Name', ledgerLabel = 'Registr
 </table>
 ${filterLabel ? PAGER : ''}
 </section>
-<p class="table-note">“Issues” here means the one thing ${esc(SOURCE_YEAR)} records about
-  girls’ toilets: the school has none, or has one that does not function. It is the only
-  issue in this release — a school counted as having no issue may still have others.</p>
+<p class="table-note">“Issues” means one thing here: no girls’ toilet, or one that
+  does not work. That is all ${esc(SOURCE_YEAR)} records. A school shown with none may
+  still have plenty.</p>
 ${filterLabel ? FILTER_SCRIPT : ''}`;
 
 /** What the schools in a region show beyond the toilet they are listed for.
