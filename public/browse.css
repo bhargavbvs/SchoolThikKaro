@@ -634,3 +634,4 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
    COLUMN, not to a narrow screen. */
 .atlas-table table.stats th .lg { display:none; }
 .atlas-table table.stats th .sm { display:inline; }
+.live-list .at { color:var(--ink); font-weight:600; }

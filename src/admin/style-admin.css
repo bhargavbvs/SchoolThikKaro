@@ -8,3 +8,12 @@
 .b-warn { background:rgba(240,147,43,.2); color:#f0932b; }
 .b-danger { background:rgba(224,71,62,.25); color:#e0473e; }
 .actions button { margin-right:8px; padding:8px 14px; border:0; }
+
+/* Pending / approved / rejected. Approving something used to remove it
+   from every view there was. */
+.q-tabs { display:flex; gap:8px; margin:0 0 16px; }
+.q-tabs button { padding:9px 14px; cursor:pointer; background:transparent;
+  border:1px solid var(--line); color:var(--body);
+  font:600 11px/1 var(--mono, ui-monospace, monospace); letter-spacing:.08em;
+  text-transform:uppercase; }
+.q-tabs button.is-on { background:var(--ink); border-color:var(--ink); color:var(--bg); }

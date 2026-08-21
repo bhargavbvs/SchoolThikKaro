@@ -42,8 +42,11 @@ export function summarise(rows) {
   };
 }
 
-export function renderQueueHTML(rows) {
-  if (!rows.length) return '<p class="empty">The queue is empty.</p>';
+export function renderQueueHTML(rows, status = 'pending') {
+  if (!rows.length) {
+    return `<p class="empty">${status === 'pending' ? 'The queue is empty.'
+      : `Nothing ${status} yet.`}</p>`;
+  }
   return rows.map((r) => `
     <article class="card" data-id="${esc(r.id)}" data-table="${esc(r._table ?? 'reports')}">
       <img data-path="${esc(r.image_path)}" alt="submitted photo" loading="lazy" />
@@ -60,8 +63,12 @@ export function renderQueueHTML(rows) {
         <p class="finding">${esc(r.category ?? 'girls_toilet')} \u00b7 ${esc(r.finding)} \u00b7 ${esc(new Date(r.created_at).toLocaleString())}</p>
         ${r.note ? `<p class="note">${esc(r.note)}</p>` : ''}
         <div class="actions">
-          <button data-act="approve">Approve</button>
-          <button data-act="reject">Reject</button>
+          ${r.review_status === 'approved'
+            ? '<button data-act="reject">Take it down</button>'
+            : '<button data-act="approve">Approve</button>'}
+          ${r.review_status === 'rejected'
+            ? '<button data-act="approve">Publish after all</button>'
+            : (r.review_status === 'approved' ? '' : '<button data-act="reject">Reject</button>')}
         </div>
       </div>
     </article>`).join('');

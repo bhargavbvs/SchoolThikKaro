@@ -124,3 +124,35 @@ describe('photos are not public', () => {
     expect(src).toMatch(/Authorization: `Bearer \$\{token\}`/);
   });
 });
+
+describe('a moderator can see what they already decided', () => {
+  const src = readFileSync('src/admin/admin.js', 'utf8');
+
+  it('offers pending, approved and rejected', () => {
+    // Approving something removed it from the only view there was, so a
+    // published report could not be checked or taken down again.
+    for (const s of ['pending', 'approved', 'rejected']) {
+      expect(src).toContain(`data-status="${s}"`);
+    }
+  });
+
+  it('queries the chosen status rather than hardcoding pending', () => {
+    expect(src).toMatch(/review_status=eq\.\$\{status\}/);
+  });
+
+  it('shows the newest first once something has been decided', () => {
+    // A pending list is a queue, oldest first. A decided list is a log.
+    expect(src).toMatch(/status === 'pending' \? 'created_at\.asc' : 'created_at\.desc'/);
+  });
+
+  it('lets an approved report be taken down again', () => {
+    const q = readFileSync('src/admin/queue.js', 'utf8');
+    expect(q).toContain('Take it down');
+    expect(q).toContain('Publish after all');
+  });
+
+  it('says which list is empty, not just "empty"', () => {
+    expect(renderQueueHTML([], 'approved')).toMatch(/Nothing approved yet/);
+    expect(renderQueueHTML([], 'pending')).toMatch(/queue is empty/);
+  });
+});

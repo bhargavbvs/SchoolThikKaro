@@ -21,31 +21,59 @@ export async function mountAdmin(el) {
   captureTokenFromHash();
   if (!sessionToken()) return renderLogin(el);
 
-  el.innerHTML = '<h1>Moderation queue</h1><div id="stats"></div><div id="q">Loading\u2026</div>';
+  el.innerHTML = `<h1>Moderation queue</h1>
+    <nav class="q-tabs" id="q-tabs">
+      <button data-status="pending" class="is-on">Pending</button>
+      <button data-status="approved">Approved</button>
+      <button data-status="rejected">Rejected</button>
+    </nav>
+    <div id="stats"></div><div id="q">Loading\u2026</div>`;
+  // Approving something used to make it disappear: the console only ever
+  // asked for pending, so there was no way to see what had been published
+  // or to undo a mistake.
+  el.querySelector('#q-tabs').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-status]');
+    if (!b) return;
+    [...e.currentTarget.querySelectorAll('button')]
+      .forEach((x) => x.classList.toggle('is-on', x === b));
+    load(b.dataset.status);
+  });
   // BOTH queues. school_submissions was invisible here until now, which
   // meant a citizen could report a school the government record misses and
   // no moderator would ever see it.
-  const query = 'review_status=eq.pending&select=*&order=created_at.asc';
-  const [rRes, sRes] = await Promise.all([
-    api(`reports?${query}`), api(`school_submissions?${query}`),
-  ]);
-  if (rRes.status === 401 || sRes.status === 401) {
-    return renderLogin(el, 'Session expired. Sign in again.');
-  }
-  const rows = [
-    ...(await rRes.json()).map((r) => normaliseRow(r, 'reports')),
-    ...(await sRes.json()).map((r) => normaliseRow(r, 'school_submissions')),
-  ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-  const s = summarise(rows);
-  el.querySelector('#stats').textContent =
-    `${s.total} pending \u00b7 ${s.verified} verified \u00b7 ${s.unblurred} unblurred`
-    + (s.unlisted ? ` \u00b7 ${s.unlisted} not in the record` : '');
   const q = el.querySelector('#q');
-  q.innerHTML = renderQueueHTML(rows);
-  // Photos are private now; each needs a short-lived signed URL minted
-  // with the moderator's own session.
-  signPhotos(q, sessionToken());
+
+  async function load(status) {
+    q.textContent = 'Loading\u2026';
+    // Newest first for anything already decided — the last thing acted on
+    // is the one a moderator wants to check. Oldest first for pending,
+    // because that is a queue.
+    const order = status === 'pending' ? 'created_at.asc' : 'created_at.desc';
+    const query = `review_status=eq.${status}&select=*&order=${order}`;
+    const [rRes, sRes] = await Promise.all([
+      api(`reports?${query}`), api(`school_submissions?${query}`),
+    ]);
+    if (rRes.status === 401 || sRes.status === 401) {
+      return renderLogin(el, 'Session expired. Sign in again.');
+    }
+    const rows = [
+      ...(await rRes.json()).map((r) => normaliseRow(r, 'reports')),
+      ...(await sRes.json()).map((r) => normaliseRow(r, 'school_submissions')),
+    ].sort((a, b) => (status === 'pending'
+      ? new Date(a.created_at) - new Date(b.created_at)
+      : new Date(b.created_at) - new Date(a.created_at)));
+
+    const s = summarise(rows);
+    el.querySelector('#stats').textContent =
+      `${s.total} ${status} \u00b7 ${s.verified} verified \u00b7 ${s.unblurred} unblurred`
+      + (s.unlisted ? ` \u00b7 ${s.unlisted} not in the record` : '');
+    q.innerHTML = renderQueueHTML(rows, status);
+    // Photos are private now; each needs a short-lived signed URL minted
+    // with the moderator's own session.
+    signPhotos(q, sessionToken());
+    return undefined;
+  }
+  await load('pending');
 
   q.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-act]');

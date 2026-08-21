@@ -272,10 +272,17 @@ fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot
    }
    var sec=document.getElementById('live'), list=document.getElementById('live-list');
    if(sec&&list){
+     // Name the school and link to it. The band used to say only what
+     // was wrong, with nothing to click — a reader could see that reports
+     // existed and never find out about which school.
      list.innerHTML=rows.slice(0,6).map(function(r){
+       var where=r.school_name_snapshot
+         ? '<span class="at">at '+String(r.school_name_snapshot)
+             .replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];})
+           +'</span>' : '';
        return '<li><span class="dot"></span>Someone reported '
          +(found[r.finding]||'a problem')+' for '+(say[r.category]||'a facility')
-         +' <span class="when">\u00b7 '+ago(r.created_at)+'</span></li>';
+         +' '+where+' <span class="when">\u00b7 '+ago(r.created_at)+'</span></li>';
      }).join('');
      sec.hidden=false;
    }
