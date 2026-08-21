@@ -1,6 +1,6 @@
 // src/admin/admin.js
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
-import { renderQueueHTML, summarise, normaliseRow } from './queue.js';
+import { renderQueueHTML, summarise, normaliseRow, signPhotos } from './queue.js';
 import { sendMagicLink, sessionToken, captureTokenFromHash } from './auth.js';
 
 async function api(path, opts = {}) {
@@ -43,6 +43,9 @@ export async function mountAdmin(el) {
     + (s.unlisted ? ` \u00b7 ${s.unlisted} not in the record` : '');
   const q = el.querySelector('#q');
   q.innerHTML = renderQueueHTML(rows);
+  // Photos are private now; each needs a short-lived signed URL minted
+  // with the moderator's own session.
+  signPhotos(q, sessionToken());
 
   q.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-act]');

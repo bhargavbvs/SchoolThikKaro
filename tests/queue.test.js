@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 // tests/queue.test.js
 import { describe, it, expect } from 'vitest';
 import { normaliseRow, renderQueueHTML, summarise } from '../src/admin/queue.js';
@@ -98,5 +99,28 @@ describe('the queue shows both kinds of submission', () => {
   it('never invents a name for a nameless submission', () => {
     const bare = normaliseRow({ id: 'x', submitted_name: '' }, 'school_submissions');
     expect(bare.title).toBe('Unnamed school');
+  });
+});
+
+describe('photos are not public', () => {
+  it('renders no src, because a public URL would 400 on a private bucket', () => {
+    // The bucket used to be public: a report's photo was fetchable with no
+    // key at all, from upload, before any moderator had seen it. And the
+    // anon key in the page source listed every path, so the unguessable
+    // filename protected nothing.
+    const html = renderQueueHTML([normaliseRow(
+      { id: 'r1', image_path: 'unlisted/abc.jpg', finding: 'absent', created_at: '2026-08-20T10:00:00Z' },
+      'school_submissions')]);
+    expect(html).toContain('data-path="unlisted/abc.jpg"');
+    expect(html).not.toMatch(/<img[^>]*src="[^"]+"/);
+    expect(html).not.toContain('/object/public/');
+  });
+
+  it('mints a short-lived signed URL with the moderator’s own session', () => {
+    const src = readFileSync('src/admin/queue.js', 'utf8');
+    expect(src).toMatch(/\/storage\/v1\/object\/sign\/shaala-photos\//);
+    expect(src).toMatch(/expiresIn: 3600/);
+    // Signed with the caller's token, so a revoked moderator loses access.
+    expect(src).toMatch(/Authorization: `Bearer \$\{token\}`/);
   });
 });

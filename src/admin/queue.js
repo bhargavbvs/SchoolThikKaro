@@ -6,7 +6,10 @@ function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-const photoURL = (p) => `${SUPABASE_URL}/storage/v1/object/public/shaala-photos/${p}`;
+// The bucket is private: a public URL 400s now. Cards render with the
+// image blank and it is filled in by a signed URL once the moderator's
+// session has been used to mint one — see signPhotos below.
+const photoURL = () => '';
 
 /** The two queues carry different identity fields — a report on a listed
  *  school has a UDISE code and a name from the government record; an
@@ -43,7 +46,7 @@ export function renderQueueHTML(rows) {
   if (!rows.length) return '<p class="empty">The queue is empty.</p>';
   return rows.map((r) => `
     <article class="card" data-id="${esc(r.id)}" data-table="${esc(r._table ?? 'reports')}">
-      <img src="${esc(photoURL(r.image_path))}" alt="submitted photo" loading="lazy" />
+      <img data-path="${esc(r.image_path)}" alt="submitted photo" loading="lazy" />
       <div class="card-body">
         <h3>${esc(r.title)}</h3>
         <p class="where">${esc(r.where)}</p>
@@ -62,4 +65,25 @@ export function renderQueueHTML(rows) {
         </div>
       </div>
     </article>`).join('');
+}
+
+/** Mints a signed URL for each card's photo, using the moderator's own
+ *  session. The bucket is private, so this is the only way a photo is
+ *  readable at all — and it expires, which a public URL never did. */
+export async function signPhotos(root, token) {
+  const imgs = [...root.querySelectorAll('img[data-path]')];
+  await Promise.all(imgs.map(async (img) => {
+    const path = img.dataset.path;
+    if (!path) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/shaala-photos/${path}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiresIn: 3600 }),
+      });
+      if (!res.ok) return;
+      const { signedURL } = await res.json();
+      img.src = `${SUPABASE_URL}/storage/v1${signedURL}`;
+    } catch { /* a photo that will not load is not worth breaking the queue for */ }
+  }));
 }

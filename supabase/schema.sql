@@ -211,16 +211,32 @@ drop policy if exists disputes_public_insert_pending on disputes;
 create policy disputes_public_insert_pending on disputes
   for insert to anon with check (review_status = 'pending');
 
+-- NOT public. It was, and that meant a report's photo could be fetched by
+-- anyone with no key at all, from the moment it was uploaded — before any
+-- moderator had looked at it. The anon key is in the page source, and it
+-- listed every path in the bucket, so the unguessable filename was not
+-- protecting anything either.
+--
+-- A public bucket serves through /object/public/ and bypasses RLS
+-- entirely, so no policy could have fixed it while `public` stayed true.
+-- Moderators now read photos through signed URLs; nothing else reads them
+-- until we build a way to publish approved ones deliberately.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('shaala-photos','shaala-photos', true, 3145728,
+values ('shaala-photos','shaala-photos', false, 3145728,
         array['image/jpeg','image/webp'])
-on conflict (id) do nothing;
+on conflict (id) do update set public = false;
 
--- Public may READ photos. Public may NOT write to the report-photo path:
--- the submit-report Edge Function uploads those with the service key.
+-- The public reads no photos at all. Approved ones will be published
+-- through a deliberate path when that is built; until then the only
+-- reader is a moderator, over a signed URL.
 drop policy if exists shaala_photos_public_read on storage.objects;
-create policy shaala_photos_public_read on storage.objects
-  for select to anon using (bucket_id = 'shaala-photos');
+
+drop policy if exists shaala_photos_moderator_read on storage.objects;
+create policy shaala_photos_moderator_read on storage.objects
+  for select to authenticated
+  using (bucket_id = 'shaala-photos'
+         and exists (select 1 from moderators m
+                     where m.email = auth.jwt() ->> 'email' and m.active));
 
 -- Fix-evidence photos ARE written directly by anon, but only under the
 -- fixes/ path prefix — the report-photo path stays Edge-Function-only.
