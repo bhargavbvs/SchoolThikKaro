@@ -792,3 +792,34 @@ describe('inline scripts are valid JavaScript', () => {
     expect(renderIndexPage(tree, geo)).not.toMatch(/\/\^?<li>\|<\/li>/);
   });
 });
+
+describe('reports render as cards', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('lays them out two up rather than as a list of one-liners', () => {
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect(css).toMatch(/\.live-list \{[^}]*repeat\(2, minmax\(0,1fr\)\)/);
+  });
+
+  it('leads each card with what and where, and marks the finding', () => {
+    expect(html).toContain('class="r-head"');
+    expect(html).toContain('class="r-finding"');
+    expect(html).toContain('r.school_name_snapshot');
+  });
+
+  it('shows the photo through the approval-checking endpoint, never storage', () => {
+    expect(html).toContain('/functions/v1/report-photo?id=');
+    expect(html).not.toMatch(/storage\/v1\/object\/public/);
+  });
+
+  it('quotes the reporter’s own words', () => {
+    expect(html).toContain('class="r-note"');
+  });
+
+  it('says whether it was verified on-site, without claiming it is proven', () => {
+    // "Verified" here means the submission passed our GPS and blur checks,
+    // never that the finding is true.
+    expect(html).toMatch(/Verified on-site/);
+    expect(html).toMatch(/Unverified/);
+  });
+});

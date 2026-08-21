@@ -277,27 +277,32 @@ fetch(url+'/reports?select=id,category,finding,tier,created_at,school_name_snaps
      // existed and could not reach the school it was about.
      var esc2=function(s){return String(s||'').replace(/[&<>"]/g,function(c){
        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+     var title=function(t){return t.charAt(0).toUpperCase()+t.slice(1);};
      var card=function(r,href){
-       // The photo comes from an endpoint that checks approval on every
-       // request, so a report taken down stops being visible at once.
-       var img='<img class="l-shot" loading="lazy" alt="" src="'
-         +esc2(url.replace('/rest/v1','')+'/functions/v1/report-photo?id='+r.id)+'" />';
-       var body='<div class="l-body">'
-         +'<span class="l-what">'+(found[r.finding]||'a problem')+' \u00b7 '
-         +(say[r.category]||'a facility')+'</span>'
-         +'<span class="l-at">'+esc2(r.school_name_snapshot||'a school')+'</span>'
-         +(r.note?'<span class="l-note">'+esc2(r.note)+'</span>':'')
-         +'<span class="l-meta">'+(r.tier==='verified'
-             ? '<b class="l-ok">Verified on-site</b>' : 'Unverified')
-         +' \u00b7 '+ago(r.created_at)+'</span></div>';
-       return href ? '<a href="'+esc2(href)+'">'+img+body+'</a>'
-                   : '<span class="norow">'+img+body+'</span>';
+       var cat=say[r.category]||'a facility';
+       var initial=cat.replace(/[^A-Za-z]/g,'').charAt(0).toUpperCase();
+       // Approval is checked on every request for this, so a report taken
+       // down stops being visible at once.
+       var shot=url.replace('/rest/v1','')+'/functions/v1/report-photo?id='+r.id;
+       var inner=''
+         +'<header class="r-head">'
+           +'<span class="r-badge">'+esc2(initial)+'</span>'
+           +'<span class="r-who"><b>'+esc2(title(cat))+'</b>'
+             +'<span>'+esc2(r.school_name_snapshot||'a school')+'</span></span>'
+           +'<span class="r-finding">'+esc2((found[r.finding]||'a problem'))+'</span>'
+         +'</header>'
+         +'<img class="r-shot" loading="lazy" alt="" src="'+esc2(shot)+'" />'
+         +(r.note?'<p class="r-note">\u201c'+esc2(r.note)+'\u201d</p>':'')
+         +'<footer class="r-foot">'+ago(r.created_at)
+           +' \u00b7 '+(r.tier==='verified'
+             ? '<b class="r-ok">Verified on-site</b>'
+             : 'Unverified')+'</footer>';
+       return href ? '<a href="'+esc2(href)+'">'+inner+'</a>'
+                   : '<span class="norow">'+inner+'</span>';
      };
      var shown=rows.slice(0,6);
      list.innerHTML=shown.map(function(r){return '<li>'+card(r,null)+'</li>';}).join('');
      shown.forEach(function(r,i){
-       // Keyed on the UDISE code, not the school's name: the name stored
-       // with a report is a snapshot and can drift from the index.
        if(!r.udise_code) return;
        fetch('/data/su/'+String(r.udise_code).slice(0,3)+'.json')
         .then(function(x){return x.ok?x.json():[];})
