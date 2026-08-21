@@ -250,7 +250,7 @@ var set=function(id,v){var el=document.getElementById(id); if(el) el.textContent
 // One request serves all three panels: the two live figures at the top
 // and the band further down. The columns are chosen so nothing that could
 // identify a reporter is ever requested.
-fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot,udise_code'
+fetch(url+'/reports?select=id,category,finding,tier,created_at,school_name_snapshot,udise_code,note'
   +',udise_code&review_status=eq.approved&order=created_at.desc&limit=50',{headers:H})
  .then(function(r){return r.ok?r.json():[];})
  .then(function(rows){
@@ -277,24 +277,27 @@ fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot
      // existed and could not reach the school it was about.
      var esc2=function(s){return String(s||'').replace(/[&<>"]/g,function(c){
        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-     var line=function(r,href){
-       var at=r.school_name_snapshot
-         ? '<span class="at">at '+esc2(r.school_name_snapshot)+'</span>' : '';
-       var body='<span class="dot"></span>Someone reported '
-         +(found[r.finding]||'a problem')+' for '+(say[r.category]||'a facility')
-         +' '+at+' <span class="when">\u00b7 '+ago(r.created_at)+'</span>';
-       return href ? '<li><a href="'+esc2(href)+'">'+body+'</a></li>'
-                   : '<li><span class="norow">'+body+'</span></li>';
+     var card=function(r,href){
+       // The photo comes from an endpoint that checks approval on every
+       // request, so a report taken down stops being visible at once.
+       var img='<img class="l-shot" loading="lazy" alt="" src="'
+         +esc2(url.replace('/rest/v1','')+'/functions/v1/report-photo?id='+r.id)+'" />';
+       var body='<div class="l-body">'
+         +'<span class="l-what">'+(found[r.finding]||'a problem')+' \u00b7 '
+         +(say[r.category]||'a facility')+'</span>'
+         +'<span class="l-at">'+esc2(r.school_name_snapshot||'a school')+'</span>'
+         +(r.note?'<span class="l-note">'+esc2(r.note)+'</span>':'')
+         +'<span class="l-meta">'+(r.tier==='verified'
+             ? '<b class="l-ok">Verified on-site</b>' : 'Unverified')
+         +' \u00b7 '+ago(r.created_at)+'</span></div>';
+       return href ? '<li><a href="'+esc2(href)+'">'+img+body+'</a></li>'
+                   : '<li><span class="norow">'+img+body+'</span></li>';
      };
      var shown=rows.slice(0,6);
-     list.innerHTML=shown.map(function(r){return line(r,null);}).join('');
-     // Resolve each school to its block page through the same sharded
-     // index the search uses, then upgrade the row to a link. Done after
-     // paint so a slow lookup never holds up the band.
+     list.innerHTML=shown.map(function(r){return card(r,null);}).join('');
      shown.forEach(function(r,i){
        // Keyed on the UDISE code, not the school's name: the name stored
-       // with a report is a snapshot and can drift from the index, and a
-       // link that silently stops resolving is worse than none.
+       // with a report is a snapshot and can drift from the index.
        if(!r.udise_code) return;
        fetch('/data/su/'+String(r.udise_code).slice(0,3)+'.json')
         .then(function(x){return x.ok?x.json():[];})
@@ -302,7 +305,7 @@ fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot
           var hit=idx.find(function(e){return e[0]===r.udise_code;});
           if(!hit) return;
           var li=list.children[i];
-          if(li) li.innerHTML=line(r,'/state/'+hit[1]).replace(/^<li>|<\/li>$/g,'');
+          if(li) li.innerHTML=card(r,'/state/'+hit[1]).replace(/^<li>|<\/li>$/g,'');
         }).catch(function(){});
      });
      sec.hidden=false;
@@ -558,6 +561,9 @@ export function renderIndexPage(tree, geo) {
            checked by a moderator, and permanent.</p>
       </div>
       <ul class="live-list" id="live-list"></ul>
+      <p class="live-note">Photographs are published only after a moderator has
+        approved the report. Nothing here is our finding — it is what someone
+        standing at the school sent us.</p>
     </section>
     ${LIVE_SCRIPT}${FINDER_SCRIPT}
 

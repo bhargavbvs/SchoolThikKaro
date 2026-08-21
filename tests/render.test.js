@@ -572,9 +572,9 @@ describe('the live reports band', () => {
 
   it('asks only for what the three panels render', () => {
     const q = html.match(/reports\?select=([^&']*)/)[1].split(',').sort();
-    // udise_code is what resolves a row to the school's own page.
-    expect(q).toEqual(['category', 'created_at', 'finding', 'school_name_snapshot',
-      'tier', 'udise_code']);
+    // udise_code resolves the school's page; id fetches the photo.
+    expect(q).toEqual(['category', 'created_at', 'finding', 'id', 'note',
+      'school_name_snapshot', 'tier', 'udise_code']);
   });
 
   it('fails silently rather than breaking the page', () => {
@@ -739,10 +739,22 @@ describe('the live band goes somewhere', () => {
     expect(html).toMatch(/'\/data\/su\/'\+String\(r\.udise_code\)/);
   });
 
-  it('renders as plain text first and upgrades to a link after', () => {
+  it('renders unlinked first and upgrades once the school resolves', () => {
     // A row that becomes a link under the finger is worse than one that
     // was never clickable.
-    expect(html).toMatch(/line\(r,null\)/);
+    expect(html).toMatch(/card\(r,null\)/);
+  });
+
+  it('shows the photo through the approval-checking endpoint', () => {
+    // Never a storage URL: the bucket is private, and approval is checked
+    // on every request so a report taken down disappears at once.
+    expect(html).toContain('/functions/v1/report-photo?id=');
+    expect(html).not.toMatch(/storage\/v1\/object\/public/);
+  });
+
+  it('says the photos are moderated and not our finding', () => {
+    expect(html).toMatch(/only after a moderator has\s+approved/);
+    expect(html).toMatch(/Nothing here is our finding/);
   });
 
   it('drops the state names from the map', () => {
