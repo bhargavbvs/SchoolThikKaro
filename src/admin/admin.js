@@ -107,8 +107,28 @@ function renderLogin(el, msg = '') {
     <input id="email" type="email" placeholder="you@example.org" />
     <button id="send" type="button">Send magic link</button>
     <p id="sent" hidden>Check your email.</p>`;
-  el.querySelector('#send').addEventListener('click', async () => {
-    await sendMagicLink(el.querySelector('#email').value);
-    el.querySelector('#sent').hidden = false;
+  const btn = el.querySelector('#send');
+  btn.addEventListener('click', async () => {
+    const email = el.querySelector('#email').value.trim();
+    if (!email) return;
+    btn.disabled = true;
+    btn.textContent = 'Sending\u2026';
+    try {
+      await sendMagicLink(email);
+      el.querySelector('#sent').hidden = false;
+      btn.textContent = 'Link sent';
+    } catch (err) {
+      // This used to throw into nothing: the button sat there and the
+      // moderator had no idea whether a link had been sent. The common
+      // cause is an address with no account — create_user is false, so an
+      // unknown email is refused rather than signed up.
+      btn.disabled = false;
+      btn.textContent = 'Send magic link';
+      const warn = document.createElement('p');
+      warn.className = 'warn';
+      warn.textContent = 'Could not send a link to that address. '
+        + 'Only an existing moderator account can sign in.';
+      el.querySelector('#sent').before(warn);
+    }
   });
 }

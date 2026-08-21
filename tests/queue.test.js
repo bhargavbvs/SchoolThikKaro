@@ -156,3 +156,25 @@ describe('a moderator can see what they already decided', () => {
     expect(renderQueueHTML([], 'pending')).toMatch(/queue is empty/);
   });
 });
+
+describe('moderator sign-in', () => {
+  const auth = readFileSync('src/admin/auth.js', 'utf8');
+  const admin = readFileSync('src/admin/admin.js', 'utf8');
+
+  it('names the address the link should return to', () => {
+    // The project's Site URL was http://localhost:3000, so every magic
+    // link would have landed on an address that does not exist. Sending
+    // redirect_to explicitly means the link works wherever this deploys.
+    expect(auth).toMatch(/email_redirect_to/);
+    expect(auth).toMatch(/window\.location\.origin/);
+  });
+
+  it('does not silently swallow a failed link request', () => {
+    expect(admin).toMatch(/catch \(err\)/);
+    expect(admin).toMatch(/Could not send a link/);
+  });
+
+  it('says why, since the usual cause is an address with no account', () => {
+    expect(admin).toMatch(/Only an existing moderator account can sign in/);
+  });
+});
