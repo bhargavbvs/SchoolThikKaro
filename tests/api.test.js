@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 // tests/api.test.js
 import { describe, it, expect } from 'vitest';
 import { buildPayload } from '../src/submit/api.js';
@@ -93,5 +94,31 @@ describe('a report can name more than one problem', () => {
     });
     expect(p.categories).toEqual(['electricity']);
     expect(p.category).toBe('electricity');
+  });
+});
+
+describe('the Edge Function must be callable from a browser', () => {
+  const fn = readFileSync('supabase/functions/submit-report/index.ts', 'utf8');
+
+  it('answers the preflight a browser sends before any POST', () => {
+    // It returned 405 with no CORS headers, so every submission from a
+    // phone or laptop was blocked before the request left the device.
+    // curl sends no preflight, which is why every test here passed.
+    expect(fn).toMatch(/req\.method === 'OPTIONS'/);
+    expect(fn).toMatch(/status: 204/);
+  });
+
+  it('puts CORS headers on every response, not only the happy one', () => {
+    // A 400 or 429 the browser cannot read is a request that hangs.
+    expect(fn).toMatch(/'Access-Control-Allow-Origin'/);
+    expect(fn).toMatch(/'Access-Control-Allow-Headers':[^,]*authorization/);
+    const bare = fn.match(/new Response\(JSON\.stringify/g) ?? [];
+    expect(bare.length, 'every JSON response should go through json()').toBeLessThanOrEqual(1);
+  });
+
+  it('allows the headers supabase-js actually sends', () => {
+    for (const h of ['authorization', 'apikey', 'content-type']) {
+      expect(fn).toContain(h);
+    }
   });
 });

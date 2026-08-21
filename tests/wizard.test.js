@@ -143,3 +143,23 @@ describe('a device that cannot finish the report', () => {
     expect(src).toMatch(/photo taken at the school and the location/);
   });
 });
+
+describe('a failed send', () => {
+  const src = readFileSync('src/submit/camera.js', 'utf8');
+
+  it('is caught, not left hanging on "Submitting…"', () => {
+    // The reader is standing at a school and has already done the work.
+    // A button that never changes tells them nothing and loses the report.
+    expect(src).toMatch(/try \{\s*await submitReport/);
+    expect(src).toMatch(/catch \(err\)/);
+  });
+
+  it('lets them try again rather than starting over', () => {
+    expect(src).toMatch(/Try sending again/);
+    expect(src).toMatch(/sendBtn\.disabled = false/);
+  });
+
+  it('says something different when the phone is offline', () => {
+    expect(src).toMatch(/navigator\.onLine === false/);
+  });
+});

@@ -16,8 +16,30 @@ async function hashIp(ip: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// A browser sends OPTIONS before any POST carrying an Authorization
+// header. This function answered that with 405 and no CORS headers, so
+// every submission from a phone or a laptop was blocked before the
+// request left the device — which is why the button sat on "Submitting…"
+// forever. curl never sends a preflight, so nothing caught it here.
+//
+// The origin is open because this endpoint is public-write by design:
+// anyone can already reach it with curl, and what protects it is the rate
+// limit, the size cap, the jpeg check and the unblurred-photo refusal —
+// not the origin header.
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
+  'Access-Control-Max-Age': '86400',
+};
+const json = (body: unknown, status: number) =>
+  new Response(JSON.stringify(body), {
+    status, headers: { ...CORS, 'Content-Type': 'application/json' },
+  });
+
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') return new Response('method not allowed', { status: 405 });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+  if (req.method !== 'POST') return new Response('method not allowed', { status: 405, headers: CORS });
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
   const ipHash = await hashIp(ip);
@@ -33,30 +55,30 @@ Deno.serve(async (req) => {
   ]);
   const count = (reported.count ?? 0) + (submitted.count ?? 0);
   if (count >= MAX_PER_WINDOW) {
-    return new Response(JSON.stringify({ error: 'rate limited' }), { status: 429 });
+    return json({ error: 'rate limited' }, 429);
   }
 
   const form = await req.formData();
   const meta = JSON.parse(String(form.get('meta')));
   const photo = form.get('photo') as File | null;
 
-  if (!photo) return new Response(JSON.stringify({ error: 'photo required' }), { status: 400 });
+  if (!photo) return json({ error: 'photo required' }, 400);
   if (photo.size > MAX_BYTES) {
-    return new Response(JSON.stringify({ error: 'photo too large' }), { status: 413 });
+    return json({ error: 'photo too large' }, 413);
   }
   if (photo.type !== 'image/jpeg') {
-    return new Response(JSON.stringify({ error: 'jpeg only' }), { status: 415 });
+    return json({ error: 'jpeg only' }, 415);
   }
   // The client cannot be trusted to have blurred. A false value is refused
   // outright; a true value is still checked by a human before publication.
   if (meta.blur_applied !== true && (meta.faces_found ?? 0) > 0) {
-    return new Response(JSON.stringify({ error: 'unblurred photo refused' }), { status: 400 });
+    return json({ error: 'unblurred photo refused' }, 400);
   }
 
   // A school the UDISE+ release does not list has no code to file under.
   const unlisted = meta.kind === 'unlisted';
   if (unlisted && !String(meta.submitted_name ?? '').trim()) {
-    return new Response(JSON.stringify({ error: 'school name required' }), { status: 400 });
+    return json({ error: 'school name required' }, 400);
   }
   const path = unlisted
     ? `unlisted/${crypto.randomUUID()}.jpg`
@@ -64,7 +86,7 @@ Deno.serve(async (req) => {
   const up = await admin.storage.from('shaala-photos')
     .upload(path, photo, { contentType: 'image/jpeg' });
   if (up.error) {
-    return new Response(JSON.stringify({ error: up.error.message }), { status: 500 });
+    return json({ error: up.error.message }, 500);
   }
 
   // `kind` is a routing flag for this function, not a column on either
@@ -74,8 +96,6 @@ Deno.serve(async (req) => {
     ...row, image_path: path, ip_hash: ipHash, review_status: 'pending',
   }).select('id').single();
 
-  if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  return new Response(JSON.stringify({ id: data.id }), {
-    status: 201, headers: { 'Content-Type': 'application/json' },
-  });
+  if (error) return json({ error: error.message }, 500);
+  return json({ id: data.id }, 201);
 });

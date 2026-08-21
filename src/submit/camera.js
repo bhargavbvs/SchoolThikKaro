@@ -151,7 +151,25 @@ export function mountCapture(slot, school, root, { onChange = null } = {}) {
       if (candidate.size <= MAX_IMAGE_BYTES) { state.blob = candidate; break; }
       state.blob = candidate;
     }
-    await submitReport({ school, state, root });
+    // Anything that throws here used to leave the button reading
+    // "Submitting…" forever, with no way back and nothing said. A failed
+    // send must be visible and retryable — the reader is standing at a
+    // school and has already done all the work.
+    try {
+      await submitReport({ school, state, root });
+    } catch (err) {
+      sendBtn.disabled = false;
+      sendBtn.classList.remove('is-loading');
+      sendBtn.innerHTML = '<span class="btn-label">Try sending again</span>';
+      if (errBox) {
+        errBox.hidden = false;
+        errBox.innerHTML = `<p>Could not send the report. ${
+          navigator.onLine === false
+            ? 'You appear to be offline — it will send when you have signal.'
+            : 'Check your connection and try again.'}</p>`;
+      }
+      return;
+    }
     root.innerHTML = `<div class="done">
       <span class="done-badge">${iconEl('checkCircle')}</span>
       <h2>Thank you</h2>
