@@ -635,3 +635,9 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
 .atlas-table table.stats th .lg { display:none; }
 .atlas-table table.stats th .sm { display:inline; }
 .live-list .at { color:var(--ink); font-weight:600; }
+/* A live row is a link once its school resolves; until then it is plain
+   text, so nothing moves under the reader's finger. */
+.live-list a, .live-list .norow { display:flex; align-items:center; gap:10px;
+  color:inherit; text-decoration:none; }
+.live-list a:hover { background:var(--accent-soft); }
+.live-list li:has(a) { cursor:pointer; }

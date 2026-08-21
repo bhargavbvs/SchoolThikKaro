@@ -572,7 +572,9 @@ describe('the live reports band', () => {
 
   it('asks only for what the three panels render', () => {
     const q = html.match(/reports\?select=([^&']*)/)[1].split(',').sort();
-    expect(q).toEqual(['category', 'created_at', 'finding', 'school_name_snapshot', 'tier']);
+    // udise_code is what resolves a row to the school's own page.
+    expect(q).toEqual(['category', 'created_at', 'finding', 'school_name_snapshot',
+      'tier', 'udise_code']);
   });
 
   it('fails silently rather than breaking the page', () => {
@@ -722,5 +724,28 @@ describe('the headline highlight', () => {
     expect(h1).toContain('<mark>school</mark>');
     expect(h1).toContain('<mark>missing</mark>');
     expect(h1).toContain('<mark>answer</mark>');
+  });
+});
+
+describe('the live band goes somewhere', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('resolves each report to its school’s page', () => {
+    // The row named the school and could not be clicked, so a reader
+    // learned a report existed and could not reach the school.
+    expect(html).toContain("'/state/'+hit[2]");
+    expect(html).toMatch(/'\/data\/si\/'\+key\+'\.json'/);
+  });
+
+  it('renders as plain text first and upgrades to a link after', () => {
+    // A row that becomes a link under the finger is worse than one that
+    // was never clickable.
+    expect(html).toMatch(/line\(r,null\)/);
+  });
+
+  it('drops the state names from the map', () => {
+    // The worst states are the small north-eastern ones; their names sat
+    // in a knot over the busiest corner. The ledger names them in order.
+    expect(html).not.toMatch(/class="india-label"/);
   });
 });

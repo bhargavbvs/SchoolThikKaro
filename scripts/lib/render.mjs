@@ -250,8 +250,8 @@ var set=function(id,v){var el=document.getElementById(id); if(el) el.textContent
 // One request serves all three panels: the two live figures at the top
 // and the band further down. The columns are chosen so nothing that could
 // identify a reporter is ever requested.
-fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot'
-  +'&review_status=eq.approved&order=created_at.desc&limit=50',{headers:H})
+fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot,udise_code'
+  +',udise_code&review_status=eq.approved&order=created_at.desc&limit=50',{headers:H})
  .then(function(r){return r.ok?r.json():[];})
  .then(function(rows){
    if(!rows.length) return;
@@ -272,18 +272,41 @@ fetch(url+'/reports?select=category,finding,tier,created_at,school_name_snapshot
    }
    var sec=document.getElementById('live'), list=document.getElementById('live-list');
    if(sec&&list){
-     // Name the school and link to it. The band used to say only what
-     // was wrong, with nothing to click — a reader could see that reports
-     // existed and never find out about which school.
-     list.innerHTML=rows.slice(0,6).map(function(r){
-       var where=r.school_name_snapshot
-         ? '<span class="at">at '+String(r.school_name_snapshot)
-             .replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];})
-           +'</span>' : '';
-       return '<li><span class="dot"></span>Someone reported '
+     // Each row goes somewhere. It used to say what was wrong and name
+     // the school, with nothing to click — a reader learned a report
+     // existed and could not reach the school it was about.
+     var esc2=function(s){return String(s||'').replace(/[&<>"]/g,function(c){
+       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+     var line=function(r,href){
+       var at=r.school_name_snapshot
+         ? '<span class="at">at '+esc2(r.school_name_snapshot)+'</span>' : '';
+       var body='<span class="dot"></span>Someone reported '
          +(found[r.finding]||'a problem')+' for '+(say[r.category]||'a facility')
-         +' '+where+' <span class="when">\u00b7 '+ago(r.created_at)+'</span></li>';
-     }).join('');
+         +' '+at+' <span class="when">\u00b7 '+ago(r.created_at)+'</span>';
+       return href ? '<li><a href="'+esc2(href)+'">'+body+'</a></li>'
+                   : '<li><span class="norow">'+body+'</span></li>';
+     };
+     var shown=rows.slice(0,6);
+     list.innerHTML=shown.map(function(r){return line(r,null);}).join('');
+     // Resolve each school to its block page through the same sharded
+     // index the search uses, then upgrade the row to a link. Done after
+     // paint so a slow lookup never holds up the band.
+     shown.forEach(function(r,i){
+       var name=String(r.school_name_snapshot||'').toUpperCase();
+       var stop={SCHOOL:1,SCHOOLS:1,GOVT:1,GOVERNMENT:1,PRIMARY:1,UPPER:1,LOWER:1,
+         HIGH:1,SECONDARY:1,THE:1,AND:1,MPPS:1,ZPHS:1,VIDYALAYA:1};
+       var words=(name.match(/[A-Z]{3,}/g)||[]);
+       var pick=words.filter(function(w){return !stop[w];});
+       var key=((pick.length?pick:words)[0]||'').slice(0,3);
+       if(key.length<3||!r.udise_code) return;
+       fetch('/data/si/'+key+'.json').then(function(x){return x.ok?x.json():[];})
+        .then(function(idx){
+          var hit=idx.find(function(e){return e[1]===r.udise_code;});
+          if(!hit) return;
+          var li=list.children[i];
+          if(li) li.innerHTML=line(r,'/state/'+hit[2]).replace(/^<li>|<\/li>$/g,'');
+        }).catch(function(){});
+     });
      sec.hidden=false;
    }
  }).catch(function(){});
@@ -445,7 +468,11 @@ export function renderIndexPage(tree, geo) {
       ${renderChoropleth({
         shapes: geo.shapes, viewBox: geo.viewBox, byKey, nationalRate: tree.national.rate,
         title: 'Share of government schools with no working girls\u2019 toilet, by state',
-        labelTop: 8,
+        // No labels. The worst states are the small north-eastern ones,
+        // so even placed without collisions the names sat in a knot over
+        // the busiest corner of the map. The ledger beside it names them
+        // in rank order, and hovering links the two.
+        labelTop: 0,
       })}
       ${renderLegend()}
     </figure>`;
