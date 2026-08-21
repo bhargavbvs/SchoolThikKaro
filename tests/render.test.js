@@ -24,7 +24,11 @@ const block = { slug: 'mylliem', name: 'MYLLIEM', flagged: 7, total: 196, rate: 
 const district = { slug: 'east-khasi-hills', name: 'EAST KHASI HILLS', flagged: 312,
   total: 1204, rate: 25.9, noToilet: 200, nonFunctional: 112, blocks: [block] };
 const state = { slug: 'meghalaya', name: 'MEGHALAYA', flagged: 4326, total: 14555,
-  rate: 29.7, noToilet: 2601, nonFunctional: 1725, districts: [district] };
+  rate: 29.7, noToilet: 2601, nonFunctional: 1725, districts: [district],
+  // Shaped like the enriched tree: every school is here for its toilet, so
+  // the interesting figure is always what ELSE its record shows.
+  issueCounts: { no_girls_toilet: 4326, no_accessible_toilet: 4318,
+    no_electricity: 3120, single_teacher: 402 } };
 const tree = { national: { flagged: 78744, total: 1460759, rate: 5.39,
   noToilet: 39558, nonFunctional: 48324 }, states: [state] };
 
@@ -821,5 +825,32 @@ describe('reports render as cards', () => {
     // never that the finding is true.
     expect(html).toMatch(/Verified on-site/);
     expect(html).toMatch(/Unverified/);
+  });
+});
+
+describe('the map hover card', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('carries the figures on the path, so it needs no request', () => {
+    // A hover that waits on a fetch is a hover nobody sees.
+    expect(html).toMatch(/<path class="st [^"]*" d="[^"]*" data-key="[A-Z]+" data-name="/);
+    expect(html).toMatch(/data-flagged="[\d,]+"/);
+    expect(html).toMatch(/data-common="1 in \d/);
+  });
+
+  it('names what else is wrong in that state, beyond the toilet', () => {
+    // The answer to "and what else", which is why the per-school crawl
+    // exists — the map otherwise only ever says one thing.
+    expect(html).toMatch(/data-top="[^"]+ · [\d,]+"/);
+  });
+
+  it('keeps itself inside the figure rather than hanging off the edge', () => {
+    expect(html).toContain('if(x+240>box.width)');
+    expect(html).toContain('if(y+150>box.height)');
+  });
+
+  it('is hidden where there is no hover to speak of', () => {
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect(css).toMatch(/@media \(hover:none\) \{ \.map-tip \{ display:none; \} \}/);
   });
 });

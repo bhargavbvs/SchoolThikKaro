@@ -210,10 +210,37 @@ if(svg){
     var p=svg.querySelector('path[data-key="'+key+'"]');
     if(p) p.classList.toggle('is-linked',on);
   };
+  // The card is built from attributes already on the path, so it appears
+  // the moment the cursor lands — a hover that waits on a request is a
+  // hover nobody sees.
+  var tip=document.getElementById('map-tip');
+  var wrap=svg.parentElement;
+  var row=function(k,v,strong){ return v ? '<div class="t-row"><span>'+k+'</span>'
+    +'<b'+(strong?' class="t-big"':'')+'>'+v+'</b></div>' : ''; };
+  var showTip=function(p,e){
+    if(!tip||!p.dataset.name) return;
+    tip.innerHTML='<div class="t-name">'+p.dataset.name+'</div>'
+      +row('Schools with issues',p.dataset.flagged,true)
+      +row('How common',p.dataset.common)
+      +row('All schools',p.dataset.total)
+      +(p.dataset.top?'<div class="t-also"><span>Also reported</span><b>'
+        +p.dataset.top+'</b></div>':'');
+    tip.hidden=false;
+    var box=wrap.getBoundingClientRect();
+    var x=e.clientX-box.left+14, y=e.clientY-box.top+14;
+    // Keep it inside the figure rather than letting it hang off the edge.
+    if(x+240>box.width) x=Math.max(0,x-268);
+    if(y+150>box.height) y=Math.max(0,y-170);
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  };
   svg.addEventListener('mouseover',function(e){
-    var p=e.target.closest('path[data-key]'); if(p) mark(p.dataset.key,true); });
+    var p=e.target.closest('path[data-key]');
+    if(p){ mark(p.dataset.key,true); showTip(p,e); } });
+  svg.addEventListener('mousemove',function(e){
+    var p=e.target.closest('path[data-key]'); if(p) showTip(p,e); });
   svg.addEventListener('mouseout',function(e){
-    var p=e.target.closest('path[data-key]'); if(p) mark(p.dataset.key,false); });
+    var p=e.target.closest('path[data-key]');
+    if(p){ mark(p.dataset.key,false); if(tip) tip.hidden=true; } });
   body.addEventListener('mouseover',function(e){
     var t=e.target.closest('tr[data-key]'); if(t) mark(t.dataset.key,true); });
   body.addEventListener('mouseout',function(e){
@@ -461,11 +488,24 @@ export function renderIndexPage(tree, geo) {
   // Join the figures onto the outlines through stateKey, because the two
   // sources spell states differently; anything unmatched renders as
   // no-data rather than as a state with nothing wrong.
-  const byKey = new Map(tree.states.map((s) => [stateKey(s.name), {
-    slug: s.slug,
-    rate: s.rate,
-    label: `${titleCase(s.name)} — ${oneInLabel(s.rate) ?? '—'} schools has an issue in the record`,
-  }]));
+  const byKey = new Map(tree.states.map((s) => {
+    // The most common thing wrong in that state BESIDES the toilet it is
+    // listed for — the answer to "and what else", which is the reason
+    // the per-school crawl exists.
+    const other = Object.entries(s.issueCounts ?? {})
+      .filter(([k]) => k !== 'no_girls_toilet')
+      .sort((a, b) => b[1] - a[1])[0];
+    return [stateKey(s.name), {
+      slug: s.slug,
+      rate: s.rate,
+      name: titleCase(s.name),
+      flagged: fmtNum(s.flagged),
+      total: fmtNum(s.total),
+      common: oneInLabel(s.rate) ?? '—',
+      top: other ? `${ISSUE_LABELS[other[0]] ?? other[0]} · ${fmtNum(other[1])}` : '',
+      label: `${titleCase(s.name)} — ${oneInLabel(s.rate) ?? '—'} schools has an issue in the record`,
+    }];
+  }));
   const map = `<figure class="atlas-map">
       <header class="map-head">
         <h2>India, by state</h2>
@@ -481,6 +521,7 @@ export function renderIndexPage(tree, geo) {
         labelTop: 0,
       })}
       ${renderLegend()}
+      <div class="map-tip" id="map-tip" hidden aria-hidden="true"></div>
     </figure>`;
   return renderPage({
     bodyClass: 'browse',

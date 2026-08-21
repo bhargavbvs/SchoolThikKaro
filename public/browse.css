@@ -682,3 +682,23 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
 
 .live-note { margin:14px 0 0; max-width:62ch; font:400 12px/1.6 var(--sans);
   color:var(--muted); }
+
+/* ---------- map hover card ---------- */
+.atlas-map { position:relative; }
+.map-tip { position:absolute; z-index:6; width:240px; padding:14px 16px;
+  background:var(--ink); color:var(--bg); pointer-events:none; }
+.map-tip .t-name { font:600 15px/1.2 var(--mono); padding-bottom:10px;
+  margin-bottom:10px; border-bottom:1px solid rgba(250,249,245,0.22); }
+.map-tip .t-row { display:flex; align-items:baseline; justify-content:space-between;
+  gap:14px; padding:3px 0; }
+.map-tip .t-row span { font:500 10px/1.3 var(--mono); letter-spacing:.1em;
+  text-transform:uppercase; color:rgba(250,249,245,0.6); }
+.map-tip .t-row b { font:600 13px/1 var(--mono);
+  font-variant-numeric:tabular-nums slashed-zero; font-feature-settings:'zero' 1,'tnum' 1; }
+.map-tip .t-row b.t-big { font-size:17px; color:var(--accent); }
+.map-tip .t-also { margin-top:10px; padding-top:10px;
+  border-top:1px solid rgba(250,249,245,0.22); }
+.map-tip .t-also span { display:block; font:500 10px/1.3 var(--mono);
+  letter-spacing:.1em; text-transform:uppercase; color:rgba(250,249,245,0.6); }
+.map-tip .t-also b { display:block; margin-top:4px; font:400 12.5px/1.4 var(--sans); }
+@media (hover:none) { .map-tip { display:none; } }

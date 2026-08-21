@@ -137,7 +137,14 @@ export function renderChoropleth({ shapes, viewBox, byKey, nationalRate, title, 
     // than no link, and the "not in this release" title says why.
     // data-key lets the ledger beside the map find its state and vice
     // versa, which is what makes the two one view rather than two.
-    const shape = `<path class="st ${cls}" d="${s.d}" data-key="${esc(s.key)}"><title>${esc(label)}</title></path>`;
+    // Figures ride on the path so the hover card needs no request: the
+    // whole point of it is that it appears the instant the cursor lands.
+    const facts = row ? ` data-name="${esc(row.name ?? s.label)}"`
+      + ` data-flagged="${esc(row.flagged ?? '')}"`
+      + ` data-common="${esc(row.common ?? '')}"`
+      + ` data-total="${esc(row.total ?? '')}"`
+      + ` data-top="${esc(row.top ?? '')}"` : '';
+    const shape = `<path class="st ${cls}" d="${s.d}" data-key="${esc(s.key)}"${facts}><title>${esc(label)}</title></path>`;
     return row ? `<a href="/state/${esc(row.slug)}" aria-label="${esc(label)}" data-key="${esc(s.key)}">${shape}</a>` : shape;
   });
   // Labels only for the worst few. Every state named turns the map into
