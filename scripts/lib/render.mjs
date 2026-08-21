@@ -438,7 +438,7 @@ export function renderIndexPage(tree, geo) {
       ${renderChoropleth({
         shapes: geo.shapes, viewBox: geo.viewBox, byKey, nationalRate: tree.national.rate,
         title: 'Share of government schools with no working girls\u2019 toilet, by state',
-        labelTop: 4,
+        labelTop: 8,
       })}
       ${renderLegend()}
     </figure>`;

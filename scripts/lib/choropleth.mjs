@@ -77,6 +77,42 @@ export function pathCentroid(d) {
   return best;
 }
 
+/** The bounding box a state's outline occupies, for deciding whether a
+ *  label can sit inside it. */
+export function pathBounds(d) {
+  const pts = [...String(d ?? '').matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)]
+    .map((m) => [+m[1], +m[2]]);
+  if (!pts.length) return null;
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+}
+
+/** Places labels worst-first, dropping any that would collide with one
+ *  already placed or overflow the state it names.
+ *
+ *  Without this the four worst states — all small and all in the
+ *  north-east — piled their names on top of each other into something
+ *  unreadable. A label that cannot be read is worse than no label,
+ *  because it also hides the map underneath it. */
+export function placeLabels(candidates, { charW = 7.4, lineH = 19 } = {}) {
+  const placed = [];
+  for (const c of candidates) {
+    const at = pathCentroid(c.d);
+    const box = pathBounds(c.d);
+    if (!at || !box) continue;
+    const w = c.label.length * charW;
+    // A label wider than the shape it names reads as belonging to the
+    // neighbour it spills into.
+    if (w > box.w * 1.05) continue;
+    const rect = { x1: at[0] - w / 2, x2: at[0] + w / 2, y1: at[1] - lineH / 2, y2: at[1] + lineH / 2 };
+    if (placed.some((p) => !(rect.x2 < p.x1 || rect.x1 > p.x2 || rect.y2 < p.y1 || rect.y1 > p.y2))) continue;
+    placed.push(rect);
+    c.at = at;
+  }
+  return candidates.filter((c) => c.at);
+}
+
 /** Diagonal hatch for states with no figures.
  *
  *  It used to be the palest step on the same ramp, which measured 1.09:1
@@ -112,12 +148,9 @@ export function renderChoropleth({ shapes, viewBox, byKey, nationalRate, title, 
     .filter((x) => typeof x.rate === 'number')
     .sort((a, b) => b.rate - a.rate)
     .slice(0, labelTop);
-  const labels = ranked.map(({ s }) => {
-    const c = pathCentroid(s.d);
-    if (!c) return '';
-    return `<text class="india-label" x="${c[0].toFixed(0)}" y="${c[1].toFixed(0)}"
-      text-anchor="middle">${esc(s.label)}</text>`;
-  }).join('\n');
+  const labels = placeLabels(ranked.map(({ s }) => ({ label: s.label, d: s.d })))
+    .map((c) => `<text class="india-label" x="${c.at[0].toFixed(0)}" y="${c.at[1].toFixed(0)}"
+      text-anchor="middle">${esc(c.label)}</text>`).join('\n');
 
   return `<svg class="india" viewBox="${esc(viewBox)}" role="img" aria-label="${esc(title)}" xmlns="http://www.w3.org/2000/svg">
 <title>${esc(title)}</title>

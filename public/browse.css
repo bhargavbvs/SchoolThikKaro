@@ -627,3 +627,10 @@ table.stats tbody tr.is-linked td .rate-val { color:#111214; }
   color:var(--muted); }
 .finder-label span { text-transform:none; letter-spacing:0;
   font:400 12.5px/1.3 var(--sans); }
+
+/* Beside the map the ledger sits in a 340px column, so "Schools with
+   issues" stacked three words deep whatever the window width — the phone
+   breakpoint was the wrong test. The short label belongs to the narrow
+   COLUMN, not to a narrow screen. */
+.atlas-table table.stats th .lg { display:none; }
+.atlas-table table.stats th .sm { display:inline; }

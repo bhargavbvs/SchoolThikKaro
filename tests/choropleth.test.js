@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { binBreaks, binOf, renderChoropleth, renderLegend, stateKey, pathCentroid, BIN_MULTIPLES }
+import { readFileSync } from 'node:fs';
+import { binBreaks, binOf, renderChoropleth, renderLegend, stateKey, pathCentroid, placeLabels, BIN_MULTIPLES }
   from '../scripts/lib/choropleth.mjs';
 
 const NATIONAL = 5.63; // the real national rate
@@ -149,9 +150,11 @@ describe('pathCentroid', () => {
 });
 
 describe('no-data states are categorically different, not paler', () => {
+  // Wide enough to hold their labels — a shape narrower than its own
+  // name gets no label, which is its own test below.
   const shapes = [
-    { key: 'A', label: 'Aaa', d: 'M0 0L10 0L10 10L0 10Z' },
-    { key: 'B', label: 'Bbb', d: 'M20 20L30 20L30 30L20 30Z' },
+    { key: 'A', label: 'Aaa', d: 'M0 0L60 0L60 40L0 40Z' },
+    { key: 'B', label: 'Bbb', d: 'M200 200L260 200L260 240L200 240Z' },
   ];
   const svg = renderChoropleth({
     shapes, viewBox: '0 0 100 100', nationalRate: 5.63, title: 't', labelTop: 1,
@@ -173,5 +176,53 @@ describe('no-data states are categorically different, not paler', () => {
 
   it('gives every state a key the table can match', () => {
     expect(svg).toMatch(/<path class="st [^"]*" d="[^"]*" data-key="A"/);
+  });
+});
+
+describe('label placement', () => {
+  const wide = (x, y, w = 200) => `M${x} ${y}L${x + w} ${y}L${x + w} ${y + 60}L${x} ${y + 60}Z`;
+
+  it('drops a label that would not fit inside the state it names', () => {
+    // Tripura is 39 units across and its name needs about 56. Spilling
+    // over reads as naming the neighbour it lands on.
+    const out = placeLabels([{ label: 'Tripura', d: 'M0 0L39 0L39 57L0 57Z' }]);
+    expect(out).toHaveLength(0);
+  });
+
+  it('drops a label that would collide with one already placed', () => {
+    // The four worst states are all small and all in the north-east; they
+    // piled their names into an unreadable heap.
+    const out = placeLabels([
+      { label: 'First', d: wide(0, 0) },
+      { label: 'Second', d: wide(10, 10) },
+    ]);
+    expect(out.map((c) => c.label)).toEqual(['First']);
+  });
+
+  it('keeps both when they are genuinely apart', () => {
+    const out = placeLabels([
+      { label: 'First', d: wide(0, 0) },
+      { label: 'Second', d: wide(0, 400) },
+    ]);
+    expect(out).toHaveLength(2);
+  });
+
+  it('places in the order given, so the worst state wins a contested spot', () => {
+    const out = placeLabels([
+      { label: 'Worst', d: wide(0, 0) },
+      { label: 'Lesser', d: wide(5, 5) },
+    ]);
+    expect(out[0].label).toBe('Worst');
+  });
+});
+
+describe('the ledger beside the map', () => {
+  it('uses the short column heading in the narrow column, not just on phones', () => {
+    // The panel is 340px wide at any window size, so "Schools with issues"
+    // stacked three words deep on a desktop. The phone breakpoint was
+    // testing the wrong thing.
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect(css).toMatch(/\.atlas-table table\.stats th \.lg \{ display:none; \}/);
+    expect(css).toMatch(/\.atlas-table table\.stats th \.sm \{ display:inline; \}/);
   });
 });
