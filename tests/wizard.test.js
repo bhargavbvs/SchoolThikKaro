@@ -122,3 +122,24 @@ describe('fieldsets', () => {
     expect(css).toMatch(/#submit-root fieldset \{[^}]*border:0/);
   });
 });
+
+describe('a device that cannot finish the report', () => {
+  const src = readFileSync('src/submit/addSchool.js', 'utf8');
+
+  it('does not offer a submit button it can never enable', () => {
+    // On desktop mountCapture never runs, so nothing ever attached a
+    // click handler to #sub-send. It rendered permanently disabled with
+    // nothing saying why, and the flow simply stopped there.
+    expect(src).toMatch(/send\.hidden = !isLast\(step\) \|\| capture\.handoff/);
+  });
+
+  it('hands the job to the phone instead of dead-ending', () => {
+    expect(src).toMatch(/capture\.handoff = true/);
+    expect(src).toMatch(/paintQR/);
+    expect(src).toMatch(/window\.location\.href/);
+  });
+
+  it('says why the step cannot happen here', () => {
+    expect(src).toMatch(/photo taken at the school and the location/);
+  });
+});

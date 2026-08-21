@@ -260,3 +260,10 @@
 .sub-shell > #sub-close { position:absolute; top:0; right:0; }
 .legend-hint { margin-left:6px; text-transform:none; letter-spacing:0;
   font:400 11px/1 var(--sans); color:var(--muted); }
+
+/* Desktop hand-off: the last step cannot happen here, so carry it over. */
+.handoff-qr { display:flex; justify-content:center; margin:16px 0 10px; }
+.handoff-qr img { width:170px; height:170px; image-rendering:pixelated;
+  border:1px solid var(--line); background:#fff; padding:8px; }
+.handoff-url { margin:0; text-align:center; word-break:break-all;
+  font:500 12px/1.4 var(--mono); color:var(--muted); }

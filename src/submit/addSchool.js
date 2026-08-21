@@ -178,7 +178,9 @@ export async function openAddSchoolFlow(candidate = null) {
     cards.forEach((c, i) => { c.hidden = i !== step; });
     back.hidden = step === 0;
     next.hidden = isLast(step);
-    send.hidden = !isLast(step);
+    // Never shown when this device cannot complete the step — an offered
+    // action that can never succeed is worse than no action.
+    send.hidden = !isLast(step) || capture.handoff;
 
     const st = stateNow();
     const ok = canAdvance(step, st);
@@ -200,12 +202,22 @@ export async function openAddSchoolFlow(candidate = null) {
       capture.mounted = true;
       const slot = root.querySelector('#capture-slot');
       if (detectPlatform() === 'desktop') {
+        // A desktop cannot finish this: the photo has to be taken on the
+        // spot and the location recorded with it. The submit button used
+        // to sit here permanently disabled with nothing saying why, so
+        // the flow simply stopped. Hand off to the phone instead.
+        capture.handoff = true;
         slot.innerHTML = `<div class="gate gate-camera">
           <span class="gate-badge">${iconEl('camera')}</span>
-          <h3>Use your phone for this</h3>
-          <p>A report needs a photo taken on the spot and the location it was
-             taken at. Open this page on the phone you are carrying.</p>
+          <h3>Finish this on your phone</h3>
+          <p>A report needs a photo taken at the school and the location it was
+             taken at, so this last step has to happen there. Scan this to carry
+             on, or open the address below on the phone you are carrying.</p>
+          <div id="handoff-qr" class="handoff-qr"></div>
+          <p class="handoff-url">${esc(window.location.href)}</p>
         </div>`;
+        const { paintQR } = await import('./qr.js');
+        await paintQR(slot.querySelector('#handoff-qr'), window.location.href);
       } else {
         const { mountCapture } = await import('./camera.js');
         mountCapture(slot, school, root, { onChange: (s) => {
