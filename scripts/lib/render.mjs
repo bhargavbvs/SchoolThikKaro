@@ -263,12 +263,12 @@ const LIVE_SCRIPT = `<script>
 var url=${JSON.stringify(SUPABASE_REST)}, key=${JSON.stringify(SUPABASE_ANON)};
 if(!url) return;
 var H={apikey:key,Authorization:'Bearer '+key};
-var say={girls_toilet:"the girls’ toilet",boys_toilet:"the boys’ toilet",
-  drinking_water:'drinking water',handwashing:'handwashing',electricity:'electricity',
-  classroom:'a classroom',boundary_wall:'the boundary wall',ramp:'a ramp',
-  playground:'the playground',other:'something else'};
-var found={absent:'nothing at all',broken:'it broken',locked:'it locked',
-  no_water:'no water',inadequate:'not enough',working:'it working'};
+var say={girls_toilet:"Girls’ toilet",boys_toilet:"Boys’ toilet",
+  drinking_water:'Drinking water',handwashing:'Handwashing',electricity:'Electricity',
+  classroom:'Classroom',boundary_wall:'Boundary wall',ramp:'Ramp',
+  playground:'Playground',other:'Something else'};
+var found={absent:'None at all',broken:'Broken',locked:'Locked',
+  no_water:'No water',inadequate:'Not enough',working:'Working'};
 var ago=function(t){var m=Math.round((Date.now()-new Date(t))/60000);
   if(m<60) return m+'m ago'; if(m<1440) return Math.round(m/60)+'h ago';
   return Math.round(m/1440)+'d ago';};
@@ -304,7 +304,6 @@ fetch(url+'/reports?select=id,category,finding,tier,created_at,school_name_snaps
      // existed and could not reach the school it was about.
      var esc2=function(s){return String(s||'').replace(/[&<>"]/g,function(c){
        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-     var title=function(t){return t.charAt(0).toUpperCase()+t.slice(1);};
      var card=function(r,href){
        var cat=say[r.category]||'a facility';
        var initial=cat.replace(/[^A-Za-z]/g,'').charAt(0).toUpperCase();

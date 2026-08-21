@@ -854,3 +854,30 @@ describe('the map hover card', () => {
     expect(css).toMatch(/@media \(hover:none\) \{ \.map-tip \{ display:none; \} \}/);
   });
 });
+
+describe('card labels read as labels, not sentence fragments', () => {
+  const html = renderIndexPage(tree, geo);
+
+  it('names a category without the article it needed in a sentence', () => {
+    // These were written for "Someone reported it locked for the girls'
+    // toilet". On a card they became "The girls' toilet · IT LOCKED".
+    expect(html).toMatch(/girls_toilet:"Girls’ toilet"/);
+    expect(html).toMatch(/ramp:'Ramp'/);
+    expect(html).not.toMatch(/ramp:'a ramp'/);
+  });
+
+  it('states a finding as a tag, not as a verb phrase', () => {
+    expect(html).toMatch(/absent:'None at all'/);
+    expect(html).toMatch(/locked:'Locked'/);
+    expect(html).not.toMatch(/locked:'it locked'/);
+  });
+
+  it('has exactly one .live-list rule block', () => {
+    // The ticker's styling survived the move to cards and kept every card
+    // a flex item with the ticker's padding and borders, so the columns
+    // came out different widths.
+    const css = readFileSync('public/browse.css', 'utf8');
+    expect((css.match(/^\.live-list \{/gm) ?? []).length).toBe(1);
+    expect(css).not.toMatch(/\.live-list \.dot|\.live-list \.when|\.live-list \.at\b/);
+  });
+});
